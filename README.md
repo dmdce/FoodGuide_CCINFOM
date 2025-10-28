@@ -1,29 +1,29 @@
 # FoodGuide_CCINFOM
 
 ### legend:
-primary table
+primary table\n
 *supporting table (without these, primary tables do not work*
 
 ## darryl tables:
-restaurant
-food_address
-food_rating
-*food_user
+restaurant\n
+food_address\n
+food_rating\n
+*food_user\n
 food_transaction*
 
 ## avram tables:
-food_user
-food_transaction
-food_rating
-food_order
-*food_menu
+food_user\n
+food_transaction\n
+food_rating\n
+food_order\n
+*food_menu\n
 food*
 
 ## nykko tables:
-food
-*food_event
+food\n
+*food_event\n
 origin*
 
 ## selina tables:
-food_event
+food_event\n
 origin
