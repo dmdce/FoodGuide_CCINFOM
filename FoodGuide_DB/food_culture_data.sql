@@ -1,1 +1,0 @@
-insert into `restaurant` (`description`, `food_address_id`, `food_rating_id`, `num_of_visits`, `restaurant_id`, `restaurant_name`, `total_rating`) values ('Filipino famous fast food restaurant', 1, 1, 900, 1, 'Jollibee', '4.00');
