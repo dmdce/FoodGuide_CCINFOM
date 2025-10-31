@@ -7,7 +7,7 @@ primary table<br>
 ## darryl tables:
 restaurant<br>
 food_address<br>
-food_rating<br>
+food_menu<br>
 *food_user<br>
 food_transaction*
 
