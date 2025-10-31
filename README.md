@@ -11,7 +11,7 @@ food_menu<br>
 *food_user<br>
 food_transaction*
 
-## avram tables:
+## avram & nykko tables:
 food_user<br>
 food_transaction<br>
 food_rating<br>
@@ -19,11 +19,7 @@ food_order<br>
 *food_menu<br>
 food*
 
-## nykko tables:
-food<br>
-*food_event<br>
-origin*
-
 ## selina tables:
+food<br>
 food_event<br>
 origin
