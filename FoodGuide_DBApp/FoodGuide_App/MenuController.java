@@ -33,12 +33,12 @@ public class MenuController implements ActionListener {
         switch (e.getActionCommand()) {
             case "ADMIN":
                 AdminView av = new AdminView();
-                AdminController ac = new AdminController(am, av);
+                new AdminController(am, av);
                 break;
             case "CUSTOMER":
-                // CustomerModel cm = new CustomerModel(am);
-                // CustomerView cv = new CustomerView();
-                // CustomerController cc = new CustomerController(cm, cv);
+                CustomerModel cm = new CustomerModel(am);
+                CustomerView cv = new CustomerView();
+                new CustomerController(cm, cv);
                 break;
         }
     }

@@ -33,21 +33,21 @@ public class AdminController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
-            // MAKE TRANSACTIONS
-            case "MAKE TRANSACTIONS":
-                view.getCardLayout().show(view.getMainPanel(), "MAKE_TRANSACTIONS_MENU");
+            // MANAGE DATABASE
+            case "MANAGE DATABASE":
+                view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
                 break;
             case "Read User Feedback":
-                System.out.println("Read User Feedback clicked!!");
+                System.out.println("This this supposed to be for the customer (1)");
                 break;
             case "Reserve Order":
-                System.out.println("Reserve Order clicked!");
+                System.out.println("Change this to make a new promo instead for admin");
                 break;
             case "Log a New Dish":
                 System.out.println("Log a New Dish clicked!");
                 break;
             case "Personalize Meal Recommendations":
-                System.out.println("Personalize Meal Recommendations clicked!");
+                System.out.println("This this supposed to be for the customer (2)");
                 break;
 
             // GENERATE REPORTS

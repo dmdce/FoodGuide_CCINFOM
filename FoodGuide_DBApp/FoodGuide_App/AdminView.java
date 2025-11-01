@@ -19,11 +19,11 @@ public class AdminView extends JFrame {
     
     private JPanel mainPanel = new JPanel(cardLayout);
     private JPanel mainMenuPanel;
-    private JPanel makeTransactionsPanel;
+    private JPanel manageDatabasePanel;
     private JPanel generateReportsPanel;
 
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
-    private ArrayList<JButton> makeTransactionsButtonList = new ArrayList<>();
+    private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
     private ArrayList<JButton> generateReportsButtonList = new ArrayList<>();
 
     private JButton backButton = new JButton("GO BACK");
@@ -41,11 +41,11 @@ public class AdminView extends JFrame {
         setSize(850, 450);
 
         mainMenuPanel = createMainMenuPanel();
-        makeTransactionsPanel = createMakeTransactionsPanel();
+        manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
-        mainPanel.add(makeTransactionsPanel, "MAKE_TRANSACTIONS_MENU");
+        mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
 
         add(mainPanel);
@@ -80,7 +80,7 @@ public class AdminView extends JFrame {
         mainMenuButtonPanel.setBackground(Color.decode("#FCD303"));
 
         mainMenuButtonList.clear();
-        mainMenuButtonList.add(new JButton("MAKE TRANSACTIONS"));
+        mainMenuButtonList.add(new JButton("MANAGE DATABASE"));
         mainMenuButtonList.add(new JButton("GENERATE REPORTS"));
         mainMenuButtonList.add(new JButton("GO BACK TO MAIN"));
 
@@ -95,42 +95,42 @@ public class AdminView extends JFrame {
 
     /**
      * Builds the truck simulation selection panel.
-     * @return a JPanel for the MAKE_TRANSACTIONS_MENU card
+     * @return a JPanel for the MANAGE_DATABASE_MENU card
      */
-    private JPanel createMakeTransactionsPanel() {
+    private JPanel createManageDatabasePanel() {
         // MAIN PANEL
         JPanel panel = new JPanel(new BorderLayout());
 
         // LABELS
-        JPanel makeTransactionsLabelPanel = new JPanel(new GridBagLayout());
+        JPanel manageDatabaseLabelPanel = new JPanel(new GridBagLayout());
 
         ArrayList<JLabel> labelList = new ArrayList<>(); // Used for multiple labels
         labelList.add(new JLabel("What kind of transaction do you want to do?"));
         labelList.getFirst().setFont(new Font("Verdana", Font.BOLD, 20));
 
         for (JLabel jLabel : labelList) {
-            makeTransactionsLabelPanel.add(jLabel);
+            manageDatabaseLabelPanel.add(jLabel);
         }
 
-        panel.add(makeTransactionsLabelPanel, BorderLayout.CENTER);
+        panel.add(manageDatabaseLabelPanel, BorderLayout.CENTER);
 
         // BUTTONS
-        JPanel makeTransactionsButtonPanel = new JPanel(new GridLayout(0, 1));
-        makeTransactionsButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
-        makeTransactionsButtonPanel.setBackground(Color.decode("#FCD303"));
+        JPanel manageDatabaseButtonPanel = new JPanel(new GridLayout(0, 1));
+        manageDatabaseButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        manageDatabaseButtonPanel.setBackground(Color.decode("#FCD303"));
 
-        makeTransactionsButtonList.clear();
-        makeTransactionsButtonList.add(new JButton("Read User Feedback"));
-        makeTransactionsButtonList.add(new JButton("Reserve Order"));
-        makeTransactionsButtonList.add(new JButton("Log a New Dish"));
-        makeTransactionsButtonList.add(new JButton("Personalize Meal Recommendations"));
-        makeTransactionsButtonList.add(new JButton("GO BACK"));
+        manageDatabaseButtonList.clear();
+        manageDatabaseButtonList.add(new JButton("Read User Feedback"));
+        manageDatabaseButtonList.add(new JButton("Reserve Order"));
+        manageDatabaseButtonList.add(new JButton("Log a New Dish"));
+        manageDatabaseButtonList.add(new JButton("Personalize Meal Recommendations"));
+        manageDatabaseButtonList.add(new JButton("GO BACK"));
 
-        for (JButton jButton : makeTransactionsButtonList) {
-            makeTransactionsButtonPanel.add(jButton);
+        for (JButton jButton : manageDatabaseButtonList) {
+            manageDatabaseButtonPanel.add(jButton);
         }
 
-        panel.add(makeTransactionsButtonPanel, BorderLayout.SOUTH);
+        panel.add(manageDatabaseButtonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -192,14 +192,14 @@ public class AdminView extends JFrame {
      */
     public void refreshPanels() {
         // Remove
-        mainPanel.remove(makeTransactionsPanel);
+        mainPanel.remove(manageDatabasePanel);
         mainPanel.remove(generateReportsPanel);
 
         // Generate and add
-        makeTransactionsPanel = createMakeTransactionsPanel();
+        manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
 
-        mainPanel.add(makeTransactionsPanel, "MAKE_TRANSACTIONS_MENU");
+        mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
 
         // Revalidate and repaint
@@ -229,7 +229,7 @@ public class AdminView extends JFrame {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
-        for (JButton jButton : makeTransactionsButtonList) {
+        for (JButton jButton : manageDatabaseButtonList) {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
