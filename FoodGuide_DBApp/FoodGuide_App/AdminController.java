@@ -33,14 +33,46 @@ public class AdminController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
-            case "SIMULATE":
-                view.getCardLayout().show(view.getMainPanel(), "SIMULATE_VIEW");
+            // MAKE TRANSACTIONS
+            case "MAKE TRANSACTIONS":
+                view.getCardLayout().show(view.getMainPanel(), "MAKE_TRANSACTIONS_MENU");
                 break;
-            case "DASHBOARD":
+            case "Read User Feedback":
+                System.out.println("Read User Feedback clicked!!");
+                break;
+            case "Reserve Order":
+                System.out.println("Reserve Order clicked!");
+                break;
+            case "Log a New Dish":
+                System.out.println("Log a New Dish clicked!");
+                break;
+            case "Personalize Meal Recommendations":
+                System.out.println("Personalize Meal Recommendations clicked!");
+                break;
+
+            // GENERATE REPORTS
+            case "GENERATE REPORTS":
                 updateView();
-                view.getCardLayout().show(view.getMainPanel(), "DASHBOARD_MENU");
+                view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
-            case "GO BACK", "GO BACK DASHBOARD":
+            case "New User Registration":
+                System.out.println(1);
+                break;
+            case "User Referral Impact":
+                System.out.println(2);
+                break;
+            case "Popular Menu Items":
+                System.out.println(3);
+                break;
+            case "Food, Ratings and Feedback":
+                System.out.println(4);
+                break;
+            case "Revenue and Transaction":
+                System.out.println(5);
+                break;
+
+            // BASIC NAVIGATION BUTTONS
+            case "GO BACK", "GO BACK GENERATE REPORTS":
                 view.getCardLayout().show(view.getMainPanel(), "MAIN_MENU");
                 break;
             case "GO BACK TO MAIN":

@@ -9,7 +9,7 @@ import java.awt.event.ActionListener;
  */
 public class MenuController implements ActionListener {
     private MenuView view;
-    private AdminModel am = new AdminModel(this); // only instantiates once
+    private AdminModel am = new AdminModel(this); // Only instantiates once
 
     /**
      * Constructs the MenuController where the model and the view are assigned.
@@ -29,7 +29,7 @@ public class MenuController implements ActionListener {
      */
     @Override
     public void actionPerformed(ActionEvent e) {
-        view.setVisible(false);
+        view.setVisible(false); // Hide window before showing ADMIN/CUSTOMER
         switch (e.getActionCommand()) {
             case "ADMIN":
                 AdminView av = new AdminView();

@@ -1,5 +1,6 @@
 import java.util.*;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -15,15 +16,18 @@ import java.awt.event.ActionListener;
  */
 public class AdminView extends JFrame {
     private CardLayout cardLayout = new CardLayout();
+    
     private JPanel mainPanel = new JPanel(cardLayout);
-    private JPanel dashboardPanel;
+    private JPanel mainMenuPanel;
+    private JPanel makeTransactionsPanel;
+    private JPanel generateReportsPanel;
 
-    private ArrayList<JButton> mainMenuButtonList = new ArrayList<JButton>();
-    private ArrayList<JButton> simulateButtonList = new ArrayList<JButton>();
-    private ArrayList<JButton> dashboardButtonList = new ArrayList<JButton>();
+    private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
+    private ArrayList<JButton> makeTransactionsButtonList = new ArrayList<>();
+    private ArrayList<JButton> generateReportsButtonList = new ArrayList<>();
 
     private JButton backButton = new JButton("GO BACK");
-    private JButton backDashboardButton = new JButton("GO BACK");
+    private JButton backGenerateReportsButton = new JButton("GO BACK");
 
     /**
      * Constructs the AdminView, initializes all sub-panels,
@@ -36,13 +40,13 @@ public class AdminView extends JFrame {
         setLayout(new BorderLayout());
         setSize(850, 450);
 
-        JPanel mainMenuPanel = createMainMenuPanel();
-        JPanel simulatePanel = createSimulatePanel();
-        dashboardPanel = createDashboardPanel();
+        mainMenuPanel = createMainMenuPanel();
+        makeTransactionsPanel = createMakeTransactionsPanel();
+        generateReportsPanel = createGenerateReportsPanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
-        mainPanel.add(simulatePanel, "SIMULATE_VIEW");
-        mainPanel.add(dashboardPanel, "DASHBOARD_MENU");
+        mainPanel.add(makeTransactionsPanel, "MAKE_TRANSACTIONS_MENU");
+        mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
 
         add(mainPanel);
 
@@ -61,9 +65,9 @@ public class AdminView extends JFrame {
         // LABELS
         JPanel mainMenuLabelPanel = new JPanel(new GridBagLayout());
 
-        ArrayList<JLabel> labelList = new ArrayList<JLabel>();
+        ArrayList<JLabel> labelList = new ArrayList<>();
         labelList.add(new JLabel("Choose an option below!"));
-        labelList.get(0).setFont(new Font("Verdana", Font.BOLD, 20));
+        labelList.getFirst().setFont(new Font("Verdana", Font.BOLD, 20));
 
         for (JLabel labels : labelList) {
             mainMenuLabelPanel.add(labels);
@@ -73,11 +77,11 @@ public class AdminView extends JFrame {
 
         // BUTTONS
         JPanel mainMenuButtonPanel = new JPanel(new FlowLayout());
-        mainMenuButtonPanel.setBackground(Color.decode("#703030"));
+        mainMenuButtonPanel.setBackground(Color.decode("#FCD303"));
 
         mainMenuButtonList.clear();
-        mainMenuButtonList.add(new JButton("SIMULATE"));
-        mainMenuButtonList.add(new JButton("DASHBOARD"));
+        mainMenuButtonList.add(new JButton("MAKE TRANSACTIONS"));
+        mainMenuButtonList.add(new JButton("GENERATE REPORTS"));
         mainMenuButtonList.add(new JButton("GO BACK TO MAIN"));
 
         for (JButton buttons : mainMenuButtonList) {
@@ -91,78 +95,93 @@ public class AdminView extends JFrame {
 
     /**
      * Builds the truck simulation selection panel.
-     * @return a JPanel for the SIMULATE_VIEW card
+     * @return a JPanel for the MAKE_TRANSACTIONS_MENU card
      */
-    private JPanel createSimulatePanel() {
+    private JPanel createMakeTransactionsPanel() {
         // MAIN PANEL
         JPanel panel = new JPanel(new BorderLayout());
 
         // LABELS
-        JPanel simulateLabelPanel = new JPanel(new GridBagLayout());
+        JPanel makeTransactionsLabelPanel = new JPanel(new GridBagLayout());
 
-        ArrayList<JLabel> labelList = new ArrayList<JLabel>();
-        labelList.add(new JLabel("Question goes here?"));
-        labelList.get(0).setFont(new Font("Verdana", Font.BOLD, 20));
+        ArrayList<JLabel> labelList = new ArrayList<>(); // Used for multiple labels
+        labelList.add(new JLabel("What kind of transaction do you want to do?"));
+        labelList.getFirst().setFont(new Font("Verdana", Font.BOLD, 20));
 
-        for (JLabel labels : labelList) {
-            simulateLabelPanel.add(labels);
+        for (JLabel jLabel : labelList) {
+            makeTransactionsLabelPanel.add(jLabel);
         }
 
-        panel.add(simulateLabelPanel, BorderLayout.CENTER);
+        panel.add(makeTransactionsLabelPanel, BorderLayout.CENTER);
 
         // BUTTONS
-        JPanel simulateButtonPanel = new JPanel(new FlowLayout());
-        simulateButtonPanel.setBackground(Color.decode("#703030"));
+        JPanel makeTransactionsButtonPanel = new JPanel(new GridLayout(0, 1));
+        makeTransactionsButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        makeTransactionsButtonPanel.setBackground(Color.decode("#FCD303"));
 
-        simulateButtonList.clear();
-        simulateButtonList.add(new JButton("OPTION 1"));
-        simulateButtonList.add(new JButton("OPTION 2"));
-        simulateButtonList.add(new JButton("GO BACK"));
+        makeTransactionsButtonList.clear();
+        makeTransactionsButtonList.add(new JButton("Read User Feedback"));
+        makeTransactionsButtonList.add(new JButton("Reserve Order"));
+        makeTransactionsButtonList.add(new JButton("Log a New Dish"));
+        makeTransactionsButtonList.add(new JButton("Personalize Meal Recommendations"));
+        makeTransactionsButtonList.add(new JButton("GO BACK"));
 
-        for (JButton buttons : simulateButtonList) {
-            simulateButtonPanel.add(buttons);
+        for (JButton jButton : makeTransactionsButtonList) {
+            makeTransactionsButtonPanel.add(jButton);
         }
 
-        panel.add(simulateButtonPanel, BorderLayout.SOUTH);
+        panel.add(makeTransactionsButtonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
 
     /**
-     * Builds the dashboard showing truck inventories and sales.
-     * @return a JPanel for the DASHBOARD_MENU card
+     * Shows a menu for generating reports.
+     * @return a JPanel for the GENERATE_REPORTS_MENU card
      */
-    private JPanel createDashboardPanel() {
-        double allPrice = 0;
+    private JPanel createGenerateReportsPanel() {
+        // MAIN PANEL
         JPanel panel = new JPanel(new BorderLayout());
+
+        // LABELS
         JPanel titlePanel = new JPanel(new GridBagLayout());
-        JPanel infoPanel = new JPanel(new GridBagLayout());
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(20, 0, 10, 0);
+        // GridBagLayout is used for multiple labels
+        // GridBagConstraints gbc = new GridBagConstraints();
+        // gbc.insets = new Insets(20, 0, 10, 0);
 
-        JLabel name = new JLabel("Dashboard");
-        name.setFont(new Font("Verdana", Font.BOLD, 20));
+        JLabel label = new JLabel("Choose a report to generate");
+        label.setFont(new Font("Verdana", Font.BOLD, 20));
 
-        titlePanel.add(name, gbc);
+        titlePanel.add(label);
 
-        panel.add(titlePanel, BorderLayout.NORTH);
-        panel.add(infoPanel, BorderLayout.CENTER);
+        panel.add(titlePanel, BorderLayout.CENTER);
 
-        JScrollPane scrollPane = new JScrollPane(infoPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
-        // Create a vertical scrollbar
+        // Create a vertical scroll panel
+        // JScrollPane scrollPane = new JScrollPane(infoPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         // JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
 
-        //BUTTONS
-        JPanel dashboardButtonPanel = new JPanel(new FlowLayout());
-        dashboardButtonPanel.setBackground(Color.decode("#703030"));
+        // BUTTONS
+        JPanel generateReportsButtonPanel = new JPanel(new GridLayout(0, 1));
+        generateReportsButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        generateReportsButtonPanel.setBackground(Color.decode("#FCD303"));
 
-        backDashboardButton.setActionCommand("GO BACK DASHBOARD");
-        dashboardButtonPanel.add(backDashboardButton);
+        generateReportsButtonList.clear();
+        generateReportsButtonList.add(new JButton("New User Registration"));
+        generateReportsButtonList.add(new JButton("User Referral Impact"));
+        generateReportsButtonList.add(new JButton("Popular Menu Items"));
+        generateReportsButtonList.add(new JButton("Food, Ratings and Feedback"));
+        generateReportsButtonList.add(new JButton("Revenue and Transaction"));
 
-        panel.add(scrollPane, BorderLayout.CENTER);
-        panel.add(dashboardButtonPanel, BorderLayout.SOUTH);
+        for (JButton jButton : generateReportsButtonList) {
+            generateReportsButtonPanel.add(jButton);
+        }
+
+        backGenerateReportsButton.setActionCommand("GO BACK GENERATE REPORTS");
+        generateReportsButtonPanel.add(backGenerateReportsButton);
+
+        // panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(generateReportsButtonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -172,12 +191,18 @@ public class AdminView extends JFrame {
      * recreates them to reflect any updated data, and then adds them back to the main panel.
      */
     public void refreshPanels() {
-        mainPanel.remove(dashboardPanel);
+        // Remove
+        mainPanel.remove(makeTransactionsPanel);
+        mainPanel.remove(generateReportsPanel);
 
-        dashboardPanel = createDashboardPanel();
+        // Generate and add
+        makeTransactionsPanel = createMakeTransactionsPanel();
+        generateReportsPanel = createGenerateReportsPanel();
 
-        mainPanel.add(dashboardPanel, "DASHBOARD_MENU");
+        mainPanel.add(makeTransactionsPanel, "MAKE_TRANSACTIONS_MENU");
+        mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
 
+        // Revalidate and repaint
         mainPanel.revalidate();
         mainPanel.repaint();
     }
@@ -189,20 +214,24 @@ public class AdminView extends JFrame {
      * @param listener The ActionListener to be used for the GUI components.
      */
     public void setActionListener(ActionListener listener) {
-        // REMOVE TO NOT STACK
+        // Remove to not stack
         backButton.removeActionListener(listener);
-        backDashboardButton.removeActionListener(listener);
+        backGenerateReportsButton.removeActionListener(listener);
 
-        // ADD
+        // Add
         backButton.addActionListener(listener);
-        backDashboardButton.addActionListener(listener);
-        for (JButton buttons : mainMenuButtonList) {
-            buttons.removeActionListener(listener);
-            buttons.addActionListener(listener);
+        backGenerateReportsButton.addActionListener(listener);
+        for (JButton jButton : mainMenuButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
         }
-        for (JButton buttons : simulateButtonList) {
-            buttons.removeActionListener(listener);
-            buttons.addActionListener(listener);
+        for (JButton jButton : generateReportsButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
+        for (JButton jButton : makeTransactionsButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
         }
     }
 

@@ -44,7 +44,7 @@ public class MenuView extends JFrame {
         // new label with text inside
         labelList.add(new JLabel("Hello User, welcome to the Food Guide System!"));
         labelList.getFirst().setFont(new Font("Verdana", Font.BOLD, 20));
-        labelList.add(new JLabel("Do you want to register as an admin or a customer?"));
+        labelList.add(new JLabel("Do you want to sign in as an admin or a customer?"));
 
         // add buttons to panel
         for (JLabel jLabel : labelList) {
