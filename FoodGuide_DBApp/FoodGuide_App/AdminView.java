@@ -21,6 +21,7 @@ public class AdminView extends JFrame {
     private JPanel mainMenuPanel;
     private JPanel manageDatabasePanel;
     private JPanel generateReportsPanel;
+    private JPanel userRegPanel;
 
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
     private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
@@ -28,6 +29,7 @@ public class AdminView extends JFrame {
 
     private JButton backButton = new JButton("GO BACK");
     private JButton backGenerateReportsButton = new JButton("GO BACK");
+    private JButton backUserRegButton = new JButton("GO BACK");
 
     /**
      * Constructs the AdminView, initializes all sub-panels,
@@ -43,10 +45,12 @@ public class AdminView extends JFrame {
         mainMenuPanel = createMainMenuPanel();
         manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
+        userRegPanel = createUserRegPanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
+        mainPanel.add(userRegPanel, "USER_REG");
 
         add(mainPanel);
 
@@ -186,6 +190,36 @@ public class AdminView extends JFrame {
         return panel;
     }
 
+    private JPanel createUserRegPanel() {
+        // MAIN PANEL
+        JPanel panel = new JPanel(new BorderLayout());
+
+        // LABELS
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+
+        JLabel label = new JLabel("User Registration Report");
+        label.setFont(new Font("Verdana", Font.BOLD, 20));
+
+        titlePanel.add(label);
+
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        // QUERY RESULT
+
+
+        // BUTTONS
+        JPanel userRegButtonPanel = new JPanel(new GridLayout(0, 1));
+        userRegButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        userRegButtonPanel.setBackground(Color.decode("#FCD303"));
+
+        backUserRegButton.setActionCommand("GO BACK USER REG");
+        userRegButtonPanel.add(backUserRegButton);
+
+        panel.add(userRegButtonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
     /**
      * Refreshes the display panels of the application. This method removes existing panels,
      * recreates them to reflect any updated data, and then adds them back to the main panel.
@@ -194,13 +228,16 @@ public class AdminView extends JFrame {
         // Remove
         mainPanel.remove(manageDatabasePanel);
         mainPanel.remove(generateReportsPanel);
+        mainPanel.remove(userRegPanel);
 
         // Generate and add
         manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
+        userRegPanel = createUserRegPanel();
 
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
+        mainPanel.add(userRegPanel, "USER_REG");
 
         // Revalidate and repaint
         mainPanel.revalidate();
@@ -217,10 +254,12 @@ public class AdminView extends JFrame {
         // Remove to not stack
         backButton.removeActionListener(listener);
         backGenerateReportsButton.removeActionListener(listener);
+        backUserRegButton.removeActionListener(listener);
 
         // Add
         backButton.addActionListener(listener);
         backGenerateReportsButton.addActionListener(listener);
+        backUserRegButton.addActionListener(listener);
         for (JButton jButton : mainMenuButtonList) {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
