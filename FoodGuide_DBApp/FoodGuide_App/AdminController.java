@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import javax.swing.*;
 
 /**
  * Class: AdminController
@@ -34,6 +36,9 @@ public class AdminController implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
             // MANAGE DATABASE
+            case "Create User":
+                view.getCardLayout().show(view.getMainPanel(), "USER_CREATE");
+                break;
             case "MANAGE DATABASE":
                 view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
                 break;
@@ -48,6 +53,16 @@ public class AdminController implements ActionListener {
                 break;
             case "Personalize Meal Recommendations":
                 System.out.println("This this supposed to be for the customer (2)");
+                break;
+            case "REGISTER_USER":
+                ArrayList<String> input = view.getRegistrationInput();
+                String username = input.get(0);
+                String email = input.get(1);
+                // 2. TODO: Send this data to your Model (AdminModel)
+                //    (e.g., model.registerNewUser(username, email);)
+                System.out.println("Registering user: " + username + " with email: " + email);
+                JOptionPane.showMessageDialog(view, "User Registered!");
+                view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
 
             // GENERATE REPORTS

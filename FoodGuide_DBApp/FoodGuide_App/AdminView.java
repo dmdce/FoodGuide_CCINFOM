@@ -22,10 +22,13 @@ public class AdminView extends JFrame {
     private JPanel manageDatabasePanel;
     private JPanel generateReportsPanel;
     private JPanel userRegPanel;
+    private JPanel userCreationPanel;
 
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
     private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
     private ArrayList<JButton> generateReportsButtonList = new ArrayList<>();
+    private ArrayList<JTextField> userRegTextFieldList = new ArrayList<>();
+    private ArrayList<JButton> userRegButtonList = new ArrayList<>();
 
     private JButton backButton = new JButton("GO BACK");
     private JButton backGenerateReportsButton = new JButton("GO BACK");
@@ -46,11 +49,13 @@ public class AdminView extends JFrame {
         manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
         userRegPanel = createUserRegPanel();
+        userCreationPanel = createUserCreationPanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
         mainPanel.add(userRegPanel, "USER_REG");
+        mainPanel.add(userCreationPanel, "USER_CREATE");
 
         add(mainPanel);
 
@@ -129,6 +134,7 @@ public class AdminView extends JFrame {
         manageDatabaseButtonList.add(new JButton("Log a New Dish"));
         manageDatabaseButtonList.add(new JButton("Personalize Meal Recommendations"));
         manageDatabaseButtonList.add(new JButton("GO BACK"));
+        manageDatabaseButtonList.add(new JButton("Create User"));
 
         for (JButton jButton : manageDatabaseButtonList) {
             manageDatabaseButtonPanel.add(jButton);
@@ -220,6 +226,70 @@ public class AdminView extends JFrame {
         return panel;
     }
 
+    private JPanel createUserCreationPanel() {
+        // MAIN PANEL
+        JPanel panel = new JPanel(new BorderLayout());
+
+        // LABELS
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel label = new JLabel("Input Registration Information");
+        label.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(label);
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        // --- NEW: REGISTRATION FORM ---
+        JPanel formPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // 0 rows, 2 cols, 10px gaps
+        formPanel.setBorder(new EmptyBorder(20, 150, 20, 150)); // Add padding
+
+        // Create labels
+        JLabel nameLabel = new JLabel("Username:");
+        JLabel emailLabel = new JLabel("Email Address:");
+
+        // Initialize text field list (clears it for refreshPanels)
+        userRegTextFieldList.clear();
+
+        // Create text fields and add to list
+        JTextField nameField = new JTextField(20);
+        JTextField emailField = new JTextField(20);
+        userRegTextFieldList.add(nameField);
+        userRegTextFieldList.add(emailField);
+
+        // Add components to the form panel
+        formPanel.add(nameLabel);
+        formPanel.add(nameField);
+        formPanel.add(emailLabel);
+        formPanel.add(emailField);
+
+        panel.add(formPanel, BorderLayout.CENTER); // Add form to the center
+
+        // --- UPDATED: BUTTONS ---
+        JPanel userRegButtonPanel = new JPanel(new FlowLayout()); // Use FlowLayout like your others
+        userRegButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        userRegButtonPanel.setBackground(Color.decode("#FCD303"));
+
+        // Initialize button list (clears it for refreshPanels)
+        userRegButtonList.clear();
+
+        // Create buttons and add to list
+        JButton registerButton = new JButton("REGISTER USER");
+        registerButton.setActionCommand("REGISTER_USER"); // New action command for the controller
+
+        // This button should already be declared at the top of AdminView
+        backUserRegButton.setActionCommand("GO BACK USER REG");
+
+        userRegButtonList.add(registerButton);
+        userRegButtonList.add(backUserRegButton);
+
+        // Add buttons from the list to the panel
+        for (JButton button : userRegButtonList) {
+            userRegButtonPanel.add(button);
+        }
+
+        panel.add(userRegButtonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
     /**
      * Refreshes the display panels of the application. This method removes existing panels,
      * recreates them to reflect any updated data, and then adds them back to the main panel.
@@ -229,15 +299,18 @@ public class AdminView extends JFrame {
         mainPanel.remove(manageDatabasePanel);
         mainPanel.remove(generateReportsPanel);
         mainPanel.remove(userRegPanel);
+        mainPanel.remove(userCreationPanel);
 
         // Generate and add
         manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
         userRegPanel = createUserRegPanel();
+        userCreationPanel = createUserCreationPanel();
 
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
         mainPanel.add(userRegPanel, "USER_REG");
+        mainPanel.add(userCreationPanel, "USER_CREATE");
 
         // Revalidate and repaint
         mainPanel.revalidate();
@@ -272,6 +345,10 @@ public class AdminView extends JFrame {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
+        for (JButton jButton : userRegButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
     }
 
     /**
@@ -290,5 +367,17 @@ public class AdminView extends JFrame {
      */
     public CardLayout getCardLayout() {
         return cardLayout;
+    }
+
+    /**
+     * Gets the registration input from the text fields.
+     * @return An ArrayList<String> containing the username and email.
+     */
+    public ArrayList<String> getRegistrationInput() {
+        ArrayList<String> texts = new ArrayList<>();
+        for (JTextField jTextField : userRegTextFieldList) {
+            texts.add(jTextField.getText());
+        }
+        return texts;
     }
 }
