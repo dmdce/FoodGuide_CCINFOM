@@ -12,6 +12,7 @@ import javax.swing.*;
 public class AdminController implements ActionListener {
     private AdminModel model;
     private AdminView view;
+    private ArrayList<AdminView.FoodItem> cart;
 
     /**
      * Constructs an AdminController with the specified model and view.
@@ -22,7 +23,7 @@ public class AdminController implements ActionListener {
     public AdminController(AdminModel m, AdminView v) {
         this.model = m;
         this.view = v;
-
+        this.cart = new ArrayList<>();
         view.setActionListener(this);
     }
 
@@ -38,6 +39,56 @@ public class AdminController implements ActionListener {
             // MANAGE DATABASE
             case "Create User":
                 view.getCardLayout().show(view.getMainPanel(), "USER_CREATE");
+                break;
+            case "Create Transaction":
+                cart.clear();
+                view.getTransactionCartArea().setText("");
+                view.getRestaurantNameField().setText("");
+                view.getInitialPriceLabel().setText("P0.00");
+                view.getPromoLabel().setText("-P0.00");
+                view.getFinalPriceLabel().setText("P0.00");
+                view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
+                break;
+            case "ADD_ITEM":
+                AdminView.FoodItem selectedItem = (AdminView.FoodItem) view.getFoodItemComboBox().getSelectedItem();
+                if (selectedItem == null) return;
+                cart.add(selectedItem);
+                updateCartView();
+                break;
+            case "CALCULATE_TOTAL":
+                double initialPrice = 0.0;
+                for (AdminView.FoodItem item : cart) {
+                    initialPrice += item.getPrice();
+                }
+
+                double promoAmount = initialPrice * 0.10; // 10% promo
+                double finalPrice = initialPrice - promoAmount;
+
+                // Update the labels in the view
+                view.getInitialPriceLabel().setText(String.format("P%.2f", initialPrice));
+                view.getPromoLabel().setText(String.format("-P%.2f", promoAmount));
+                view.getFinalPriceLabel().setText(String.format("P%.2f", finalPrice));
+                break;
+            case "SUBMIT_TRANSACTION":
+                // 1. Get restaurant name
+                String restaurant = view.getRestaurantNameField().getText();
+
+                // 2. Get final price (by re-calculating or grabbing from label)
+                String finalPriceText = view.getFinalPriceLabel().getText();
+
+                // 3. (Backend logic would go here)
+                System.out.println("--- TRANSACTION SUBMITTED ---");
+                System.out.println("Restaurant: " + restaurant);
+                System.out.println("Cart Items:");
+                for(AdminView.FoodItem item : cart) {
+                    System.out.println("  " + item.toString());
+                }
+                System.out.println("Final Price: " + finalPriceText);
+                System.out.println("---------------------------------");
+
+                // 4. Show success and go back
+                JOptionPane.showMessageDialog(view, "Transaction Submitted!");
+                view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
                 break;
             case "MANAGE DATABASE":
                 view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
@@ -108,5 +159,17 @@ public class AdminController implements ActionListener {
     private void updateView() {
         view.refreshPanels();
         view.setActionListener(this);
+    }
+    private void updateCartView() {
+        JTextArea cartArea = view.getTransactionCartArea();
+        cartArea.setText(""); // Clear it first
+
+        if (cart.isEmpty()) {
+            cartArea.setText("Cart is empty.");
+        } else {
+            for (AdminView.FoodItem item : cart) {
+                cartArea.append(item.toString() + "\n");
+            }
+        }
     }
 }

@@ -23,6 +23,15 @@ public class AdminView extends JFrame {
     private JPanel generateReportsPanel;
     private JPanel userRegPanel;
     private JPanel userCreationPanel;
+    private JPanel transactionPanel;
+
+    private ArrayList<JButton> transactionButtonList = new ArrayList<>();
+    private JComboBox<FoodItem> foodItemComboBox;
+    private JTextField restaurantNameField;
+    private JTextArea transactionCartArea;
+    private JLabel initialPriceLabel;
+    private JLabel promoLabel;
+    private JLabel finalPriceLabel;
 
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
     private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
@@ -50,12 +59,14 @@ public class AdminView extends JFrame {
         generateReportsPanel = createGenerateReportsPanel();
         userRegPanel = createUserRegPanel();
         userCreationPanel = createUserCreationPanel();
+        transactionPanel = createTransactionPanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
         mainPanel.add(userRegPanel, "USER_REG");
         mainPanel.add(userCreationPanel, "USER_CREATE");
+        mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
 
         add(mainPanel);
 
@@ -135,6 +146,7 @@ public class AdminView extends JFrame {
         manageDatabaseButtonList.add(new JButton("Personalize Meal Recommendations"));
         manageDatabaseButtonList.add(new JButton("GO BACK"));
         manageDatabaseButtonList.add(new JButton("Create User"));
+        manageDatabaseButtonList.add(new JButton("Create Transaction"));
 
         for (JButton jButton : manageDatabaseButtonList) {
             manageDatabaseButtonPanel.add(jButton);
@@ -300,17 +312,20 @@ public class AdminView extends JFrame {
         mainPanel.remove(generateReportsPanel);
         mainPanel.remove(userRegPanel);
         mainPanel.remove(userCreationPanel);
+        mainPanel.remove(transactionPanel);
 
         // Generate and add
         manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
         userRegPanel = createUserRegPanel();
         userCreationPanel = createUserCreationPanel();
+        transactionPanel = createTransactionPanel();
 
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
         mainPanel.add(userRegPanel, "USER_REG");
         mainPanel.add(userCreationPanel, "USER_CREATE");
+        mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
 
         // Revalidate and repaint
         mainPanel.revalidate();
@@ -349,6 +364,11 @@ public class AdminView extends JFrame {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
+
+        for (JButton jButton : transactionButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
     }
 
     /**
@@ -379,5 +399,178 @@ public class AdminView extends JFrame {
             texts.add(jTextField.getText());
         }
         return texts;
+    }
+
+    private JPanel createTransactionPanel() {
+        // MAIN PANEL
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // TITLE
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel titleLabel = new JLabel("Create New Transaction");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(titleLabel);
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        // --- FORM PANEL (Center) ---
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Row 0: Restaurant Name
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Restaurant Name:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        restaurantNameField = new JTextField(20);
+        formPanel.add(restaurantNameField, gbc);
+
+        // Row 1: Food Items JComboBox
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Select Food Item:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        // Create placeholder items
+        FoodItem[] foodItems = {
+                new FoodItem("Adobo", 150.00),
+                new FoodItem("Sinigang", 180.00),
+                new FoodItem("Sisig", 200.00),
+                new FoodItem("Bulalo", 250.00)
+        };
+        foodItemComboBox = new JComboBox<>(foodItems);
+        formPanel.add(foodItemComboBox, gbc);
+
+        // Row 1, Col 2: Add Item Button
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        JButton addItemButton = new JButton("Add Item");
+        addItemButton.setActionCommand("ADD_ITEM");
+        // We will add this to the button list later
+        formPanel.add(addItemButton, gbc);
+
+        // Row 2: Cart Area
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.NORTHEAST;
+        formPanel.add(new JLabel("Cart:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2; // Span 2 columns
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0; // Allow text area to grow
+        transactionCartArea = new JTextArea(5, 20);
+        transactionCartArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(transactionCartArea);
+        formPanel.add(scrollPane, gbc);
+
+        // --- Row 3: Price Details (in a separate panel) ---
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.weighty = 0;
+        JPanel pricePanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        pricePanel.setBorder(BorderFactory.createTitledBorder("Price Details"));
+
+        pricePanel.add(new JLabel("Initial Price:"));
+        initialPriceLabel = new JLabel("P0.00");
+        pricePanel.add(initialPriceLabel);
+
+        pricePanel.add(new JLabel("Promo (10%):"));
+        promoLabel = new JLabel("-P0.00");
+        pricePanel.add(promoLabel);
+
+        pricePanel.add(new JLabel("Final Price:"));
+        finalPriceLabel = new JLabel("P0.00");
+        finalPriceLabel.setFont(finalPriceLabel.getFont().deriveFont(Font.BOLD));
+        pricePanel.add(finalPriceLabel);
+
+        formPanel.add(pricePanel, gbc);
+
+        panel.add(formPanel, BorderLayout.CENTER);
+
+        // --- BUTTONS (South) ---
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#FCD303"));
+
+        transactionButtonList.clear(); // Clear list for refreshPanels
+        // Add the "Add Item" button from before
+        transactionButtonList.add(addItemButton);
+
+        JButton calculateButton = new JButton("Calculate Total");
+        calculateButton.setActionCommand("CALCULATE_TOTAL");
+        transactionButtonList.add(calculateButton);
+
+        JButton submitButton = new JButton("Submit Transaction");
+        submitButton.setActionCommand("SUBMIT_TRANSACTION");
+        transactionButtonList.add(submitButton);
+
+        JButton backButton = new JButton("GO BACK");
+        backButton.setActionCommand("GO BACK"); // Use the existing "GO BACK" command
+        transactionButtonList.add(backButton);
+
+        // Add buttons from the list to the panel
+        for (JButton btn : transactionButtonList) {
+            buttonPanel.add(btn);
+        }
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    public JComboBox<FoodItem> getFoodItemComboBox() {
+        return foodItemComboBox;
+    }
+
+    public JTextArea getTransactionCartArea() {
+        return transactionCartArea;
+    }
+
+    public JLabel getInitialPriceLabel() {
+        return initialPriceLabel;
+    }
+
+    public JLabel getPromoLabel() {
+        return promoLabel;
+    }
+
+    public JLabel getFinalPriceLabel() {
+        return finalPriceLabel;
+    }
+
+    public JTextField getRestaurantNameField() {
+        return restaurantNameField;
+    }
+
+    public class FoodItem {
+        String name;
+        double price;
+
+        public FoodItem(String name, double price) {
+            this.name = name;
+            this.price = price;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        // This is what the JComboBox will display
+        @Override
+        public String toString() {
+            return String.format("%s - P%.2f", name, price);
+        }
     }
 }
