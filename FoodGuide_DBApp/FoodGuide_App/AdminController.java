@@ -109,10 +109,44 @@ public class AdminController implements ActionListener {
                 ArrayList<String> input = view.getRegistrationInput();
                 String username = input.get(0);
                 String email = input.get(1);
-                // 2. TODO: Send this data to your Model (AdminModel)
-                //    (e.g., model.registerNewUser(username, email);)
-                System.out.println("Registering user: " + username + " with email: " + email);
-                JOptionPane.showMessageDialog(view, "User Registered!");
+                try {
+                    // Check for empty fields first
+                    if (username.isEmpty() || email.isEmpty()) {
+                        JOptionPane.showMessageDialog(view,
+                                "Username and Email cannot be empty.",
+                                "Input Error",
+                                JOptionPane.WARNING_MESSAGE);
+                        return; // Stop processing
+                    }
+
+                    boolean isSuccess = model.registerNewUser(username, email);
+
+                    if (isSuccess) {
+                        // 3. Show a success message
+                        JOptionPane.showMessageDialog(view,
+                                "User registered successfully!",
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
+
+                        // 4. Go back to the manage database menu
+                        view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
+
+                    } else {
+                        // 3. Show an error message (e.g., user already exists)
+                        JOptionPane.showMessageDialog(view,
+                                "Error: Could not register user.\nCheck console for details (e.g., duplicate entry).",
+                                "Registration Failed",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+
+                } catch (Exception ex) {
+                    // Catch any other unexpected errors
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(view,
+                            "An unexpected error occurred: " + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
 

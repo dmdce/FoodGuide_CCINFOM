@@ -9,7 +9,7 @@ import java.util.ArrayList;
  */
 public class AdminModel {
     private MenuController menuController;
-
+    private FoodDataBase db;
     /**
      * Constructs an AdminModel.
      *
@@ -17,6 +17,7 @@ public class AdminModel {
      */
     public AdminModel(MenuController menuController) {
         this.menuController = menuController;
+        this.db = new FoodDataBase();
     }
 
     /**
@@ -26,5 +27,11 @@ public class AdminModel {
      */
     public MenuController getMenuController() {
         return menuController;
+    }
+
+    public boolean registerNewUser(String username, String email) {
+        // The model delegates the hard work to the database class
+        // You could add business logic here (e.g., check if email is valid)
+        return db.registerUser(username, email);
     }
 }
