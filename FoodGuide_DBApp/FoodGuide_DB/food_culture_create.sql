@@ -11,6 +11,27 @@ CREATE TABLE
     `food_user_email` varchar(100) NOT NULL,
     PRIMARY KEY (`food_user_id`)
   );
+  
+CREATE TABLE
+  `food_address` (
+    `food_address_id` int unsigned NOT NULL AUTO_INCREMENT,
+    `street` varchar(100) NOT NULL,
+    `city` varchar(100) NOT NULL,
+    PRIMARY KEY (`food_address_id`)
+  );
+
+CREATE TABLE
+  `restaurant` (
+    `restaurant_id` int unsigned NOT NULL AUTO_INCREMENT,
+    `food_address_id` int unsigned NOT NULL,
+    `restaurant_name` varchar(100) NOT NULL,
+    `description` tinytext,
+    `num_of_visits` int NOT NULL DEFAULT 0 COMMENT 'counts transactions',
+    `total_rating` decimal(3, 2) NOT NULL DEFAULT 0.00 COMMENT 'average rating from food ratings',
+    PRIMARY KEY (`restaurant_id`),
+    KEY `restaurant_relation_1` (`food_address_id`),
+    CONSTRAINT `restaurant_relation_1` FOREIGN KEY (`food_address_id`) REFERENCES `food_address` (`food_address_id`)
+  );
 
 CREATE TABLE
   `food_transaction` (
@@ -29,14 +50,17 @@ CREATE TABLE
 CREATE TABLE
   `food_rating` (
     `food_rating_id` int unsigned NOT NULL AUTO_INCREMENT,
-    `food_transaction_id` int unsigned NOT NULL,
+    `food_transaction_id` int unsigned UNIQUE NOT NULL, -- Enforces one-to-one relationship
+    `restaurant_id` int unsigned NOT NULL,
     `suggestion` tinytext COMMENT 'feedback from user',
     `quality` tinyint NOT NULL COMMENT 'food taste, presentation, and originality',
     `authenticity` tinyint NOT NULL COMMENT 'how close the food is to its event and/or origin',
     `overall_rating` float NOT NULL COMMENT 'mean of quality and authenticity',
     PRIMARY KEY (`food_rating_id`),
     KEY `food_rating_relation_1` (`food_transaction_id`),
-    CONSTRAINT `food_rating_relation_1` FOREIGN KEY (`food_transaction_id`) REFERENCES `food_transaction` (`food_transaction_id`)
+    KEY `food_rating_relation_2` (`restaurant_id`),
+    CONSTRAINT `food_rating_relation_1` FOREIGN KEY (`food_transaction_id`) REFERENCES `food_transaction` (`food_transaction_id`),
+    CONSTRAINT `food_rating_relation_2` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurant` (`restaurant_id`)
   );
 
 CREATE TABLE
@@ -65,30 +89,6 @@ CREATE TABLE
     KEY `food_relation_2` (`origin_id`),
     CONSTRAINT `food_relation_1` FOREIGN KEY (`food_event_id`) REFERENCES `food_event` (`food_event_id`),
     CONSTRAINT `food_relation_2` FOREIGN KEY (`origin_id`) REFERENCES `origin` (`origin_id`)
-  );
-
-CREATE TABLE
-  `food_address` (
-    `food_address_id` int unsigned NOT NULL AUTO_INCREMENT,
-    `street` varchar(100) NOT NULL,
-    `city` varchar(100) NOT NULL,
-    PRIMARY KEY (`food_address_id`)
-  );
-
-CREATE TABLE
-  `restaurant` (
-    `restaurant_id` int unsigned NOT NULL AUTO_INCREMENT,
-    `food_address_id` int unsigned NOT NULL,
-    `restaurant_name` varchar(100) NOT NULL,
-    `description` tinytext,
-    `num_of_visits` int NOT NULL COMMENT 'counts transactions',
-    `total_rating` decimal(3, 2) NOT NULL COMMENT 'average rating from food ratings',
-    `food_rating_id` int unsigned NOT NULL,
-    PRIMARY KEY (`restaurant_id`),
-    KEY `restaurant_relation_1` (`food_address_id`),
-    KEY `restaurant_relation_2` (`food_rating_id`),
-    CONSTRAINT `restaurant_relation_1` FOREIGN KEY (`food_address_id`) REFERENCES `food_address` (`food_address_id`),
-    CONSTRAINT `restaurant_relation_2` FOREIGN KEY (`food_rating_id`) REFERENCES `food_rating` (`food_rating_id`)
   );
 
 CREATE TABLE

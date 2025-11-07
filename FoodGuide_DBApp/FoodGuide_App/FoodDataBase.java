@@ -6,7 +6,7 @@ import java.sql.SQLException;
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
     private static final String USER = "root";
-    private static final String PASS = "YOUR_OWN_PASSWORD";
+    private static final String PASS = "12345678";
 
     /**
      * Attempts to get a connection to the database.
@@ -53,7 +53,7 @@ public class FoodDataBase {
 
         } catch (SQLException | ClassNotFoundException e) {
             // Handle database errors (e.g., user already exists, DB is offline)
-            e.printStackTrace(); // Log the full error to the console
+            System.getLogger(MyJDBC.class.getName()).log(System.Logger.Level.ERROR, (String) null, e);
             return false;
         }
     }

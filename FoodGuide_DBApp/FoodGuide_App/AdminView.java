@@ -24,10 +24,11 @@ public class AdminView extends JFrame {
     private JPanel userRegPanel;
     private JPanel userCreationPanel;
     private JPanel transactionPanel;
+    private JPanel foodRatingPanel;
 
     private ArrayList<JButton> transactionButtonList = new ArrayList<>();
     private JComboBox<FoodItem> foodItemComboBox;
-    private JTextField restaurantNameField;
+    private JComboBox<String> restaurantComboBox;
     private JTextArea transactionCartArea;
     private JLabel initialPriceLabel;
     private JLabel promoLabel;
@@ -42,6 +43,12 @@ public class AdminView extends JFrame {
     private JButton backButton = new JButton("GO BACK");
     private JButton backGenerateReportsButton = new JButton("GO BACK");
     private JButton backUserRegButton = new JButton("GO BACK");
+
+    private ArrayList<JButton> ratingButtonList = new ArrayList<>();
+    private JComboBox<Integer> qualityRatingComboBox;
+    private JComboBox<Integer> authenticityRatingComboBox;
+    private JTextArea ratingCommentsArea;
+    private JLabel overallRatingLabel;
 
     /**
      * Constructs the AdminView, initializes all sub-panels,
@@ -60,6 +67,7 @@ public class AdminView extends JFrame {
         userRegPanel = createUserRegPanel();
         userCreationPanel = createUserCreationPanel();
         transactionPanel = createTransactionPanel();
+        foodRatingPanel = createFoodRatingPanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
@@ -67,6 +75,7 @@ public class AdminView extends JFrame {
         mainPanel.add(userRegPanel, "USER_REG");
         mainPanel.add(userCreationPanel, "USER_CREATE");
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
+        mainPanel.add(foodRatingPanel, "RATING_MENU");
 
         add(mainPanel);
 
@@ -313,6 +322,7 @@ public class AdminView extends JFrame {
         mainPanel.remove(userRegPanel);
         mainPanel.remove(userCreationPanel);
         mainPanel.remove(transactionPanel);
+        mainPanel.remove(foodRatingPanel);
 
         // Generate and add
         manageDatabasePanel = createManageDatabasePanel();
@@ -320,12 +330,14 @@ public class AdminView extends JFrame {
         userRegPanel = createUserRegPanel();
         userCreationPanel = createUserCreationPanel();
         transactionPanel = createTransactionPanel();
+        foodRatingPanel = createFoodRatingPanel();
 
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
         mainPanel.add(userRegPanel, "USER_REG");
         mainPanel.add(userCreationPanel, "USER_CREATE");
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
+        mainPanel.add(foodRatingPanel, "RATING_MENU");
 
         // Revalidate and repaint
         mainPanel.revalidate();
@@ -366,6 +378,11 @@ public class AdminView extends JFrame {
         }
 
         for (JButton jButton : transactionButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
+
+        for (JButton jButton : ratingButtonList) {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
@@ -423,18 +440,20 @@ public class AdminView extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Restaurant Name:"), gbc);
+        formPanel.add(new JLabel("Select Restaurant:"), gbc); // Text is changed
 
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
-        restaurantNameField = new JTextField(20);
-        formPanel.add(restaurantNameField, gbc);
+
+        String[] restaurants = {"[Select One]", "Jollibee", "McDonald's", "Chowking", "KFC"};
+        restaurantComboBox = new JComboBox<>(restaurants);
+        formPanel.add(restaurantComboBox, gbc);
 
         // Row 1: Food Items JComboBox
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.EAST;
+        gbc.anchor = GridBagConstraints.WEST;
         formPanel.add(new JLabel("Select Food Item:"), gbc);
 
         gbc.gridx = 1;
@@ -512,9 +531,9 @@ public class AdminView extends JFrame {
         calculateButton.setActionCommand("CALCULATE_TOTAL");
         transactionButtonList.add(calculateButton);
 
-        JButton submitButton = new JButton("Submit Transaction");
-        submitButton.setActionCommand("SUBMIT_TRANSACTION");
-        transactionButtonList.add(submitButton);
+        JButton proceedButton = new JButton("Proceed to Rating");
+        proceedButton.setActionCommand("PROCEED_TO_RATING");
+        transactionButtonList.add(proceedButton);
 
         JButton backButton = new JButton("GO BACK");
         backButton.setActionCommand("GO BACK"); // Use the existing "GO BACK" command
@@ -550,8 +569,24 @@ public class AdminView extends JFrame {
         return finalPriceLabel;
     }
 
-    public JTextField getRestaurantNameField() {
-        return restaurantNameField;
+    public JComboBox<Integer> getQualityRatingComboBox() {
+        return qualityRatingComboBox;
+    }
+
+    public JComboBox<Integer> getAuthenticityRatingComboBox() {
+        return authenticityRatingComboBox;
+    }
+
+    public JTextArea getRatingCommentsArea() {
+        return ratingCommentsArea;
+    }
+
+    public JLabel getOverallRatingLabel() {
+        return overallRatingLabel;
+    }
+
+    public JComboBox<String> getRestaurantComboBox() {
+        return restaurantComboBox;
     }
 
     public class FoodItem {
@@ -572,5 +607,116 @@ public class AdminView extends JFrame {
         public String toString() {
             return String.format("%s - P%.2f", name, price);
         }
+    }
+
+    /**
+     * Creates the panel for rating a food transaction.
+     * @return JPanel for the RATING_MENU card
+     */
+    private JPanel createFoodRatingPanel() {
+        // MAIN PANEL
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // TITLE
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel titleLabel = new JLabel("Rate Your Transaction");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(titleLabel);
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        // --- RATING FORM PANEL (Center) ---
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // --- Helper array for 1-5 scores ---
+        Integer[] scores = {1, 2, 3, 4, 5};
+
+        // Row 0: Quality Rating
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Food Quality (1-5):"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        qualityRatingComboBox = new JComboBox<>(scores);
+        formPanel.add(qualityRatingComboBox, gbc);
+
+        // Row 1: Authenticity Rating
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Authenticity (1-5):"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        authenticityRatingComboBox = new JComboBox<>(scores);
+        formPanel.add(authenticityRatingComboBox, gbc);
+
+        // Row 2: Calculate Button
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        JButton calcButton = new JButton("Calculate Overall");
+        calcButton.setActionCommand("CALCULATE_RATING");
+        // We'll add this to the button list later
+        formPanel.add(calcButton, gbc);
+
+        // Row 3: Overall Rating Label
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Overall Rating:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.WEST;
+        overallRatingLabel = new JLabel("N/A");
+        overallRatingLabel.setFont(new Font("Verdana", Font.BOLD, 14));
+        formPanel.add(overallRatingLabel, gbc);
+
+        // Row 4: Comments
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.NORTHEAST;
+        formPanel.add(new JLabel("Comments:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2; // Span 2 columns
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0; // Allow text area to grow
+        ratingCommentsArea = new JTextArea(5, 20);
+        JScrollPane scrollPane = new JScrollPane(ratingCommentsArea);
+        formPanel.add(scrollPane, gbc);
+
+        panel.add(formPanel, BorderLayout.CENTER);
+
+        // --- BUTTONS (South) ---
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#FCD303"));
+
+        ratingButtonList.clear(); // Clear list for refreshPanels
+        ratingButtonList.add(calcButton); // Add the button from before
+
+        JButton submitButton = new JButton("Submit Final Rating");
+        submitButton.setActionCommand("SUBMIT_RATING");
+        ratingButtonList.add(submitButton);
+
+        JButton backButton = new JButton("GO BACK");
+        backButton.setActionCommand("GO_BACK_TO_TRANSACTION"); // New unique command
+        ratingButtonList.add(backButton);
+
+        for (JButton btn : ratingButtonList) {
+            buttonPanel.add(btn);
+        }
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
     }
 }
