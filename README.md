@@ -1,7 +1,9 @@
 # FoodGuide_CCINFOM
 
 ### PS:
-For Java, [Connector/J](https://dev.mysql.com/downloads/connector/j/) is required (store the folder in a local directory)<br>
+1. FoodGuide_DBApp/FoodGuide_App for Java source code<br>
+FoodGuide_DBApp/FoodGuide_DB for MySQL Database<br>
+2. For Java, [Connector/J](https://dev.mysql.com/downloads/connector/j/) is required (store the folder in a local directory)<br>
 
 ### legend:
 primary table<br>
