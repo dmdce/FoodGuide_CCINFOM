@@ -12,10 +12,6 @@ import javax.swing.*;
 public class AdminController implements ActionListener {
     private AdminModel model;
     private AdminView view;
-    private ArrayList<AdminView.FoodItem> cart;
-
-    private String currentTransactionRestaurant;
-    private double currentTransactionFinalPrice;
 
     /**
      * Constructs an AdminController with the specified model and view.
@@ -26,7 +22,6 @@ public class AdminController implements ActionListener {
     public AdminController(AdminModel m, AdminView v) {
         this.model = m;
         this.view = v;
-        this.cart = new ArrayList<>();
         view.setActionListener(this);
     }
 
@@ -43,103 +38,6 @@ public class AdminController implements ActionListener {
             case "Create User":
                 view.getCardLayout().show(view.getMainPanel(), "USER_CREATE");
                 break;
-            case "Create Transaction":
-                cart.clear();
-                view.getTransactionCartArea().setText("");
-                view.getRestaurantComboBox().setSelectedIndex(0);
-                view.getInitialPriceLabel().setText("P0.00");
-                view.getPromoLabel().setText("-P0.00");
-                view.getFinalPriceLabel().setText("P0.00");
-                view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
-                break;
-            case "ADD_ITEM":
-                AdminView.FoodItem selectedItem = (AdminView.FoodItem) view.getFoodItemComboBox().getSelectedItem();
-                if (selectedItem == null) return;
-                cart.add(selectedItem);
-                updateCartView();
-                break;
-
-            case "CALCULATE_TOTAL":
-                double initialPrice = 0.0;
-                for (AdminView.FoodItem item : cart) {
-                    initialPrice += item.getPrice();
-                }
-
-                double promoAmount = initialPrice * 0.10; // 10% promo
-                double finalPrice = initialPrice - promoAmount;
-
-                // Update the labels in the view
-                view.getInitialPriceLabel().setText(String.format("P%.2f", initialPrice));
-                view.getPromoLabel().setText(String.format("-P%.2f", promoAmount));
-                view.getFinalPriceLabel().setText(String.format("P%.2f", finalPrice));
-                break;
-
-            case "PROCEED_TO_RATING":
-                // 1. Get and store transaction data
-                currentTransactionRestaurant = (String) view.getRestaurantComboBox().getSelectedItem();
-                String finalPriceText = view.getFinalPriceLabel().getText().replace("P", "");
-
-                // 1A. Validate
-                if (currentTransactionRestaurant == null || currentTransactionRestaurant.equals("[Select One]")) {
-                    JOptionPane.showMessageDialog(view, "Please select a valid restaurant.", "Input Error", JOptionPane.WARNING_MESSAGE);
-                    return; // Stop
-                }
-                if (finalPriceText.equals("0.00") || cart.isEmpty()) {
-                    JOptionPane.showMessageDialog(view, "Please add items and calculate the total.", "Input Error", JOptionPane.WARNING_MESSAGE);
-                    return; // Stop
-                }
-
-                currentTransactionFinalPrice = Double.parseDouble(finalPriceText);
-
-                // 2. Reset rating form
-                view.getQualityRatingComboBox().setSelectedIndex(0);
-                view.getAuthenticityRatingComboBox().setSelectedIndex(0);
-                view.getRatingCommentsArea().setText("");
-                view.getOverallRatingLabel().setText("N/A");
-
-                // 3. Switch panels
-                view.getCardLayout().show(view.getMainPanel(), "RATING_MENU");
-                break;
-
-            // --- ADD THESE NEW CASES ---
-            case "CALCULATE_RATING":
-                int quality = (int) view.getQualityRatingComboBox().getSelectedItem();
-                int authenticity = (int) view.getAuthenticityRatingComboBox().getSelectedItem();
-                double average = (quality + authenticity) / 2.0;
-                view.getOverallRatingLabel().setText(String.format("%.1f / 5.0", average));
-                break;
-
-            case "SUBMIT_RATING":
-                // 1. Get all data from the form
-                int finalQuality = (int) view.getQualityRatingComboBox().getSelectedItem();
-                int finalAuthenticity = (int) view.getAuthenticityRatingComboBox().getSelectedItem();
-                String comments = view.getRatingCommentsArea().getText();
-                double finalOverall = (finalQuality + finalAuthenticity) / 2.0;
-
-                // 2. (Backend logic placeholder) Print everything
-                System.out.println("--- FINAL SUBMISSION (Transaction + Rating) ---");
-                System.out.println("Restaurant: " + currentTransactionRestaurant);
-                System.out.println("Final Price: P" + currentTransactionFinalPrice);
-                System.out.println("Cart Items:");
-                for(AdminView.FoodItem item : cart) {
-                    System.out.println("  " + item.toString());
-                }
-                System.out.println("---------------------------------");
-                System.out.println("Quality Rating: " + finalQuality);
-                System.out.println("Authenticity Rating: " + finalAuthenticity);
-                System.out.println("Overall Rating: " + finalOverall);
-                System.out.println("Comments: " + comments);
-                System.out.println("---------------------------------");
-
-                // 3. Show success and go back to main menu
-                JOptionPane.showMessageDialog(view, "Transaction and Rating Submitted! Thank you!");
-                view.getCardLayout().show(view.getMainPanel(), "MAIN_MENU");
-                break;
-
-            case "GO_BACK_TO_TRANSACTION":
-                view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
-                break;
-
             case "MANAGE DATABASE":
                 view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
                 break;
@@ -243,17 +141,5 @@ public class AdminController implements ActionListener {
     private void updateView() {
         view.refreshPanels();
         view.setActionListener(this);
-    }
-    private void updateCartView() {
-        JTextArea cartArea = view.getTransactionCartArea();
-        cartArea.setText(""); // Clear it first
-
-        if (cart.isEmpty()) {
-            cartArea.setText("Cart is empty.");
-        } else {
-            for (AdminView.FoodItem item : cart) {
-                cartArea.append(item.toString() + "\n");
-            }
-        }
     }
 }

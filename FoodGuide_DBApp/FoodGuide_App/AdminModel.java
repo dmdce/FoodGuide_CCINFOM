@@ -29,9 +29,39 @@ public class AdminModel {
         return menuController;
     }
 
+
+    /**
+     * Passes the registration request to the database class.
+     * @return true if successful, false otherwise.
+     */
     public boolean registerNewUser(String username, String email) {
-        // The model delegates the hard work to the database class
-        // You could add business logic here (e.g., check if email is valid)
         return db.registerUser(username, email);
+    }
+
+    /**
+     * Passes the login request to the database class.
+     * @param username The username to check.
+     * @param email    The email to check.
+     * @return The user's ID if successful, or null if login fails.
+     */
+    public Integer loginCustomer(String username, String email) {
+        return db.loginUser(username, email);
+    }
+
+    /**
+     * Asks the database for a list of all restaurant names.
+     * @return An ArrayList of restaurant names.
+     */
+    public ArrayList<String> getRestaurantNames() {
+        return db.getAllRestaurantNames();
+    }
+
+    /**
+     * Asks the database for the menu of a specific restaurant.
+     * @param restaurantName The name of the restaurant.
+     * @return An ArrayList of FoodItem objects.
+     */
+    public ArrayList<FoodItem> getFoodMenu(String restaurantName) {
+        return db.getFoodMenuForRestaurant(restaurantName);
     }
 }

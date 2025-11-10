@@ -2,6 +2,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 
 /**
  * Class: CustomerController
@@ -14,6 +16,10 @@ public class CustomerController implements ActionListener {
     private CustomerModel model;
     private CustomerView view;
 
+    private ArrayList<FoodItem> cart; // Not CustomerView.FoodItem
+    private String currentTransactionRestaurant;
+    private double currentTransactionFinalPrice;
+
     /**
      * Constructs a CustomerController with the given model and view.
      * Registers itself as the ActionListener for view events.
@@ -24,6 +30,7 @@ public class CustomerController implements ActionListener {
     public CustomerController(CustomerModel m, CustomerView v) {
         this.model = m;
         this.view = v;
+        this.cart = new ArrayList<>(); // Initialize the cart
 
         view.setActionListener(this);
         view.setVisible(true);
@@ -38,18 +45,194 @@ public class CustomerController implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
             // SIGN IN
-            case "SIGN IN":
+            case "SIGN IN": { // Added braces to fix scope issue from before
+                // 1. Get input from view
                 ArrayList<String> signInInput = view.getSignInInput();
-                System.out.printf("name: %s%n", signInInput.get(0));
-                System.out.printf("email: %s%n", signInInput.get(1));
-                view.getCardLayout().show(view.getMainPanel(), "MAIN_MENU");
+                String username = signInInput.get(0);
+                String email = signInInput.get(1);
+
+                // 2. Validate input
+                if (username.isEmpty() || email.isEmpty()) {
+                    JOptionPane.showMessageDialog(view,
+                            "Username and Email cannot be empty.",
+                            "Login Error",
+                            JOptionPane.WARNING_MESSAGE);
+                    return; // Stop
+                }
+
+                // 3. Ask model to log in (via AdminModel)
+                Integer userId = model.getAm().loginCustomer(username, email);
+
+                // 4. Check result
+                if (userId != null) {
+                    // --- SUCCESS ---
+                    // a. Store user ID in model
+                    model.setLoggedInUser(userId);
+                    // b. Update the view's label
+                    view.setUserIdLabel(userId.toString());
+                    // c. Switch panels
+                    view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                } else {
+                    // --- FAILURE ---
+                    JOptionPane.showMessageDialog(view,
+                            "Invalid username or email. Please try again.",
+                            "Login Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                }
                 break;
+            } // End of SIGN IN case
+
+            case "LOG_OUT":
+                // 1. Clear user from model
+                model.setLoggedInUser(null);
+                // 2. Go back to sign in screen
+                view.getCardLayout().show(view.getMainPanel(), "START_VIEW");
+                break;
+
+            // --- FIX 1: ADDED ALL MISSING TRANSACTION/RATING LOGIC ---
+
+            case "RESTAURANT_SELECTED":
+                String selectedRestaurant = (String) view.getRestaurantComboBox().getSelectedItem();
+
+                // Check if the selection is valid
+                if (selectedRestaurant == null || selectedRestaurant.equals("[Select One]")) {
+                    // Clear the food items combo box
+                    view.updateFoodItemComboBox(new ArrayList<>());
+                } else {
+                    // Fetch the menu for the selected restaurant
+                    ArrayList<FoodItem> menuItems = model.getAm().getFoodMenu(selectedRestaurant);
+                    // Update the view
+                    view.updateFoodItemComboBox(menuItems);
+                }
+                break;
+
+            case "CREATE_TRANSACTION":
+                // 1. Clear old transaction data
+                cart.clear();
+                view.getTransactionCartArea().setText("");
+                view.getInitialPriceLabel().setText("P0.00");
+                view.getPromoLabel().setText("-P0.00");
+                view.getFinalPriceLabel().setText("P0.00");
+
+                // 2. Fetch and populate restaurant list
+                ArrayList<String> restaurantList = model.getAm().getRestaurantNames();
+                view.updateRestaurantComboBox(restaurantList);
+
+                // 3. Clear food item list
+                view.updateFoodItemComboBox(new ArrayList<>());
+
+                // 4. Reset combo box selection *after* populating
+                view.getRestaurantComboBox().setSelectedIndex(0);
+
+                // 5. Show the panel
+                view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
+                break;
+
+            case "ADD_ITEM":
+                FoodItem selectedItem = (FoodItem) view.getFoodItemComboBox().getSelectedItem(); // FIX 2: Changed to FoodItem
+                if (selectedItem == null) return;
+                cart.add(selectedItem);
+                updateCartView();
+                break;
+
+            case "CALCULATE_TOTAL":
+                double initialPrice = 0.0;
+                for (FoodItem item : cart) { // FIX 2: Changed to FoodItem
+                    initialPrice += item.getPrice();
+                }
+
+                double promoAmount = initialPrice * 0.10; // 10% promo
+                double finalPrice = initialPrice - promoAmount;
+
+                // Update the labels in the view
+                view.getInitialPriceLabel().setText(String.format("P%.2f", initialPrice));
+                view.getPromoLabel().setText(String.format("-P%.2f", promoAmount));
+                view.getFinalPriceLabel().setText(String.format("P%.2f", finalPrice));
+                break;
+
+            case "PROCEED_TO_RATING":
+                // 1. Get and store transaction data
+                currentTransactionRestaurant = (String) view.getRestaurantComboBox().getSelectedItem();
+                String finalPriceText = view.getFinalPriceLabel().getText().replace("P", "");
+
+                // 1A. Validate
+                if (currentTransactionRestaurant == null || currentTransactionRestaurant.equals("[Select One]")) {
+                    JOptionPane.showMessageDialog(view, "Please select a valid restaurant.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                    return; // Stop
+                }
+                if (finalPriceText.equals("0.00") || cart.isEmpty()) {
+                    JOptionPane.showMessageDialog(view, "Please add items and calculate the total.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                    return; // Stop
+                }
+
+                currentTransactionFinalPrice = Double.parseDouble(finalPriceText);
+
+                // 2. Reset rating form
+                view.getQualityRatingComboBox().setSelectedIndex(0);
+                view.getAuthenticityRatingComboBox().setSelectedIndex(0);
+                view.getRatingCommentsArea().setText("");
+                view.getOverallRatingLabel().setText("N/A");
+
+                // 3. Switch panels
+                view.getCardLayout().show(view.getMainPanel(), "RATING_MENU");
+                break;
+
+            case "CALCULATE_RATING":
+                int quality = (int) view.getQualityRatingComboBox().getSelectedItem();
+                int authenticity = (int) view.getAuthenticityRatingComboBox().getSelectedItem();
+                double average = (quality + authenticity) / 2.0;
+                view.getOverallRatingLabel().setText(String.format("%.1f / 5.0", average));
+                break;
+
+            case "SUBMIT_RATING": { // Added braces
+                // 1. Get all data from the form
+                int finalQuality = (int) view.getQualityRatingComboBox().getSelectedItem();
+                int finalAuthenticity = (int) view.getAuthenticityRatingComboBox().getSelectedItem();
+                String comments = view.getRatingCommentsArea().getText();
+                double finalOverall = (finalQuality + finalAuthenticity) / 2.0;
+                Integer userId = model.getLoggedInUserId(); // Corrected variable name
+
+                // 2. (Backend logic placeholder) Print everything
+                System.out.println("--- FINAL SUBMISSION (Transaction + Rating) ---");
+                System.out.println("User ID: " + (userId != null ? userId : "N/A")); // Print user ID
+                System.out.println("Restaurant: " + currentTransactionRestaurant);
+                System.out.println("Final Price: P" + currentTransactionFinalPrice);
+                System.out.println("Cart Items:");
+                for(FoodItem item : cart) { // FIX 2: Changed to FoodItem
+                    System.out.println("  " + item.toString());
+                }
+                System.out.println("---------------------------------");
+                System.out.println("Quality Rating: " + finalQuality);
+                System.out.println("Authenticity Rating: " + finalAuthenticity);
+                System.out.println("Overall Rating: " + finalOverall);
+                System.out.println("Comments: " + comments);
+                System.out.println("---------------------------------");
+
+                // 3. Show success and go back to main menu
+                JOptionPane.showMessageDialog(view, "Transaction and Rating Submitted! Thank you!");
+                view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU"); // Go back to customer menu
+                break;
+            } // End of SUBMIT_RATING case
+
+            case "GO_BACK_TO_TRANSACTION":
+                view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
+                break;
+
+            case "GO_BACK_FROM_TRANSACTION":
+                view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                break;
+
+            // --- END OF ADDED LOGIC ---
 
             // BASIC NAVIGATION BUTTONS
             case "GO BACK":
-                view.getCardLayout().show(view.getMainPanel(), "START_VIEW");
+                // This button is on the sign-in panel, it should go back to the main menu
+                view.dispose(); // Close the customer window
+                model.getAm().getMenuController().showMenuView(); // Show the main menu
                 break;
+
             case "GO BACK TO MAIN":
+                // This button is also on the sign-in panel
                 view.dispose();
                 model.getAm().getMenuController().showMenuView();
                 break;
@@ -64,4 +247,22 @@ public class CustomerController implements ActionListener {
         view.refreshPanels();
         view.setActionListener(this);
     }
+
+    // --- FIX 1: ADDED MISSING HELPER METHOD ---
+    /**
+     * Helper method to update the cart display.
+     */
+    private void updateCartView() {
+        JTextArea cartArea = view.getTransactionCartArea();
+        cartArea.setText(""); // Clear it first
+
+        if (cart.isEmpty()) {
+            cartArea.setText("Cart is empty.");
+        } else {
+            for (FoodItem item : cart) { // FIX 2: Changed to FoodItem
+                cartArea.append(item.toString() + "\n");
+            }
+        }
+    }
+    // --- END OF FIX 1 ---
 }

@@ -10,6 +10,7 @@ import java.awt.*;
 public class CustomerModel {
     private AdminModel am;
     private ArrayList<String> processList;
+    private Integer loggedInUserId;
 
     /**
      * Constructs a CustomerModel with a reference to the AdminModel.
@@ -19,6 +20,7 @@ public class CustomerModel {
     public CustomerModel(AdminModel am) {
         this.am = am;
         this.processList = new ArrayList<>();
+        this.loggedInUserId = null;
     }
 
     /**
@@ -28,5 +30,13 @@ public class CustomerModel {
      */
     public AdminModel getAm() {
         return am;
+    }
+
+    public void setLoggedInUser(Integer userId) {
+        this.loggedInUserId = userId;
+    }
+
+    public Integer getLoggedInUserId() {
+        return this.loggedInUserId;
     }
 }
