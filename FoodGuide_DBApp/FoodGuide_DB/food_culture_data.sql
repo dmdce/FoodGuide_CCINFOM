@@ -106,6 +106,39 @@ INSERT INTO `food_culture`.`restaurant`(`food_address_id`,`restaurant_name`,`des
 (1,'Aling Banang Caloocan','Serves Filipino dishes in large quantities for family gatherings.',(SELECT IFNULL(SUM(T.food_transaction_id), 0) FROM food_culture.food_transaction T JOIN food_culture.food_rating R ON T.food_transaction_id = R.food_transaction_id WHERE R.restaurant_id = 34),(SELECT IFNULL(AVG(R.overall_rating), 0) FROM food_culture.food_rating R WHERE R.restaurant_id = 34)),
 (3,'Tíabuela Cocina Española','Serves authentic Spanish dishes with Spanish wines and cocktails.',(SELECT IFNULL(SUM(T.food_transaction_id), 0) FROM food_culture.food_transaction T JOIN food_culture.food_rating R ON T.food_transaction_id = R.food_transaction_id WHERE R.restaurant_id = 35),(SELECT IFNULL(AVG(R.overall_rating), 0) FROM food_culture.food_rating R WHERE R.restaurant_id = 35));
 
+
+/*
+-----------------------------------
+	food TABLE dummy values
+-----------------------------------
+*/
+ALTER TABLE `food`
+auto_increment = 1;
+
+INSERT INTO `food` (`food_name`, `food_event_id`, `origin_id`)
+VALUES
+('Itlog with Egg',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Daily Fare'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+    ),
+('Shrek',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Redo of Healer'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Cebuano')
+    ),
+('Prinitong daga',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Katyusha'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Kapampangan')
+    ),
+('Gordon Ramsay',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Boku no Pico'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Ilonggo')
+    ),
+('Minimum Search Tree',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Ishuzoku Reviewer'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Filipino-Chinese')
+    );
+
+
 /*
 -----------------------------------
 	SELECT QUERIES FOR TESTING
