@@ -138,6 +138,46 @@ VALUES
     (SELECT `origin_id` FROM `origin` WHERE `name` = 'Filipino-Chinese')
     );
 
+/*
+-----------------------------------
+	food_menu TABLE dummy values
+-----------------------------------
+*/
+ALTER TABLE `food_menu`
+auto_increment = 1;
+
+INSERT INTO `food_menu` (`food_id`, `food_alias`, `price`, `restaurant_id`)
+VALUES
+(
+	(SELECT `food_id` FROM `food` WHERE `food_name` = 'Itlog with Egg'),
+	'Boiled egg in boiled egg sauce',
+    10,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Winikko Cafe And Catering')
+),
+(
+	(SELECT `food_id` FROM `food` WHERE `food_name` = 'Minimum Search Tree'),
+	'Binary Search Tree',
+    20,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Cafe Poblacion - A Mabini')
+),
+(
+	(SELECT `food_id` FROM `food` WHERE `food_name` = 'Shrek'),
+	'Rockstar',
+    30,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Mama Lou''s Italian Kitchen')
+),
+(
+	(SELECT `food_id` FROM `food` WHERE `food_name` = 'Prinitong daga'),
+	'Micah Bell',
+    40,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Bojangles Grill & Gym')
+),
+(
+	(SELECT `food_id` FROM `food` WHERE `food_name` = 'Gordon Ramsay'),
+	'Where is da lamb sauce',
+    50,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Friends and Neighbors Restaurant')
+);
 
 /*
 -----------------------------------
