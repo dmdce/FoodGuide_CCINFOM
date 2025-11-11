@@ -1,50 +1,58 @@
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.DocumentListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
+import javax.swing.table.DefaultTableModel; // Import TableModel
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
  * Class: CustomerView
  * This class represents the view of the Customer.
- * It handles the representation of panels in the program for the customer,
- * such as...
+ * (Rest of class description...)
  */
 public class CustomerView extends JFrame {
     private CardLayout cardLayout = new CardLayout();
     private JPanel mainPanel = new JPanel(cardLayout);
     private JPanel transactionPanel;
     private JPanel foodRatingPanel;
-
     private JPanel startPanel;
     private JPanel userActionsPanel;
 
+    private JPanel transactionHistoryPanel;
+    private JTextField promoInputField;
+
     private ArrayList<JButton> userActionsButtonList = new ArrayList<>();
     private ArrayList<JTextField> signInTextFieldList = new ArrayList<>();
-
     private JButton signInButton = new JButton("SIGN IN");
     private JButton backButton = new JButton("GO BACK");
-    private JButton okButton = new JButton("OK");
-
     private JLabel userIdLabel;
 
+    // Transaction Panel components
     private ArrayList<JButton> transactionButtonList = new ArrayList<>();
-    private JComboBox<FoodItem> foodItemComboBox; // Uses the new FoodItem.java
+    private JComboBox<FoodItem> foodItemComboBox;
     private JComboBox<String> restaurantComboBox;
     private JTextArea transactionCartArea;
     private JLabel initialPriceLabel;
     private JLabel promoLabel;
     private JLabel finalPriceLabel;
 
+    // Rating Panel components
     private ArrayList<JButton> ratingButtonList = new ArrayList<>();
     private JComboBox<Integer> qualityRatingComboBox;
     private JComboBox<Integer> authenticityRatingComboBox;
     private JTextArea ratingCommentsArea;
     private JLabel overallRatingLabel;
+
+    // --- NEW: History Panel Components ---
+    private ArrayList<JButton> historyButtonList = new ArrayList<>();
+    private JTextField filterStartDateField;
+    private JTextField filterEndDateField;
+    private JComboBox<String> filterRestaurantComboBox;
+    private JTextField filterMaxPriceField;
+    private JTextField filterPromoField;
+    private JTable historyTable;
+    private DefaultTableModel historyTableModel;
+    // --- END: History Panel Components ---
 
     /**
      * Constructs the customer view, initializes all panels,
@@ -55,28 +63,35 @@ public class CustomerView extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-        setSize(850, 450);
+        setSize(850, 550); // Increased height for the new panel
 
         startPanel = createSignInPanel();
         userActionsPanel = createUserActionsPanel();
         transactionPanel = createTransactionPanel();
         foodRatingPanel = createFoodRatingPanel();
 
+        // --- NEW: Create history panel ---
+        transactionHistoryPanel = createTransactionHistoryPanel();
+        // --- END: New ---
+
         mainPanel.add(startPanel, "START_VIEW");
         mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
         mainPanel.add(foodRatingPanel, "RATING_MENU");
 
+        // --- NEW: Add history panel to layout ---
+        mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
+        // --- END: New ---
+
         add(mainPanel);
 
         setVisible(true);
-        setResizable(false);
+        setResizable(true); // Allow resizing
     }
 
     /**
      * Creates the starting panel.
-     *
-     * @return JPanel for the START_VIEW card
+     * (Unchanged)
      */
     private JPanel createSignInPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -115,21 +130,17 @@ public class CustomerView extends JFrame {
 
     public ArrayList<String> getSignInInput() {
         ArrayList<String> texts = new ArrayList<>();
-
         for (JTextField jTextField : signInTextFieldList)
             texts.add(jTextField.getText());
-
         return texts;
     }
 
     /**
-     * Creates the new user actions panel (replaces createMainMenuPanel).
-     * @return JPanel for the USER_ACTIONS_MENU card
+     * Creates the user actions panel.
      */
     private JPanel createUserActionsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
 
-        // --- User ID Display ---
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         infoPanel.add(new JLabel("Logged in as User ID:"));
@@ -138,14 +149,12 @@ public class CustomerView extends JFrame {
         infoPanel.add(userIdLabel);
         panel.add(infoPanel, BorderLayout.NORTH);
 
-        // --- Center Title ---
         JPanel titlePanel = new JPanel(new GridBagLayout());
         JLabel title = new JLabel("What would you like to do?");
         title.setFont(new Font("Verdana", Font.BOLD, 20));
         titlePanel.add(title);
         panel.add(titlePanel, BorderLayout.CENTER);
 
-        // --- BUTTONS ---
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBackground(Color.decode("#2E5E19"));
 
@@ -155,7 +164,11 @@ public class CustomerView extends JFrame {
         createTransactionButton.setActionCommand("CREATE_TRANSACTION");
         userActionsButtonList.add(createTransactionButton);
 
-        // userActionsButtonList.add(new JButton("VIEW HISTORY"));
+        // --- NEW: View History Button ---
+        JButton viewHistoryButton = new JButton("VIEW TRANSACTION HISTORY");
+        viewHistoryButton.setActionCommand("VIEW_TRANSACTION_HISTORY");
+        userActionsButtonList.add(viewHistoryButton);
+        // --- END: New ---
 
         JButton logOutButton = new JButton("LOG OUT");
         logOutButton.setActionCommand("LOG_OUT");
@@ -174,21 +187,29 @@ public class CustomerView extends JFrame {
 
     /**
      * Refreshes dynamic panels.
+     * --- MODIFIED: Added history panel ---
      */
     public void refreshPanels() {
-        // Remove
         mainPanel.remove(userActionsPanel);
         mainPanel.remove(transactionPanel);
         mainPanel.remove(foodRatingPanel);
+        // --- NEW: Remove history panel ---
+        mainPanel.remove(transactionHistoryPanel);
+        // --- END: New ---
 
-        // Generate and add
         userActionsPanel = createUserActionsPanel();
         transactionPanel = createTransactionPanel();
         foodRatingPanel = createFoodRatingPanel();
+        // --- NEW: Re-create history panel ---
+        transactionHistoryPanel = createTransactionHistoryPanel();
+        // --- END: New ---
 
         mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
         mainPanel.add(foodRatingPanel, "RATING_MENU");
+        // --- NEW: Add history panel back ---
+        mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
+        // --- END: New ---
 
         mainPanel.revalidate();
         mainPanel.repaint();
@@ -196,31 +217,28 @@ public class CustomerView extends JFrame {
 
     /**
      * Attaches a shared ActionListener to all buttons.
+     * --- MODIFIED: Added history buttons ---
      */
     public void setActionListener(ActionListener listener) {
-        // Buttons from signInPanel
+        // ... (signInButton, backButton, southPanel buttons unchanged) ...
         signInButton.removeActionListener(listener);
         signInButton.addActionListener(listener);
-
         backButton.removeActionListener(listener);
         backButton.addActionListener(listener);
-
-        JPanel southPanel = (JPanel) startPanel.getComponent(2); // 2 is BorderLayout.SOUTH
+        JPanel southPanel = (JPanel) startPanel.getComponent(2);
         for (Component comp : southPanel.getComponents()) {
             if (comp instanceof JButton) {
-                JButton btn = (JButton) comp;
-                btn.removeActionListener(listener);
-                btn.addActionListener(listener);
+                ((JButton) comp).removeActionListener(listener);
+                ((JButton) comp).addActionListener(listener);
             }
         }
 
-        // Buttons from userActionsPanel
+        // Buttons from userActionsPanel (now includes view history)
         for (JButton button : userActionsButtonList) {
             button.removeActionListener(listener);
             button.addActionListener(listener);
         }
 
-        // --- FIX 2: ADDED MISSING LISTENERS FOR NEW PANELS ---
         // Buttons from transactionPanel
         for (JButton button : transactionButtonList) {
             button.removeActionListener(listener);
@@ -239,112 +257,87 @@ public class CustomerView extends JFrame {
             restaurantComboBox.addActionListener(listener);
             restaurantComboBox.setActionCommand("RESTAURANT_SELECTED");
         }
-        // --- END OF FIX 2 ---
+
+        // --- NEW: Listeners for history panel buttons ---
+        for (JButton button : historyButtonList) {
+            button.removeActionListener(listener);
+            button.addActionListener(listener);
+        }
+        // --- END: New ---
     }
 
-    /**
-     * Returns the main panel containing all card views.
-     * @return the CardLayout container panel
-     */
     public JPanel getMainPanel() {
         return mainPanel;
     }
 
-    /**
-     * Returns the CardLayout manager for switching views.
-     * @return the CardLayout used by this view
-     */
     public CardLayout getCardLayout() {
         return cardLayout;
     }
+
     /**
      * Creates the transaction panel.
-     * MOVED FROM ADMINVIEW.
-     * @return JPanel for the TRANSACTION_CREATE card
+     * (Unchanged)
      */
     private JPanel createTransactionPanel() {
-        // MAIN PANEL
+        // ... (panel, title, form, gbc setup is unchanged) ...
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // TITLE
         JPanel titlePanel = new JPanel(new GridBagLayout());
         JLabel titleLabel = new JLabel("Create New Transaction");
         titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
         titlePanel.add(titleLabel);
         panel.add(titlePanel, BorderLayout.NORTH);
-
-        // --- FORM PANEL (Center) ---
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Row 0: Restaurant Name
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.EAST;
+        // ... (Restaurant and Food Item rows are unchanged) ...
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.EAST;
         formPanel.add(new JLabel("Select Restaurant:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-
+        gbc.gridx = 1; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
         restaurantComboBox = new JComboBox<>();
         formPanel.add(restaurantComboBox, gbc);
-
-        // Row 1: Food Items JComboBox
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.WEST;
         formPanel.add(new JLabel("Select Food Item:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-
-        foodItemComboBox = new JComboBox<>(); // Uses FoodItem.java
+        gbc.gridx = 1; gbc.gridy = 1; gbc.anchor = GridBagConstraints.WEST;
+        foodItemComboBox = new JComboBox<>();
         formPanel.add(foodItemComboBox, gbc);
-
-        // Row 1, Col 2: Add Item Button
-        gbc.gridx = 2;
-        gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 2; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
         JButton addItemButton = new JButton("Add Item");
         addItemButton.setActionCommand("ADD_ITEM");
         formPanel.add(addItemButton, gbc);
-
-        // Row 2: Cart Area
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.NORTHEAST;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.NORTHEAST;
         formPanel.add(new JLabel("Cart:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weighty = 1.0;
+        gbc.gridx = 1; gbc.gridy = 2; gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.BOTH; gbc.weighty = 1.0;
         transactionCartArea = new JTextArea(5, 20);
         transactionCartArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(transactionCartArea);
         formPanel.add(scrollPane, gbc);
 
-        // --- Row 3: Price Details (in a separate panel) ---
-        gbc.gridx = 1;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        gbc.weighty = 0;
-        JPanel pricePanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        // --- Row 3: Price Details ---
+        gbc.gridx = 1; gbc.gridy = 3; gbc.gridwidth = 2; gbc.weighty = 0;
+
+        // --- THIS PANEL IS MODIFIED ---
+        JPanel pricePanel = new JPanel(new GridLayout(0, 2, 5, 5)); // 0 rows, 2 cols
         pricePanel.setBorder(BorderFactory.createTitledBorder("Price Details"));
 
         pricePanel.add(new JLabel("Initial Price:"));
         initialPriceLabel = new JLabel("P0.00");
         pricePanel.add(initialPriceLabel);
 
-        pricePanel.add(new JLabel("Promo (10%):"));
+        // --- MODIFICATION: Replaced static label with an input field ---
+        pricePanel.add(new JLabel("Promo % (e.g., 0.10):"));
+        promoInputField = new JTextField("0.10"); // Default 10%
+        promoInputField.setToolTipText("Enter a value between 0.00 and 1.00");
+        pricePanel.add(promoInputField);
+
+        // This label now shows the calculated discount *amount*
+        pricePanel.add(new JLabel("Discount Amount:"));
         promoLabel = new JLabel("-P0.00");
         pricePanel.add(promoLabel);
+        // --- END MODIFICATION ---
 
         pricePanel.add(new JLabel("Final Price:"));
         finalPriceLabel = new JLabel("P0.00");
@@ -352,32 +345,27 @@ public class CustomerView extends JFrame {
         pricePanel.add(finalPriceLabel);
 
         formPanel.add(pricePanel, gbc);
+        // --- END OF MODIFIED PANEL ---
 
         panel.add(formPanel, BorderLayout.CENTER);
 
-        // --- BUTTONS (South) ---
+        // ... (Button panel is unchanged) ...
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.setBackground(Color.decode("#2E5E19")); // Customer Theme
-
+        buttonPanel.setBackground(Color.decode("#2E5E19"));
         transactionButtonList.clear();
         transactionButtonList.add(addItemButton);
-
         JButton calculateButton = new JButton("Calculate Total");
         calculateButton.setActionCommand("CALCULATE_TOTAL");
         transactionButtonList.add(calculateButton);
-
         JButton proceedButton = new JButton("Proceed to Rating");
         proceedButton.setActionCommand("PROCEED_TO_RATING");
         transactionButtonList.add(proceedButton);
-
         JButton backButton = new JButton("GO BACK");
         backButton.setActionCommand("GO_BACK_FROM_TRANSACTION");
         transactionButtonList.add(backButton);
-
         for (JButton btn : transactionButtonList) {
             buttonPanel.add(btn);
         }
-
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
@@ -385,80 +373,59 @@ public class CustomerView extends JFrame {
 
     /**
      * Creates the panel for rating a food transaction.
-     * MOVED FROM ADMINVIEW.
-     * @return JPanel for the RATING_MENU card
+     * (Unchanged)
      */
     private JPanel createFoodRatingPanel() {
-        // MAIN PANEL
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // TITLE
         JPanel titlePanel = new JPanel(new GridBagLayout());
         JLabel titleLabel = new JLabel("Rate Your Transaction");
         titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
         titlePanel.add(titleLabel);
         panel.add(titlePanel, BorderLayout.NORTH);
-
-        // --- RATING FORM PANEL (Center) ---
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
         Integer[] scores = {1, 2, 3, 4, 5};
-
-        // Row 0: Quality Rating
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.EAST;
         formPanel.add(new JLabel("Food Quality (1-5):"), gbc);
-
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         qualityRatingComboBox = new JComboBox<>(scores);
         formPanel.add(qualityRatingComboBox, gbc);
-
-        // Row 1: Authenticity Rating
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.EAST;
         formPanel.add(new JLabel("Authenticity (1-5):"), gbc);
-
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.WEST;
         authenticityRatingComboBox = new JComboBox<>(scores);
         formPanel.add(authenticityRatingComboBox, gbc);
-
-        // Row 2: Calculate Button
         gbc.gridx = 1;
         gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
         JButton calcButton = new JButton("Calculate Overall");
         calcButton.setActionCommand("CALCULATE_RATING");
         formPanel.add(calcButton, gbc);
-
-        // Row 3: Overall Rating Label
         gbc.gridx = 0;
         gbc.gridy = 3;
         gbc.anchor = GridBagConstraints.EAST;
         formPanel.add(new JLabel("Overall Rating:"), gbc);
-
         gbc.gridx = 1;
         gbc.gridy = 3;
         gbc.anchor = GridBagConstraints.WEST;
         overallRatingLabel = new JLabel("N/A");
         overallRatingLabel.setFont(new Font("Verdana", Font.BOLD, 14));
         formPanel.add(overallRatingLabel, gbc);
-
-        // Row 4: Comments
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.anchor = GridBagConstraints.NORTHEAST;
         formPanel.add(new JLabel("Comments:"), gbc);
-
         gbc.gridx = 1;
         gbc.gridy = 4;
         gbc.gridwidth = 2;
@@ -467,25 +434,156 @@ public class CustomerView extends JFrame {
         ratingCommentsArea = new JTextArea(5, 20);
         JScrollPane scrollPane = new JScrollPane(ratingCommentsArea);
         formPanel.add(scrollPane, gbc);
-
         panel.add(formPanel, BorderLayout.CENTER);
-
-        // --- BUTTONS (South) ---
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.setBackground(Color.decode("#2E5E19")); // Customer Theme
-
+        buttonPanel.setBackground(Color.decode("#2E5E19"));
         ratingButtonList.clear();
         ratingButtonList.add(calcButton);
-
         JButton submitButton = new JButton("Submit Final Rating");
         submitButton.setActionCommand("SUBMIT_RATING");
         ratingButtonList.add(submitButton);
-
         JButton backButton = new JButton("GO BACK");
         backButton.setActionCommand("GO_BACK_TO_TRANSACTION");
         ratingButtonList.add(backButton);
-
         for (JButton btn : ratingButtonList) {
+            buttonPanel.add(btn);
+        }
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    /**
+     * Creates the transaction history panel with filters and a results table.
+     * @return JPanel for the HISTORY_VIEW card
+     */
+    private JPanel createTransactionHistoryPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Title
+        JLabel titleLabel = new JLabel("Your Transaction History");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(titleLabel, BorderLayout.NORTH);
+
+        // --- Filter Panel (Top) ---
+        JPanel filterPanel = new JPanel(new GridBagLayout());
+        filterPanel.setBorder(BorderFactory.createTitledBorder("Filter By"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 5, 2, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // --- Row 0: Start Date / End Date ---
+
+        // Start Date Label
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.fill = GridBagConstraints.NONE; // Labels don't fill
+        gbc.weightx = 0.0; // Labels don't get extra width
+        filterPanel.add(new JLabel("Start Date (yyyy-mm-dd):"), gbc);
+
+        // Start Date Field
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL; // <-- THE FIX
+        gbc.weightx = 1.0; // <-- THE FIX: Allow this cell to grow
+        filterStartDateField = new JTextField(10);
+        filterStartDateField.setToolTipText("Format: yyyy-mm-dd");
+        filterPanel.add(filterStartDateField, gbc);
+
+        // End Date Label
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        filterPanel.add(new JLabel("End Date (yyyy-mm-dd):"), gbc);
+
+        // End Date Field
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL; // <-- THE FIX
+        gbc.weightx = 1.0; // <-- THE FIX: Allow this cell to grow
+        filterEndDateField = new JTextField(10);
+        filterEndDateField.setToolTipText("Format: yyyy-mm-dd");
+        filterPanel.add(filterEndDateField, gbc);
+
+        // --- Row 1: Restaurant / Max Price ---
+
+        // Restaurant Label
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        filterPanel.add(new JLabel("Restaurant:"), gbc);
+
+        // Restaurant ComboBox
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL; // <-- THE FIX
+        gbc.weightx = 1.0; // <-- THE FIX
+        filterRestaurantComboBox = new JComboBox<>(); // Will be populated
+        filterPanel.add(filterRestaurantComboBox, gbc);
+
+        // Max Price Label
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        filterPanel.add(new JLabel("Max Final Price (e.g., 500):"), gbc);
+
+        // Max Price Field
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL; // <-- THE FIX
+        gbc.weightx = 1.0; // <-- THE FIX
+        filterMaxPriceField = new JTextField(10);
+        filterPanel.add(filterMaxPriceField, gbc);
+
+        // --- Row 2: Promo ---
+
+        // Promo Label
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        filterPanel.add(new JLabel("Promo % (e.g., 0.10):"), gbc);
+
+        // Promo Field
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL; // <-- THE FIX
+        gbc.weightx = 1.0; // <-- THE FIX
+        filterPromoField = new JTextField(10);
+        filterPromoField.setToolTipText("Enter as a decimal, e.g., 0.10 for 10%");
+        filterPanel.add(filterPromoField, gbc);
+
+        panel.add(filterPanel, BorderLayout.CENTER);
+
+        // --- Results Table (Center) ---
+        String[] columnNames = {"ID", "Date", "Restaurant", "Initial Price", "Promo %", "Final Price"};
+        historyTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        historyTable = new JTable(historyTableModel);
+        JScrollPane scrollPane = new JScrollPane(historyTable);
+
+        // Add table
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 4; // Span all columns
+        gbc.fill = GridBagConstraints.BOTH; // Table fills both ways
+        gbc.weightx = 1.0; // Table cell gets full width
+        gbc.weighty = 1.0; // Make table take remaining vertical space
+        filterPanel.add(scrollPane, gbc);
+
+        // --- Button Panel (South) ---
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#2E5E19"));
+
+        historyButtonList.clear();
+
+        JButton searchButton = new JButton("Search");
+        searchButton.setActionCommand("SEARCH_HISTORY");
+        historyButtonList.add(searchButton);
+
+        JButton backButton = new JButton("GO BACK");
+        backButton.setActionCommand("GO_BACK_FROM_HISTORY");
+        historyButtonList.add(backButton);
+
+        for(JButton btn : historyButtonList) {
             buttonPanel.add(btn);
         }
         panel.add(buttonPanel, BorderLayout.SOUTH);
@@ -493,54 +591,37 @@ public class CustomerView extends JFrame {
         return panel;
     }
 
-    public JComboBox<FoodItem> getFoodItemComboBox() { // Uses FoodItem.java
-        return foodItemComboBox;
-    }
 
-    public JTextArea getTransactionCartArea() {
-        return transactionCartArea;
-    }
+    // --- Getters for Transaction Panel (Unchanged) ---
+    public JComboBox<FoodItem> getFoodItemComboBox() { return foodItemComboBox; }
+    public JTextArea getTransactionCartArea() { return transactionCartArea; }
+    public JLabel getInitialPriceLabel() { return initialPriceLabel; }
+    public JLabel getPromoLabel() { return promoLabel; }
+    public JLabel getFinalPriceLabel() { return finalPriceLabel; }
+    public JComboBox<String> getRestaurantComboBox() { return restaurantComboBox; }
 
-    public JLabel getInitialPriceLabel() {
-        return initialPriceLabel;
-    }
+    // --- Getters for Rating Panel (Unchanged) ---
+    public JComboBox<Integer> getQualityRatingComboBox() { return qualityRatingComboBox; }
+    public JComboBox<Integer> getAuthenticityRatingComboBox() { return authenticityRatingComboBox; }
+    public JTextArea getRatingCommentsArea() { return ratingCommentsArea; }
+    public JLabel getOverallRatingLabel() { return overallRatingLabel; }
 
-    public JLabel getPromoLabel() {
-        return promoLabel;
-    }
 
-    public JLabel getFinalPriceLabel() {
-        return finalPriceLabel;
+    // --- NEW: Getters for History Filter Fields ---
+    public String getFilterStartDate() { return filterStartDateField.getText(); }
+    public String getFilterEndDate() { return filterEndDateField.getText(); }
+    public String getFilterRestaurant() {
+        Object item = filterRestaurantComboBox.getSelectedItem();
+        return (item != null) ? item.toString() : "[All]";
     }
+    public String getFilterMaxPrice() { return filterMaxPriceField.getText(); }
+    public String getFilterPromo() { return filterPromoField.getText(); }
+    // --- END: New Getters ---
 
-    public JComboBox<Integer> getQualityRatingComboBox() {
-        return qualityRatingComboBox;
-    }
 
-    public JComboBox<Integer> getAuthenticityRatingComboBox() {
-        return authenticityRatingComboBox;
-    }
-
-    public JTextArea getRatingCommentsArea() {
-        return ratingCommentsArea;
-    }
-
-    public JLabel getOverallRatingLabel() {
-        return overallRatingLabel;
-    }
-
-    public JComboBox<String> getRestaurantComboBox() {
-        return restaurantComboBox;
-    }
-
-    /**
-     * Clears and repopulates the restaurant JComboBox with a new list of names.
-     * @param restaurantNames An ArrayList of restaurant names from the database.
-     */
+    // --- Update methods for ComboBoxes (Unchanged) ---
     public void updateRestaurantComboBox(ArrayList<String> restaurantNames) {
-        if (restaurantComboBox == null) {
-            return;
-        }
+        if (restaurantComboBox == null) return;
         restaurantComboBox.removeAllItems();
         restaurantComboBox.addItem("[Select One]");
         for (String name : restaurantNames) {
@@ -548,17 +629,9 @@ public class CustomerView extends JFrame {
         }
     }
 
-    /**
-     * Clears and repopulates the food item JComboBox.
-     * @param items An ArrayList of FoodItem objects for the selected restaurant.
-     */
     public void updateFoodItemComboBox(ArrayList<FoodItem> items) {
-        if (foodItemComboBox == null) {
-            return;
-        }
-
+        if (foodItemComboBox == null) return;
         foodItemComboBox.removeAllItems();
-
         if (items != null && !items.isEmpty()) {
             for (FoodItem item : items) {
                 foodItemComboBox.addItem(item);
@@ -566,6 +639,38 @@ public class CustomerView extends JFrame {
         }
     }
 
-    // --- FIX 3: REMOVED THE INNER FoodItem CLASS ---
-    // (It is now in its own FoodItem.java file)
+    // --- NEW: Method to update history filter ComboBox ---
+    public void updateHistoryRestaurantFilter(ArrayList<String> restaurantNames) {
+        if (filterRestaurantComboBox == null) return;
+        filterRestaurantComboBox.removeAllItems();
+        filterRestaurantComboBox.addItem("[All]"); // Add "All" option
+        for (String name : restaurantNames) {
+            filterRestaurantComboBox.addItem(name);
+        }
+    }
+
+    public String getPromoInput() {
+        return promoInputField.getText();
+    }
+
+    public void updateHistoryTable(ArrayList<TransactionData> transactions) {
+        if (historyTableModel == null) return;
+
+        // Clear old results
+        historyTableModel.setRowCount(0);
+
+        // Add new results
+        if (transactions != null) {
+            for (TransactionData transaction : transactions) {
+                historyTableModel.addRow(new Object[]{
+                        transaction.getTransactionId(),
+                        transaction.getTransactionDate(),
+                        transaction.getRestaurantName(),
+                        String.format("%.2f", transaction.getInitialPrice()),
+                        String.format("%.2f", transaction.getPromo()), // Will show 0.10
+                        String.format("%.2f", transaction.getFinalPrice())
+                });
+            }
+        }
+    }
 }

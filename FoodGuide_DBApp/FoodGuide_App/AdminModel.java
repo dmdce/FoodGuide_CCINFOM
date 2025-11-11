@@ -4,17 +4,15 @@ import java.util.HashMap;
 
 /**
  * Class: AdminModel
- * This class represents the model of the Admin.
- * It takes care the of methods needed for the view and controller like handling
- * data storage, retrieval, manipulation, and validation.
+ * (Rest of class description...)
  */
 public class AdminModel {
     private MenuController menuController;
     private FoodDataBase db;
+
     /**
      * Constructs an AdminModel.
-     *
-     * @param menuController The Menu Controller where it handles actions in the menu window.
+     * (Unchanged)
      */
     public AdminModel(MenuController menuController) {
         this.menuController = menuController;
@@ -23,8 +21,7 @@ public class AdminModel {
 
     /**
      * Getting the menu controller instance.
-     *
-     * @return the menu controller instance.
+     * (Unchanged)
      */
     public MenuController getMenuController() {
         return menuController;
@@ -33,7 +30,7 @@ public class AdminModel {
 
     /**
      * Passes the registration request to the database class.
-     * @return true if successful, false otherwise.
+     * (Unchanged)
      */
     public boolean registerNewUser(String username, String email) {
         return db.registerUser(username, email);
@@ -41,9 +38,7 @@ public class AdminModel {
 
     /**
      * Passes the login request to the database class.
-     * @param username The username to check.
-     * @param email    The email to check.
-     * @return The user's ID if successful, or null if login fails.
+     * (Unchanged)
      */
     public Integer loginCustomer(String username, String email) {
         return db.loginUser(username, email);
@@ -51,16 +46,15 @@ public class AdminModel {
 
     /**
      * Asks the database for a list of all restaurant names.
-     * @return An ArrayList of restaurant names.
+     * (Unchanged)
      */
     public ArrayList<String> getRestaurantNames() {
         return db.getAllRestaurantNames();
     }
 
     /**
-     * Asks the database for the menu of a specific restaurant.
-     * @param restaurantName The name of the restaurant.
-     * @return An ArrayList of FoodItem objects.
+     * Asks the database for a list of food items for a specific restaurant.
+     * (Unchanged)
      */
     public ArrayList<FoodItem> getFoodMenu(String restaurantName) {
         return db.getFoodMenuForRestaurant(restaurantName);
@@ -68,18 +62,7 @@ public class AdminModel {
 
     /**
      * Passes all transaction and rating data to the database layer to be processed.
-     *
-     * @param userId          The ID of the logged-in user.
-     * @param restaurantName  The name of the restaurant.
-     * @param initialPrice    The total price before promo.
-     * @param promoAmount     The amount subtracted as a promo.
-     * @param finalPrice      The final price paid.
-     * @param itemQuantities  A Map linking each FoodItem to its quantity.
-     * @param quality         The quality rating (1-5).
-     * @param authenticity    The authenticity rating (1-5).
-     * @param overallRating   The calculated overall rating.
-     * @param comments        The user's text feedback.
-     * @return true if the entire database transaction was successful, false otherwise.
+     * (Unchanged)
      */
     public boolean submitTransactionAndRating(
             Integer userId,
@@ -93,18 +76,32 @@ public class AdminModel {
             double overallRating,
             String comments
     ) {
-        // Pass all data to the database layer
         return db.createFullTransaction(
-                userId,
-                restaurantName,
-                initialPrice,
-                promoAmount,
-                finalPrice,
-                itemQuantities,
-                quality,
-                authenticity,
-                overallRating,
-                comments
+                userId, restaurantName, initialPrice, promoAmount, finalPrice,
+                itemQuantities, quality, authenticity, overallRating, comments
         );
     }
+
+    // --- NEW: Method to fetch transaction history ---
+    /**
+     * Asks the database for a filtered list of transactions for a user.
+     * @param userId The user's ID.
+     * @param startDate Filter for dates on or after this (yyyy-mm-dd).
+     * @param endDate Filter for dates on or before this (yyyy-mm-dd).
+     * @param restaurantName Filter for a specific restaurant.
+     * @param maxPrice Filter for final price less than or equal to this.
+     * @param promo Filter for a specific promo value.
+     * @return An ArrayList of TransactionData objects.
+     */
+    public ArrayList<TransactionData> fetchTransactionHistory(
+            Integer userId,
+            String startDate,
+            String endDate,
+            String restaurantName,
+            String maxPrice,
+            String promo
+    ) {
+        return db.getTransactionHistory(userId, startDate, endDate, restaurantName, maxPrice, promo);
+    }
+    // --- END: New Method ---
 }

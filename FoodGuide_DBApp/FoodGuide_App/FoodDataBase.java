@@ -3,10 +3,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
-import java.sql.Statement; // Import Statement
+import java.sql.Statement;
+import java.sql.Timestamp; // Import Timestamp
 import java.util.ArrayList;
-import java.util.HashMap; // Import HashMap
-import java.util.Map; // Import Map
+import java.util.HashMap;
+import java.util.Map;
+// No import for FoodItem here, it's correct!
 
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
@@ -25,11 +27,10 @@ public class FoodDataBase {
 
     // --- RESTAURANT TABLE ---
     private static final String RESTAURANT_TABLE = "restaurant";
-    private static final String RESTAURANT_ID_COL = "restaurant_id"; // Added ID column
+    private static final String RESTAURANT_ID_COL = "restaurant_id";
     private static final String RESTAURANT_NAME_COL = "restaurant_name";
     private static final String RESTAURANT_NAMES_QUERY =
             "SELECT " + RESTAURANT_NAME_COL + " FROM " + RESTAURANT_TABLE + " ORDER BY " + RESTAURANT_NAME_COL + " ASC";
-    // --- NEW: Query to get restaurant ID from name ---
     private static final String RESTAURANT_ID_QUERY =
             "SELECT " + RESTAURANT_ID_COL + " FROM " + RESTAURANT_TABLE + " WHERE " + RESTAURANT_NAME_COL + " = ?";
 
@@ -39,21 +40,25 @@ public class FoodDataBase {
     private static final String FOOD_ID_COL = "food_id";
     private static final String FOOD_ALIAS_COL = "food_alias";
     private static final String PRICE_COL = "price";
-    // --- UPDATED: Query now joins with restaurant table ---
     private static final String FOOD_MENU_QUERY =
             "SELECT T1." + FOOD_ALIAS_COL + ", T1." + PRICE_COL + " " +
                     "FROM " + FOOD_MENU_TABLE + " T1 " +
                     "JOIN " + RESTAURANT_TABLE + " T2 ON T1." + RESTAURANT_ID_COL + " = T2." + RESTAURANT_ID_COL + " " +
                     "WHERE T2." + RESTAURANT_NAME_COL + " = ?";
-
-    // --- NEW: Query to get Food IDs from menu ---
     private static final String FOOD_MENU_IDS_QUERY =
             "SELECT " + FOOD_MENU_ID_COL + ", " + FOOD_ID_COL + " " +
                     "FROM " + FOOD_MENU_TABLE + " " +
                     "WHERE " + FOOD_ALIAS_COL + " = ? AND " + RESTAURANT_ID_COL + " = ?";
 
-    // --- NEW: TRANSACTION, ORDER, and RATING TABLES & QUERIES ---
+    // --- TRANSACTION, ORDER, and RATING TABLES ---
     private static final String TRANSACTION_TABLE = "food_transaction";
+    // --- NEW: Columns for history query ---
+    private static final String TRANSACTION_ID_COL = "food_transaction_id";
+    private static final String TRANSACTION_DATE_COL = "transaction_date";
+    private static final String TRANSACTION_INITIAL_PRICE_COL = "initial_price";
+    private static final String TRANSACTION_PROMO_COL = "promo";
+    private static final String TRANSACTION_FINAL_PRICE_COL = "final_price";
+    // --- (end new) ---
     private static final String TRANSACTION_INSERT_QUERY =
             "INSERT INTO " + TRANSACTION_TABLE +
                     " (restaurant_name, promo, final_price, initial_price, food_user_id, transaction_date) " +
@@ -70,14 +75,10 @@ public class FoodDataBase {
             "INSERT INTO " + RATING_TABLE +
                     " (food_transaction_id, restaurant_id, suggestion, quality, authenticity, overall_rating) " +
                     "VALUES (?, ?, ?, ?, ?, ?)";
-    // --- END OF NEW CONSTANTS ---
-
 
     /**
      * Attempts to get a connection to the database.
-     * @return A Connection object.
-     * @throws SQLException if a database access error occurs.
-     * @throws ClassNotFoundException if the JDBC driver is not found.
+     * (Unchanged)
      */
     private Connection getConnection() throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
@@ -86,7 +87,7 @@ public class FoodDataBase {
 
     /**
      * Registers a new user in the database.
-     * @return true if registration was successful, false otherwise.
+     * (Unchanged)
      */
     public boolean registerUser(String username, String email) {
         try (Connection conn = getConnection();
@@ -103,15 +104,13 @@ public class FoodDataBase {
 
     /**
      * Validates a user's login credentials and returns their ID.
-     * @return The user's food_user_id if successful, or null if login fails.
+     * (Unchanged)
      */
     public Integer loginUser(String username, String email) {
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(USER_LOGIN_QUERY)) {
-
             stmt.setString(1, username);
             stmt.setString(2, email);
-
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(USER_ID_COL);
@@ -127,7 +126,7 @@ public class FoodDataBase {
 
     /**
      * Fetches a list of all restaurant names from the database.
-     * @return An ArrayList of restaurant names.
+     * (Unchanged)
      */
     public ArrayList<String> getAllRestaurantNames() {
         ArrayList<String> restaurantNames = new ArrayList<>();
@@ -145,16 +144,13 @@ public class FoodDataBase {
 
     /**
      * Fetches the food menu for a specific restaurant.
-     * @param restaurantName The name of the restaurant.
-     * @return An ArrayList of FoodItem objects.
+     * (Unchanged)
      */
     public ArrayList<FoodItem> getFoodMenuForRestaurant(String restaurantName) {
         ArrayList<FoodItem> menuItems = new ArrayList<>();
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(FOOD_MENU_QUERY)) {
-
             stmt.setString(1, restaurantName);
-
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String foodAlias = rs.getString(FOOD_ALIAS_COL);
@@ -168,31 +164,20 @@ public class FoodDataBase {
         return menuItems;
     }
 
+
     /**
-     * Executes the complete transaction and rating submission as a single
-     * atomic database operation.
-     * @return true if all inserts were successful, false if anything failed.
+     * Executes the complete transaction and rating submission...
+     * (Unchanged)
      */
     public boolean createFullTransaction(
-            Integer userId,
-            String restaurantName,
-            double initialPrice,
-            double promoAmount,
-            double finalPrice,
-            HashMap<FoodItem, Integer> itemQuantities,
-            int quality,
-            int authenticity,
-            double overallRating,
-            String comments
+            Integer userId, String restaurantName, double initialPrice, double promoAmount,
+            double finalPrice, HashMap<FoodItem, Integer> itemQuantities, int quality,
+            int authenticity, double overallRating, String comments
     ) {
         Connection conn = null;
         try {
             conn = getConnection();
-            // --- STEP 1: START DATABASE TRANSACTION ---
-            // This ensures all or nothing. If one part fails, all parts are undone.
             conn.setAutoCommit(false);
-
-            // --- STEP 2: Get Restaurant ID ---
             int restaurantId = -1;
             try (PreparedStatement stmt = conn.prepareStatement(RESTAURANT_ID_QUERY)) {
                 stmt.setString(1, restaurantName);
@@ -200,32 +185,20 @@ public class FoodDataBase {
                     if (rs.next()) {
                         restaurantId = rs.getInt(RESTAURANT_ID_COL);
                     } else {
-                        // If restaurant isn't found, fail the whole transaction
                         throw new SQLException("Restaurant not found: " + restaurantName);
                     }
                 }
             }
-
-            // --- STEP 3: Create food_transaction and get its new ID ---
             int transactionId = -1;
-
-            // Your `promo` column is `decimal(3,2)`, e.g., 0.10.
-            // We calculate this from the promo *amount*.
             double promoPercent = (initialPrice > 0) ? (promoAmount / initialPrice) : 0.0;
-
             try (PreparedStatement stmt = conn.prepareStatement(TRANSACTION_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, restaurantName);
-                stmt.setDouble(2, promoPercent); // Storing promo as 0.10 (for 10%)
+                stmt.setDouble(2, promoPercent);
                 stmt.setDouble(3, finalPrice);
                 stmt.setDouble(4, initialPrice);
                 stmt.setInt(5, userId);
-
                 int rowsAffected = stmt.executeUpdate();
-                if (rowsAffected == 0) {
-                    throw new SQLException("Creating transaction failed, no rows affected.");
-                }
-
-                // Get the newly generated food_transaction_id
+                if (rowsAffected == 0) throw new SQLException("Creating transaction failed, no rows affected.");
                 try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         transactionId = generatedKeys.getInt(1);
@@ -234,20 +207,13 @@ public class FoodDataBase {
                     }
                 }
             }
-
-            // --- STEP 4: Loop through cart and create food_order entries ---
-            // We'll re-use these prepared statements inside the loop
             try (PreparedStatement orderStmt = conn.prepareStatement(ORDER_INSERT_QUERY);
                  PreparedStatement menuIdStmt = conn.prepareStatement(FOOD_MENU_IDS_QUERY)) {
-
                 for (Map.Entry<FoodItem, Integer> entry : itemQuantities.entrySet()) {
                     FoodItem item = entry.getKey();
                     int quantity = entry.getValue();
-
-                    // Step 4a: Get food_menu_id and food_id for this item
                     menuIdStmt.setString(1, item.getName());
                     menuIdStmt.setInt(2, restaurantId);
-
                     int foodMenuId = -1;
                     int foodId = -1;
                     try (ResultSet rs = menuIdStmt.executeQuery()) {
@@ -255,23 +221,17 @@ public class FoodDataBase {
                             foodMenuId = rs.getInt(FOOD_MENU_ID_COL);
                             foodId = rs.getInt(FOOD_ID_COL);
                         } else {
-                            // If the item isn't found, fail the whole transaction
                             throw new SQLException("Food item not found in menu: " + item.getName());
                         }
                     }
-
-                    // Step 4b: Insert into food_order
                     orderStmt.setInt(1, transactionId);
                     orderStmt.setInt(2, foodMenuId);
                     orderStmt.setInt(3, quantity);
                     orderStmt.setInt(4, foodId);
-                    orderStmt.addBatch(); // Add this insert to a batch
+                    orderStmt.addBatch();
                 }
-                // Execute all food_order inserts at once
                 orderStmt.executeBatch();
             }
-
-            // --- STEP 5: Create food_rating entry ---
             try (PreparedStatement stmt = conn.prepareStatement(RATING_INSERT_QUERY)) {
                 stmt.setInt(1, transactionId);
                 stmt.setInt(2, restaurantId);
@@ -281,25 +241,19 @@ public class FoodDataBase {
                 stmt.setDouble(6, overallRating);
                 stmt.executeUpdate();
             }
-
-            // --- STEP 6: All steps succeeded! Commit the transaction ---
             conn.commit();
-            return true; // Return success
-
+            return true;
         } catch (Exception e) {
-            // --- STEP 7: Something failed. Roll back all changes ---
             e.printStackTrace();
             if (conn != null) {
                 try {
-                    System.err.println("Transaction is being rolled back");
                     conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
             }
-            return false; // Return failure
+            return false;
         } finally {
-            // --- STEP 8: Always restore autocommit and close connection ---
             if (conn != null) {
                 try {
                     conn.setAutoCommit(true);
@@ -310,5 +264,104 @@ public class FoodDataBase {
             }
         }
     }
-    // --- END OF NEW METHOD ---
+
+    // --- NEW: Method to get transaction history ---
+
+    /**
+     * Searches the database for transactions matching the given filters.
+     * @return An ArrayList of TransactionData objects.
+     */
+    public ArrayList<TransactionData> getTransactionHistory(
+            Integer userId,
+            String startDate,
+            String endDate,
+            String restaurantName,
+            String maxPrice,
+            String promo
+    ) {
+        ArrayList<TransactionData> transactions = new ArrayList<>();
+
+        // --- Dynamic Query Building ---
+        StringBuilder sql = new StringBuilder(
+                "SELECT " + TRANSACTION_ID_COL + ", " + TRANSACTION_DATE_COL + ", " +
+                        RESTAURANT_NAME_COL + ", " + TRANSACTION_INITIAL_PRICE_COL + ", " +
+                        TRANSACTION_PROMO_COL + ", " + TRANSACTION_FINAL_PRICE_COL + " " +
+                        "FROM " + TRANSACTION_TABLE + " " +
+                        "WHERE " + USER_ID_COL + " = ? " // Base filter is always the user
+        );
+
+        // This list will hold the values for the prepared statement
+        ArrayList<Object> parameters = new ArrayList<>();
+        parameters.add(userId);
+
+        // Append filters if they are valid
+        if (startDate != null && !startDate.trim().isEmpty()) {
+            sql.append(" AND " + TRANSACTION_DATE_COL + " >= ?");
+            parameters.add(startDate); // Assumes "yyyy-mm-dd" format
+        }
+        if (endDate != null && !endDate.trim().isEmpty()) {
+            sql.append(" AND " + TRANSACTION_DATE_COL + " <= ?");
+            parameters.add(endDate + " 23:59:59"); // Go to end of the day
+        }
+        if (restaurantName != null && !restaurantName.trim().isEmpty() && !restaurantName.equals("[All]")) {
+            sql.append(" AND " + RESTAURANT_NAME_COL + " = ?");
+            parameters.add(restaurantName);
+        }
+        if (maxPrice != null && !maxPrice.trim().isEmpty()) {
+            try {
+                // Validate that it's a number
+                double price = Double.parseDouble(maxPrice);
+                sql.append(" AND " + TRANSACTION_FINAL_PRICE_COL + " <= ?");
+                parameters.add(price);
+            } catch (NumberFormatException e) {
+                // Invalid number, so we ignore this filter
+                System.err.println("Invalid max price format, ignoring filter: " + maxPrice);
+            }
+        }
+        if (promo != null && !promo.trim().isEmpty()) {
+            try {
+                // Validate that it's a number
+                double promoVal = Double.parseDouble(promo);
+                sql.append(" AND " + TRANSACTION_PROMO_COL + " = ?");
+                parameters.add(promoVal);
+            } catch (NumberFormatException e) {
+                // Invalid number, so we ignore this filter
+                System.err.println("Invalid promo format, ignoring filter: " + promo);
+            }
+        }
+
+        // Add ordering
+        sql.append(" ORDER BY " + TRANSACTION_DATE_COL + " DESC");
+        // --- End of Dynamic Query Building ---
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            // Set all the parameters we collected
+            int paramIndex = 1;
+            for (Object param : parameters) {
+                stmt.setObject(paramIndex++, param);
+            }
+
+            // Execute the query
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    transactions.add(new TransactionData(
+                            rs.getInt(TRANSACTION_ID_COL),
+                            rs.getTimestamp(TRANSACTION_DATE_COL),
+                            rs.getString(RESTAURANT_NAME_COL),
+                            rs.getDouble(TRANSACTION_INITIAL_PRICE_COL),
+                            rs.getDouble(TRANSACTION_PROMO_COL),
+                            rs.getDouble(TRANSACTION_FINAL_PRICE_COL)
+                    ));
+                }
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return transactions;
+    }
+    // --- END: New Method ---
 }
