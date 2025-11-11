@@ -11,7 +11,7 @@ import java.util.Map; // Import Map
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
     private static final String USER = "root";
-    private static final String PASS = "Cheezcake21";
+    private static final String PASS = "pass";
 
     // --- USER TABLE ---
     private static final String USER_TABLE = "food_user";
