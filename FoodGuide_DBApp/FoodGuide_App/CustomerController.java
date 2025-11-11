@@ -4,6 +4,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
+import java.util.HashMap;
 
 /**
  * Class: CustomerController
@@ -19,6 +20,9 @@ public class CustomerController implements ActionListener {
     private ArrayList<FoodItem> cart; // Not CustomerView.FoodItem
     private String currentTransactionRestaurant;
     private double currentTransactionFinalPrice;
+
+    private double currentTransactionInitialPrice;
+    private double currentTransactionPromo; // This will store the promo *amount*
 
     /**
      * Constructs a CustomerController with the given model and view.
@@ -144,6 +148,10 @@ public class CustomerController implements ActionListener {
                 double promoAmount = initialPrice * 0.10; // 10% promo
                 double finalPrice = initialPrice - promoAmount;
 
+                currentTransactionInitialPrice = initialPrice;
+                currentTransactionPromo = promoAmount; // Store the *amount* (e.g., 15.00)
+                currentTransactionFinalPrice = finalPrice;
+
                 // Update the labels in the view
                 view.getInitialPriceLabel().setText(String.format("P%.2f", initialPrice));
                 view.getPromoLabel().setText(String.format("-P%.2f", promoAmount));
@@ -190,27 +198,45 @@ public class CustomerController implements ActionListener {
                 int finalAuthenticity = (int) view.getAuthenticityRatingComboBox().getSelectedItem();
                 String comments = view.getRatingCommentsArea().getText();
                 double finalOverall = (finalQuality + finalAuthenticity) / 2.0;
-                Integer userId = model.getLoggedInUserId(); // Corrected variable name
+                Integer userId = model.getLoggedInUserId();
 
-                // 2. (Backend logic placeholder) Print everything
-                System.out.println("--- FINAL SUBMISSION (Transaction + Rating) ---");
-                System.out.println("User ID: " + (userId != null ? userId : "N/A")); // Print user ID
-                System.out.println("Restaurant: " + currentTransactionRestaurant);
-                System.out.println("Final Price: P" + currentTransactionFinalPrice);
-                System.out.println("Cart Items:");
-                for(FoodItem item : cart) { // FIX 2: Changed to FoodItem
-                    System.out.println("  " + item.toString());
+                // 1A. Validate User ID
+                if (userId == null) {
+                    JOptionPane.showMessageDialog(view, "Error: You are not logged in.", "Submission Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
-                System.out.println("---------------------------------");
-                System.out.println("Quality Rating: " + finalQuality);
-                System.out.println("Authenticity Rating: " + finalAuthenticity);
-                System.out.println("Overall Rating: " + finalOverall);
-                System.out.println("Comments: " + comments);
-                System.out.println("---------------------------------");
 
-                // 3. Show success and go back to main menu
-                JOptionPane.showMessageDialog(view, "Transaction and Rating Submitted! Thank you!");
-                view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU"); // Go back to customer menu
+                // 2. Process the cart to get quantities
+                // This HashMap works because FoodItem.java now has .equals() and .hashCode()
+                HashMap<FoodItem, Integer> itemQuantities = new HashMap<>();
+                for (FoodItem item : cart) {
+                    itemQuantities.put(item, itemQuantities.getOrDefault(item, 0) + 1);
+                }
+
+                // 3. Call the model to submit everything
+                boolean isSuccess = model.getAm().submitTransactionAndRating(
+                        userId,
+                        currentTransactionRestaurant,
+                        currentTransactionInitialPrice,
+                        currentTransactionPromo, // Pass the promo *amount*
+                        currentTransactionFinalPrice,
+                        itemQuantities,
+                        finalQuality,
+                        finalAuthenticity,
+                        finalOverall,
+                        comments
+                );
+
+                // 4. Show success or failure message
+                if (isSuccess) {
+                    JOptionPane.showMessageDialog(view, "Transaction and Rating Submitted! Thank you!");
+                    view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                } else {
+                    JOptionPane.showMessageDialog(view,
+                            "Error: Could not submit transaction.\nCheck console for details.",
+                            "Database Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
                 break;
             } // End of SUBMIT_RATING case
 

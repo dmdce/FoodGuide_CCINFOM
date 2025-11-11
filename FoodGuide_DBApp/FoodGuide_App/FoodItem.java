@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 /**
  * Class: FoodItem
  * This is a Data Transfer Object (DTO) class that represents a food menu item.
@@ -19,6 +21,14 @@ public class FoodItem {
     }
 
     /**
+     * Gets the name of the food item.
+     * @return the name.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * Gets the price of the food item.
      * @return the price.
      */
@@ -35,4 +45,24 @@ public class FoodItem {
     public String toString() {
         return String.format("%s - P%.2f", name, price);
     }
+
+    // --- NEW: Added equals() and hashCode() ---
+    // This is CRITICAL for using FoodItem as a key in a HashMap to count quantities.
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FoodItem foodItem = (FoodItem) o;
+        // Two FoodItems are the same if they have the same name AND same price
+        return Double.compare(foodItem.price, price) == 0 &&
+                Objects.equals(name, foodItem.name);
+    }
+
+    @Override
+    public int hashCode() {
+        // Generates a hash code based on both name and price
+        return Objects.hash(name, price);
+    }
+    // --- END OF NEW METHODS ---
 }

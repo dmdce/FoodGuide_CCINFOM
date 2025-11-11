@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Class: AdminModel
@@ -63,5 +64,47 @@ public class AdminModel {
      */
     public ArrayList<FoodItem> getFoodMenu(String restaurantName) {
         return db.getFoodMenuForRestaurant(restaurantName);
+    }
+
+    /**
+     * Passes all transaction and rating data to the database layer to be processed.
+     *
+     * @param userId          The ID of the logged-in user.
+     * @param restaurantName  The name of the restaurant.
+     * @param initialPrice    The total price before promo.
+     * @param promoAmount     The amount subtracted as a promo.
+     * @param finalPrice      The final price paid.
+     * @param itemQuantities  A Map linking each FoodItem to its quantity.
+     * @param quality         The quality rating (1-5).
+     * @param authenticity    The authenticity rating (1-5).
+     * @param overallRating   The calculated overall rating.
+     * @param comments        The user's text feedback.
+     * @return true if the entire database transaction was successful, false otherwise.
+     */
+    public boolean submitTransactionAndRating(
+            Integer userId,
+            String restaurantName,
+            double initialPrice,
+            double promoAmount,
+            double finalPrice,
+            HashMap<FoodItem, Integer> itemQuantities,
+            int quality,
+            int authenticity,
+            double overallRating,
+            String comments
+    ) {
+        // Pass all data to the database layer
+        return db.createFullTransaction(
+                userId,
+                restaurantName,
+                initialPrice,
+                promoAmount,
+                finalPrice,
+                itemQuantities,
+                quality,
+                authenticity,
+                overallRating,
+                comments
+        );
     }
 }
