@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
     private static final String USER = "root";
-    private static final String PASS = "Cheezcake21";
+    private static final String PASS = "password";
 
     private static final String USER_TABLE = "food_user";
     private static final String USER_ID_COL = "food_user_id";

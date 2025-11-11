@@ -7,9 +7,30 @@ USE food_culture;
 
 /*
 -----------------------------------
-	??? TABLE
+	food_event and origin tables
 -----------------------------------
 */
+ALTER TABLE `origin`
+AUTO_INCREMENT = 1;
+
+INSERT INTO `origin` (name)
+VALUES
+('Tagalog'),
+('Kapampangan'),
+('Cebuano'),
+('Ilonggo'),
+('Filipino-Chinese');
+
+ALTER TABLE `food_event`
+AUTO_INCREMENT = 1;
+
+INSERT INTO  `food_event` (`food_event_name`, `description`)
+VALUES
+('Daily Fare', 'Common Food eaten on a day-to-day basis'),
+('Katyusha', 'Missiles Galore'),
+('Redo of Healer', 'Trully the healer of all time'),
+('Boku no Pico', 'Cuz why not'),
+('Ishuzoku Reviewer', 'Monster tag is very good');
 
 
 /*
@@ -17,6 +38,8 @@ USE food_culture;
 	food_address TABLE
 -----------------------------------
 */
+ALTER TABLE food_address
+AUTO_INCREMENT = 1;
 INSERT INTO `food_culture`.`food_address` (`street`,`city`) VALUES
 ("A. Mabini Street","Caloocan"),
 ("Tropical Avenue","Las Piñas"),
