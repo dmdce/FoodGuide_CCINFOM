@@ -82,7 +82,6 @@ public class AdminModel {
         );
     }
 
-    // --- NEW: Method to fetch transaction history ---
     /**
      * Asks the database for a filtered list of transactions for a user.
      * @param userId The user's ID.
@@ -103,5 +102,14 @@ public class AdminModel {
     ) {
         return db.getTransactionHistory(userId, startDate, endDate, restaurantName, maxPrice, promo);
     }
-    // --- END: New Method ---
+
+
+    /**
+     * Asks the database for a list of all registered users.
+     * @return An ArrayList of UserData objects.
+     */
+    public ArrayList<UserData> getAllUsers() {
+        return db.fetchAllUsers();
+    }
+
 }

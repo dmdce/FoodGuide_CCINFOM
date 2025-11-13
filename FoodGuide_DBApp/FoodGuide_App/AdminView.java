@@ -6,6 +6,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import javax.swing.JTable;
+import javax.swing.JScrollPane;
 
 /**
  * Class: AdminView
@@ -23,6 +25,7 @@ public class AdminView extends JFrame {
     private JPanel generateReportsPanel;
     private JPanel userRegPanel;
     private JPanel userCreationPanel;
+    private JPanel userReportPanel;
 
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
     private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
@@ -33,6 +36,14 @@ public class AdminView extends JFrame {
     private JButton backButton = new JButton("GO BACK");
     private JButton backGenerateReportsButton = new JButton("GO BACK");
     private JButton backUserRegButton = new JButton("GO BACK");
+
+    private DefaultTableModel userTableModel;
+    private JTable userTable;
+
+    private DefaultTableModel userReportTableModel;
+    private JTable userReportTable;
+    private JButton backUserReportButton = new JButton("GO BACK");
+    private ArrayList<JButton> userReportButtonList = new ArrayList<>();
 
     /**
      * Constructs the AdminView, initializes all sub-panels,
@@ -50,12 +61,14 @@ public class AdminView extends JFrame {
         generateReportsPanel = createGenerateReportsPanel();
         userRegPanel = createUserRegPanel();
         userCreationPanel = createUserCreationPanel();
+        userReportPanel = createUserReportPanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
         mainPanel.add(userRegPanel, "USER_REG");
         mainPanel.add(userCreationPanel, "USER_CREATE");
+        mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
 
         add(mainPanel);
 
@@ -301,21 +314,71 @@ public class AdminView extends JFrame {
         mainPanel.remove(generateReportsPanel);
         mainPanel.remove(userRegPanel);
         mainPanel.remove(userCreationPanel);
+        mainPanel.remove(userReportPanel);
 
         // Generate and add
         manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
         userRegPanel = createUserRegPanel();
         userCreationPanel = createUserCreationPanel();
+        userReportPanel = createUserReportPanel();
 
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
         mainPanel.add(userRegPanel, "USER_REG");
         mainPanel.add(userCreationPanel, "USER_CREATE");
+        mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
 
         // Revalidate and repaint
         mainPanel.revalidate();
         mainPanel.repaint();
+    }
+
+    /**
+     * Creates a panel to display a list of all registered users.
+     * @return a JPanel for the USER_REPORT_PANEL card
+     */
+    private JPanel createUserReportPanel() {
+        // MAIN PANEL
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // LABELS
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel label = new JLabel("Registered User List");
+        label.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(label);
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        String[] columnNames = {"User ID", "Username", "Email Address"};
+        userReportTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table cells not editable
+            }
+        };
+        userReportTable = new JTable(userReportTableModel);
+        JScrollPane scrollPane = new JScrollPane(userReportTable);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // BUTTONS
+        JPanel userReportButtonPanel = new JPanel(new FlowLayout()); // Changed to FlowLayout
+        userReportButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        userReportButtonPanel.setBackground(Color.decode("#FCD303"));
+
+        userReportButtonList.clear(); // Clear list for refresh
+
+        backUserReportButton.setActionCommand("GO_BACK_USER_REPORT"); // New action command
+        userReportButtonList.add(backUserReportButton); // Add the new back button
+
+        for(JButton btn : userReportButtonList) {
+            userReportButtonPanel.add(btn);
+        }
+
+        panel.add(userReportButtonPanel, BorderLayout.SOUTH);
+
+        return panel;
     }
 
     /**
@@ -350,6 +413,11 @@ public class AdminView extends JFrame {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
+
+        for (JButton jButton : userReportButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
     }
 
     /**
@@ -380,5 +448,29 @@ public class AdminView extends JFrame {
             texts.add(jTextField.getText());
         }
         return texts;
+    }
+
+    /**
+     * Clears and repopulates the user report table with fresh data.
+     * @param users An ArrayList of UserData objects.
+     */
+    public void updateUserReportTable(ArrayList<UserData> users) {
+        if (userReportTableModel == null) {
+            return;
+        }
+
+        // Clear old results
+        userReportTableModel.setRowCount(0);
+
+        // Add new results
+        if (users != null) {
+            for (UserData user : users) {
+                userReportTableModel.addRow(new Object[]{
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail()
+                });
+            }
+        }
     }
 }

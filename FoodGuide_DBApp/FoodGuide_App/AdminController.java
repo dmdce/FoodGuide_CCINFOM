@@ -104,8 +104,14 @@ public class AdminController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
             case "New User Registration":
-                updateView();
-                view.getCardLayout().show(view.getMainPanel(), "USER_REG");
+                // 1. Get the list of all users from the model
+                ArrayList<UserData> users = model.getAllUsers();
+
+                // 2. Pass the list to the view to update its *report* table
+                view.updateUserReportTable(users);
+
+                // 3. Show the (now populated) user *report* panel
+                view.getCardLayout().show(view.getMainPanel(), "USER_REPORT_PANEL");
                 break;
             case "User Referral Impact":
                 System.out.println(2);
@@ -123,6 +129,9 @@ public class AdminController implements ActionListener {
             // BASIC NAVIGATION BUTTONS
             case "GO BACK", "GO BACK GENERATE REPORTS":
                 view.getCardLayout().show(view.getMainPanel(), "MAIN_MENU");
+                break;
+            case "GO_BACK_USER_REPORT":
+                view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
             case "GO BACK USER REG":
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");

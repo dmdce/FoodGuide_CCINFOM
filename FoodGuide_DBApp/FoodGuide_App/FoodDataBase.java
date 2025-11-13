@@ -13,7 +13,7 @@ import java.util.Map;
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
     private static final String USER = "root";
-    private static final String PASS = "pass";
+    private static final String PASS = "Cheezcake21";
 
     // --- USER TABLE ---
     private static final String USER_TABLE = "food_user";
@@ -75,6 +75,10 @@ public class FoodDataBase {
             "INSERT INTO " + RATING_TABLE +
                     " (food_transaction_id, restaurant_id, suggestion, quality, authenticity, overall_rating) " +
                     "VALUES (?, ?, ?, ?, ?, ?)";
+
+    private static final String ALL_USERS_QUERY =
+            "SELECT " + USER_ID_COL + ", " + USER_NAME_COL + ", " + USER_EMAIL_COL +
+                    " FROM " + USER_TABLE + " ORDER BY " + USER_ID_COL + " ASC";
 
     /**
      * Attempts to get a connection to the database.
@@ -363,5 +367,30 @@ public class FoodDataBase {
 
         return transactions;
     }
-    // --- END: New Method ---
+
+    /**
+     * Fetches a list of all registered users from the database.
+     * @return An ArrayList of UserData objects.
+     */
+    public ArrayList<UserData> fetchAllUsers() {
+        ArrayList<UserData> users = new ArrayList<>();
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(ALL_USERS_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                users.add(new UserData(
+                        rs.getInt(USER_ID_COL),
+                        rs.getString(USER_NAME_COL),
+                        rs.getString(USER_EMAIL_COL)
+                ));
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
 }
