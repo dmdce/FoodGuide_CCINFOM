@@ -13,7 +13,7 @@ import java.util.Map;
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
     private static final String USER = "root";
-    private static final String PASS = "12345678";
+    private static final String PASS = "Dlsu1234!";
 
     // --- USER TABLE ---
     private static final String USER_TABLE = "food_user";
@@ -79,6 +79,16 @@ public class FoodDataBase {
     private static final String ALL_USERS_QUERY =
             "SELECT " + USER_ID_COL + ", " + USER_NAME_COL + ", " + USER_EMAIL_COL +
                     " FROM " + USER_TABLE + " ORDER BY " + USER_ID_COL + " ASC";
+
+    // --- NEW: FOR RESTAURANT RECOMENDATION
+    private static final String ORIGINS = "origin";
+    private static final String ORIGIN_NAME = "name";
+    private static final String ALL_ORIGINS_QUERY = 
+        "SELECT * FROM " + ORIGINS;
+    private static final String FOOD_EVENT = "food_event";
+    private static final String FOOD_EVENT_NAME = "food_event_name";
+    private static final String FOOD_EVENT_NAME_QUERY = 
+        "SELECT " + FOOD_EVENT_NAME + " FROM " + FOOD_EVENT;
 
     /**
      * Attempts to get a connection to the database.
@@ -393,4 +403,45 @@ public class FoodDataBase {
         return users;
     }
 
+    /**
+     * Fetches a list of all food origins from the database.
+     * @return An ArrayList of Strings containing food origins
+     */
+    public ArrayList<String> fetchOriginNames() {
+        ArrayList<String> origins = new ArrayList<>();
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(ALL_ORIGINS_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                origins.add(rs.getString(ORIGIN_NAME));
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return origins;
+    }
+    
+    /**
+     * Fetches a list of all food origins from the database.
+     * @return An ArrayList of Strings containing food origins
+     */
+    public ArrayList<String> fetchFoodEventNames() {
+        ArrayList<String> events = new ArrayList<>();
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(FOOD_EVENT_NAME_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                events.add(rs.getString(FOOD_EVENT_NAME));
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return events;
+    }
 }

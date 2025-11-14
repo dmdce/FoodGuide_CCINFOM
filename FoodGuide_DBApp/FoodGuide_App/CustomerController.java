@@ -19,6 +19,10 @@ public class CustomerController implements ActionListener {
     private double currentTransactionInitialPrice;
     private double currentTransactionPromo;
     private double currentTransactionFinalPrice;
+    // NEW FOR RESTAURANT RECO
+    private ArrayList<String> selectedOrigins = new ArrayList<>();
+    private ArrayList<Integer> selectedEvents = new ArrayList<>(); //decided to use integer to get id instead cause
+                                                                   //event names might not be unique ????
 
     /**
      * Constructs a CustomerController...
@@ -134,6 +138,45 @@ public class CustomerController implements ActionListener {
             case "GO BACK", "BACK TO MAIN MENU":
                 view.dispose();
                 model.getAm().getMenuController().showMenuView();
+                break;
+
+            // New: a general action to return to user actions menu
+            case "BACK TO USER ACTIONS":
+                System.out.println("test");
+                view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                break;
+
+            // ------------------ Restaurant Recommendation component ------------------
+            case "VIEW RESTAURANT RECOMMENDATION":
+                //show panel
+                view.populateFoodOriginsScroll(model.getAm().fetchOriginNames());
+                view.getCardLayout().show(view.getMainPanel(), "RESTAURANT_RECOMMENDATION");
+                break;
+
+            case "SEARCH ORIGIN":
+                System.out.println("yessir");
+                view.populateFoodOriginsScroll(
+                        model.getAm().fetchOriginNames(),
+                        view.getOriginSearchBarField()
+                        );
+                break;
+
+            case "PROCEED TO FOOD EVENT":
+                view.populateFoodEventsScroll(model.getAm().fetchFoodEventNames());
+                view.getRestaurantCardLayout().show(
+                        view.getRestaurantCardPanel(),
+                        "VIEW SEARCH FOOD EVENT"
+                        );
+                break;
+
+            case "SEARCH EVENT":
+                view.populateFoodEventsScroll(
+                        model.getAm().fetchFoodEventNames(),
+                        view.getEventSearchBarField()
+                        );
+                break;
+
+            case "SHOW RESTAURANT RECOMMENDATION":
                 break;
         }
     }
