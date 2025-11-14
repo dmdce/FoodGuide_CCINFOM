@@ -34,26 +34,19 @@ public class AdminController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
-            // MANAGE DATABASE
-            case "Create User":
-                view.getCardLayout().show(view.getMainPanel(), "USER_CREATE");
-                break;
+            // ------------------ Manage Database Panel component ------------------
             case "MANAGE DATABASE":
                 view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
                 break;
-            case "Read User Feedback":
-                System.out.println("This this supposed to be for the customer (1)");
-                break;
-            case "Reserve Order":
-                System.out.println("Change this to make a new promo instead for admin");
+            case "Create User":
+                view.getCardLayout().show(view.getMainPanel(), "USER_CREATE");
                 break;
             case "Log a New Dish":
                 System.out.println("Log a New Dish clicked!");
                 break;
-            case "Personalize Meal Recommendations":
-                System.out.println("This this supposed to be for the customer (2)");
-                break;
-            case "REGISTER_USER":
+
+            // ------------------ Register/Create User Panel component ------------------
+            case "REGISTER USER":
                 ArrayList<String> input = view.getRegistrationInput();
                 String username = input.get(0);
                 String email = input.get(1);
@@ -61,7 +54,7 @@ public class AdminController implements ActionListener {
                     // Check for empty fields first
                     if (username.isEmpty() || email.isEmpty()) {
                         JOptionPane.showMessageDialog(view,
-                                "Username and Email cannot be empty.",
+                                "Username and/or Email cannot be empty.",
                                 "Input Error",
                                 JOptionPane.WARNING_MESSAGE);
                         return; // Stop processing
@@ -98,7 +91,7 @@ public class AdminController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
 
-            // GENERATE REPORTS
+            // ------------------ Generate Reports panel component ------------------
             case "GENERATE REPORTS":
                 updateView();
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
@@ -126,14 +119,14 @@ public class AdminController implements ActionListener {
                 System.out.println(5);
                 break;
 
-            // BASIC NAVIGATION BUTTONS
+            // ------------------ BASIC NAVIGATION BUTTONS ------------------
             case "GO BACK", "GO BACK GENERATE REPORTS":
                 view.getCardLayout().show(view.getMainPanel(), "MAIN_MENU");
                 break;
-            case "GO_BACK_USER_REPORT":
-                view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
-                break;
             case "GO BACK USER REG":
+                view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
+                break;
+            case "GO BACK USER REPORT":
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
             case "GO BACK TO MAIN":

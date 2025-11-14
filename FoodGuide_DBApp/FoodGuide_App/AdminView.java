@@ -30,20 +30,20 @@ public class AdminView extends JFrame {
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
     private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
     private ArrayList<JButton> generateReportsButtonList = new ArrayList<>();
-    private ArrayList<JTextField> userRegTextFieldList = new ArrayList<>();
-    private ArrayList<JButton> userRegButtonList = new ArrayList<>();
 
     private JButton backButton = new JButton("GO BACK");
     private JButton backGenerateReportsButton = new JButton("GO BACK");
+
+    // User Registration/Creation Panel components
+    private ArrayList<JTextField> userRegTextFieldList = new ArrayList<>();
+    private ArrayList<JButton> userRegButtonList = new ArrayList<>();
+    private JButton registerButton = new JButton("REGISTER USER");
     private JButton backUserRegButton = new JButton("GO BACK");
 
-    private DefaultTableModel userTableModel;
-    private JTable userTable;
-
+    // User Report Panel components
     private DefaultTableModel userReportTableModel;
     private JTable userReportTable;
     private JButton backUserReportButton = new JButton("GO BACK");
-    private ArrayList<JButton> userReportButtonList = new ArrayList<>();
 
     /**
      * Constructs the AdminView, initializes all sub-panels,
@@ -142,13 +142,10 @@ public class AdminView extends JFrame {
         manageDatabaseButtonPanel.setBackground(Color.decode("#FCD303"));
 
         manageDatabaseButtonList.clear();
-        manageDatabaseButtonList.add(new JButton("Read User Feedback"));
-        manageDatabaseButtonList.add(new JButton("Reserve Order"));
         manageDatabaseButtonList.add(new JButton("Log a New Dish"));
-        manageDatabaseButtonList.add(new JButton("Personalize Meal Recommendations"));
-        manageDatabaseButtonList.add(new JButton("GO BACK"));
         manageDatabaseButtonList.add(new JButton("Create User"));
         manageDatabaseButtonList.add(new JButton("Create Transaction"));
+        manageDatabaseButtonList.add(new JButton("GO BACK"));
 
         for (JButton jButton : manageDatabaseButtonList) {
             manageDatabaseButtonPanel.add(jButton);
@@ -201,7 +198,6 @@ public class AdminView extends JFrame {
             generateReportsButtonPanel.add(jButton);
         }
 
-        backGenerateReportsButton.setActionCommand("GO BACK GENERATE REPORTS");
         generateReportsButtonPanel.add(backGenerateReportsButton);
 
         // panel.add(scrollPane, BorderLayout.CENTER);
@@ -232,7 +228,6 @@ public class AdminView extends JFrame {
         userRegButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
         userRegButtonPanel.setBackground(Color.decode("#FCD303"));
 
-        backUserRegButton.setActionCommand("GO BACK USER REG");
         userRegButtonPanel.add(backUserRegButton);
 
         panel.add(userRegButtonPanel, BorderLayout.SOUTH);
@@ -284,13 +279,7 @@ public class AdminView extends JFrame {
         // Initialize button list (clears it for refreshPanels)
         userRegButtonList.clear();
 
-        // Create buttons and add to list
-        JButton registerButton = new JButton("REGISTER USER");
-        registerButton.setActionCommand("REGISTER_USER"); // New action command for the controller
-
-        // This button should already be declared at the top of AdminView
-        backUserRegButton.setActionCommand("GO BACK USER REG");
-
+        // Add buttons to list
         userRegButtonList.add(registerButton);
         userRegButtonList.add(backUserRegButton);
 
@@ -302,36 +291,6 @@ public class AdminView extends JFrame {
         panel.add(userRegButtonPanel, BorderLayout.SOUTH);
 
         return panel;
-    }
-
-    /**
-     * Refreshes the display panels of the application. This method removes existing panels,
-     * recreates them to reflect any updated data, and then adds them back to the main panel.
-     */
-    public void refreshPanels() {
-        // Remove
-        mainPanel.remove(manageDatabasePanel);
-        mainPanel.remove(generateReportsPanel);
-        mainPanel.remove(userRegPanel);
-        mainPanel.remove(userCreationPanel);
-        mainPanel.remove(userReportPanel);
-
-        // Generate and add
-        manageDatabasePanel = createManageDatabasePanel();
-        generateReportsPanel = createGenerateReportsPanel();
-        userRegPanel = createUserRegPanel();
-        userCreationPanel = createUserCreationPanel();
-        userReportPanel = createUserReportPanel();
-
-        mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
-        mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
-        mainPanel.add(userRegPanel, "USER_REG");
-        mainPanel.add(userCreationPanel, "USER_CREATE");
-        mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
-
-        // Revalidate and repaint
-        mainPanel.revalidate();
-        mainPanel.repaint();
     }
 
     /**
@@ -367,75 +326,11 @@ public class AdminView extends JFrame {
         userReportButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
         userReportButtonPanel.setBackground(Color.decode("#FCD303"));
 
-        userReportButtonList.clear(); // Clear list for refresh
-
-        backUserReportButton.setActionCommand("GO_BACK_USER_REPORT"); // New action command
-        userReportButtonList.add(backUserReportButton); // Add the new back button
-
-        for(JButton btn : userReportButtonList) {
-            userReportButtonPanel.add(btn);
-        }
+        userReportButtonPanel.add(backUserReportButton);
 
         panel.add(userReportButtonPanel, BorderLayout.SOUTH);
 
         return panel;
-    }
-
-    /**
-     * Sets the ActionListener for various GUI components, ensuring that button clicks
-     * and other actions are handled by the provided listener.
-     *
-     * @param listener The ActionListener to be used for the GUI components.
-     */
-    public void setActionListener(ActionListener listener) {
-        // Remove to not stack
-        backButton.removeActionListener(listener);
-        backGenerateReportsButton.removeActionListener(listener);
-        backUserRegButton.removeActionListener(listener);
-
-        // Add
-        backButton.addActionListener(listener);
-        backGenerateReportsButton.addActionListener(listener);
-        backUserRegButton.addActionListener(listener);
-        for (JButton jButton : mainMenuButtonList) {
-            jButton.removeActionListener(listener);
-            jButton.addActionListener(listener);
-        }
-        for (JButton jButton : generateReportsButtonList) {
-            jButton.removeActionListener(listener);
-            jButton.addActionListener(listener);
-        }
-        for (JButton jButton : manageDatabaseButtonList) {
-            jButton.removeActionListener(listener);
-            jButton.addActionListener(listener);
-        }
-        for (JButton jButton : userRegButtonList) {
-            jButton.removeActionListener(listener);
-            jButton.addActionListener(listener);
-        }
-
-        for (JButton jButton : userReportButtonList) {
-            jButton.removeActionListener(listener);
-            jButton.addActionListener(listener);
-        }
-    }
-
-    /**
-     * Returns the main JPanel which acts as a container for different views
-     *
-     * @return The main JPanel of the view.
-     */
-    public JPanel getMainPanel() {
-        return mainPanel;
-    }
-
-    /**
-     * Returns the CardLayout manager used by the main panel to switch between different views.
-     *
-     * @return The CardLayout instance.
-     */
-    public CardLayout getCardLayout() {
-        return cardLayout;
     }
 
     /**
@@ -472,5 +367,99 @@ public class AdminView extends JFrame {
                 });
             }
         }
+    }
+
+    /*
+     * --------------------------------------------------------------------------------------------
+     * LAYOUT AND BUTTON BACKBONE
+     * --------------------------------------------------------------------------------------------
+     */
+
+    /**
+     * Refreshes the display panels of the application. This method removes existing panels,
+     * recreates them to reflect any updated data, and then adds them back to the main panel.
+     */
+    public void refreshPanels() {
+        // Remove
+        mainPanel.remove(manageDatabasePanel);
+        mainPanel.remove(generateReportsPanel);
+        mainPanel.remove(userRegPanel);
+        mainPanel.remove(userCreationPanel);
+        mainPanel.remove(userReportPanel);
+
+        // Generate and add
+        manageDatabasePanel = createManageDatabasePanel();
+        generateReportsPanel = createGenerateReportsPanel();
+        userRegPanel = createUserRegPanel();
+        userCreationPanel = createUserCreationPanel();
+        userReportPanel = createUserReportPanel();
+
+        mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
+        mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
+        mainPanel.add(userRegPanel, "USER_REG");
+        mainPanel.add(userCreationPanel, "USER_CREATE");
+        mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
+
+        // Revalidate and repaint
+        mainPanel.revalidate();
+        mainPanel.repaint();
+    }
+
+    /**
+     * Sets the ActionListener for various GUI components, ensuring that button clicks
+     * and other actions are handled by the provided listener.
+     *
+     * @param listener The ActionListener to be used for the GUI components.
+     */
+    public void setActionListener(ActionListener listener) {
+        // Remove to not stack
+        backButton.removeActionListener(listener);
+        backGenerateReportsButton.removeActionListener(listener);
+        backUserRegButton.removeActionListener(listener);
+        backUserReportButton.removeActionListener(listener);
+
+        // Add
+        backButton.addActionListener(listener);
+        backGenerateReportsButton.addActionListener(listener);
+        backUserRegButton.addActionListener(listener);
+        backUserReportButton.addActionListener(listener);
+        for (JButton jButton : mainMenuButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
+        for (JButton jButton : generateReportsButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
+        for (JButton jButton : manageDatabaseButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
+        for (JButton jButton : userRegButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
+
+        // Add ActionCommands (actions with same names but different functions)
+        backUserReportButton.setActionCommand("GO BACK USER REPORT");
+        backUserRegButton.setActionCommand("GO BACK USER REG");
+    }
+
+    /**
+     * Returns the main JPanel which acts as a container for different views
+     *
+     * @return The main JPanel of the view.
+     */
+    public JPanel getMainPanel() {
+        return mainPanel;
+    }
+
+    /**
+     * Returns the CardLayout manager used by the main panel to switch between different views.
+     *
+     * @return The CardLayout instance.
+     */
+    public CardLayout getCardLayout() {
+        return cardLayout;
     }
 }

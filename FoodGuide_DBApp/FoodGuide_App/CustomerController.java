@@ -42,7 +42,7 @@ public class CustomerController implements ActionListener {
         Integer userId = model.getLoggedInUserId();
 
         switch (e.getActionCommand()) {
-            // --- SIGN IN ---
+            // ------------------ SIGN IN Panel component ------------------
             case "SIGN IN": {
                 ArrayList<String> signInInput = view.getSignInInput();
                 String username = signInInput.get(0);
@@ -62,26 +62,20 @@ public class CustomerController implements ActionListener {
                 break;
             }
 
-            // --- LOG_OUT ---
-            case "LOG_OUT":
+            // ------------------ LOG OUT component ------------------
+            case "LOG OUT":
                 model.setLoggedInUser(null);
                 view.getCardLayout().show(view.getMainPanel(), "START_VIEW");
                 break;
 
-            // --- TRANSACTION CREATION (Refactored to helper) ---
-            case "RESTAURANT_SELECTED":
-            case "CREATE_TRANSACTION":
-            case "ADD_ITEM":
-            case "CALCULATE_TOTAL":
-            case "PROCEED_TO_RATING":
-            case "CALCULATE_RATING":
-            case "GO_BACK_TO_TRANSACTION":
-            case "GO_BACK_FROM_TRANSACTION":
+            // ------------------ TRANSACTION CREATION (Refactored to helper) Panel component ------------------
+            case "RESTAURANT_SELECTED", "CREATE TRANSACTION", "ADD ITEM", "CALCULATE TOTAL",
+                 "PROCEED TO RATING", "CALCULATE_RATING", "GO BACK FOOD RATING", "GO BACK TRANSACTION":
                 handleTransactionEvents(e); // Helper function for clarity
                 break;
 
-            // --- SUBMIT_RATING ---
-            case "SUBMIT_RATING": {
+            // ------------------ SUBMIT RATING panel component ------------------
+            case "SUBMIT RATING": {
                 int finalQuality = (int) view.getQualityRatingComboBox().getSelectedItem();
                 int finalAuthenticity = (int) view.getAuthenticityRatingComboBox().getSelectedItem();
                 String comments = view.getRatingCommentsArea().getText();
@@ -109,8 +103,8 @@ public class CustomerController implements ActionListener {
                 break;
             }
 
-            // --- NEW: History Panel Cases ---
-            case "VIEW_TRANSACTION_HISTORY":
+            // ------------------ History Panel component ------------------
+            case "VIEW TRANSACTION HISTORY":
                 if (userId == null) {
                     JOptionPane.showMessageDialog(view, "Error: You are not logged in.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
@@ -125,27 +119,19 @@ public class CustomerController implements ActionListener {
                 // 3. Show the panel
                 view.getCardLayout().show(view.getMainPanel(), "HISTORY_VIEW");
                 break;
-
-            case "SEARCH_HISTORY":
+            case "SEARCH HISTORY":
                 if (userId == null) {
                     JOptionPane.showMessageDialog(view, "Error: You are not logged in.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 searchHistory(userId); // Use helper
                 break;
-
-            case "GO_BACK_FROM_HISTORY":
+            case "GO BACK HISTORY":
                 view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
                 break;
-            // --- END: New Cases ---
 
-            // --- BASIC NAVIGATION BUTTONS (Unchanged) ---
-            case "GO BACK":
-                view.dispose();
-                model.getAm().getMenuController().showMenuView();
-                break;
-
-            case "GO BACK TO MAIN":
+            // ------------------ BASIC NAVIGATION BUTTONS ------------------
+            case "GO BACK", "BACK TO MAIN MENU":
                 view.dispose();
                 model.getAm().getMenuController().showMenuView();
                 break;
@@ -167,7 +153,7 @@ public class CustomerController implements ActionListener {
                 }
                 break;
 
-            case "CREATE_TRANSACTION":
+            case "CREATE TRANSACTION":
                 cart.clear();
                 view.getTransactionCartArea().setText("");
                 view.getInitialPriceLabel().setText("P0.00");
@@ -180,14 +166,14 @@ public class CustomerController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
                 break;
 
-            case "ADD_ITEM":
+            case "ADD ITEM":
                 FoodItem selectedItem = (FoodItem) view.getFoodItemComboBox().getSelectedItem();
                 if (selectedItem == null) return;
                 cart.add(selectedItem);
                 updateCartView();
                 break;
 
-            case "CALCULATE_TOTAL":
+            case "CALCULATE TOTAL":
                 double initialPrice = 0.0;
                 for (FoodItem item : cart) {
                     initialPrice += item.getPrice();
@@ -217,7 +203,7 @@ public class CustomerController implements ActionListener {
                 view.getFinalPriceLabel().setText(String.format("P%.2f", finalPrice));
                 break;
 
-            case "PROCEED_TO_RATING":
+            case "PROCEED TO RATING":
                 currentTransactionRestaurant = (String) view.getRestaurantComboBox().getSelectedItem();
                 if (currentTransactionRestaurant == null || currentTransactionRestaurant.equals("[Select One]")) {
                     JOptionPane.showMessageDialog(view, "Please select a valid restaurant.", "Input Error", JOptionPane.WARNING_MESSAGE);
@@ -241,17 +227,16 @@ public class CustomerController implements ActionListener {
                 view.getOverallRatingLabel().setText(String.format("%.1f / 5.0", average));
                 break;
 
-            case "GO_BACK_TO_TRANSACTION":
+            case "GO BACK FOOD RATING":
                 view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
                 break;
 
-            case "GO_BACK_FROM_TRANSACTION":
+            case "GO BACK TRANSACTION":
                 view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
                 break;
         }
     }
 
-    // --- NEW: Helper function for searching history ---
     /**
      * Gets filter values from the view, calls the model, and updates the table.
      * @param userId The ID of the logged-in user.
@@ -272,20 +257,9 @@ public class CustomerController implements ActionListener {
         // 3. Update the view's table with the results
         view.updateHistoryTable(transactions);
     }
-    // --- END: New Helper ---
-
-    /**
-     * Refreshes all panels...
-     * (Unchanged)
-     */
-    private void updateView() {
-        view.refreshPanels();
-        view.setActionListener(this);
-    }
 
     /**
      * Helper method to update the cart display.
-     * (Unchanged)
      */
     private void updateCartView() {
         JTextArea cartArea = view.getTransactionCartArea();
@@ -297,5 +271,13 @@ public class CustomerController implements ActionListener {
                 cartArea.append(item.toString() + "\n");
             }
         }
+    }
+
+    /**
+     * Refreshes all panels...
+     */
+    private void updateView() {
+        view.refreshPanels();
+        view.setActionListener(this);
     }
 }

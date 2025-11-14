@@ -17,14 +17,13 @@ public class CustomerView extends JFrame {
     private JPanel foodRatingPanel;
     private JPanel startPanel;
     private JPanel userActionsPanel;
-
     private JPanel transactionHistoryPanel;
-    private JTextField promoInputField;
 
+    // Sign In Panel components
     private ArrayList<JButton> userActionsButtonList = new ArrayList<>();
     private ArrayList<JTextField> signInTextFieldList = new ArrayList<>();
     private JButton signInButton = new JButton("SIGN IN");
-    private JButton backButton = new JButton("GO BACK");
+    private JButton backToMainMenuButton = new JButton("BACK TO MAIN MENU");
     private JLabel userIdLabel;
 
     // Transaction Panel components
@@ -32,6 +31,7 @@ public class CustomerView extends JFrame {
     private JComboBox<FoodItem> foodItemComboBox;
     private JComboBox<String> restaurantComboBox;
     private JTextArea transactionCartArea;
+    private JTextField promoInputField;
     private JLabel initialPriceLabel;
     private JLabel promoLabel;
     private JLabel finalPriceLabel;
@@ -43,7 +43,7 @@ public class CustomerView extends JFrame {
     private JTextArea ratingCommentsArea;
     private JLabel overallRatingLabel;
 
-    // --- NEW: History Panel Components ---
+    // History Panel Components
     private ArrayList<JButton> historyButtonList = new ArrayList<>();
     private JTextField filterStartDateField;
     private JTextField filterEndDateField;
@@ -52,7 +52,6 @@ public class CustomerView extends JFrame {
     private JTextField filterPromoField;
     private JTable historyTable;
     private DefaultTableModel historyTableModel;
-    // --- END: History Panel Components ---
 
     /**
      * Constructs the customer view, initializes all panels,
@@ -118,11 +117,7 @@ public class CustomerView extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBackground(Color.decode("#2E5E19"));
         buttonPanel.add(signInButton);
-        buttonPanel.add(backButton);
-
-        JButton backToMain = new JButton("BACK TO MAIN MENU");
-        backToMain.setActionCommand("GO BACK TO MAIN");
-        buttonPanel.add(backToMain);
+        buttonPanel.add(backToMainMenuButton);
 
         panel.add(buttonPanel, BorderLayout.SOUTH);
         return panel;
@@ -161,17 +156,17 @@ public class CustomerView extends JFrame {
         userActionsButtonList.clear();
 
         JButton createTransactionButton = new JButton("CREATE TRANSACTION");
-        createTransactionButton.setActionCommand("CREATE_TRANSACTION");
+        createTransactionButton.setActionCommand("CREATE TRANSACTION");
         userActionsButtonList.add(createTransactionButton);
 
         // --- NEW: View History Button ---
         JButton viewHistoryButton = new JButton("VIEW TRANSACTION HISTORY");
-        viewHistoryButton.setActionCommand("VIEW_TRANSACTION_HISTORY");
+        viewHistoryButton.setActionCommand("VIEW TRANSACTION HISTORY");
         userActionsButtonList.add(viewHistoryButton);
         // --- END: New ---
 
         JButton logOutButton = new JButton("LOG OUT");
-        logOutButton.setActionCommand("LOG_OUT");
+        logOutButton.setActionCommand("LOG OUT");
         userActionsButtonList.add(logOutButton);
 
         for (JButton button : userActionsButtonList)
@@ -183,95 +178,6 @@ public class CustomerView extends JFrame {
 
     public void setUserIdLabel(String userId) {
         this.userIdLabel.setText(userId);
-    }
-
-    /**
-     * Refreshes dynamic panels.
-     * --- MODIFIED: Added history panel ---
-     */
-    public void refreshPanels() {
-        mainPanel.remove(userActionsPanel);
-        mainPanel.remove(transactionPanel);
-        mainPanel.remove(foodRatingPanel);
-        // --- NEW: Remove history panel ---
-        mainPanel.remove(transactionHistoryPanel);
-        // --- END: New ---
-
-        userActionsPanel = createUserActionsPanel();
-        transactionPanel = createTransactionPanel();
-        foodRatingPanel = createFoodRatingPanel();
-        // --- NEW: Re-create history panel ---
-        transactionHistoryPanel = createTransactionHistoryPanel();
-        // --- END: New ---
-
-        mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
-        mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
-        mainPanel.add(foodRatingPanel, "RATING_MENU");
-        // --- NEW: Add history panel back ---
-        mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
-        // --- END: New ---
-
-        mainPanel.revalidate();
-        mainPanel.repaint();
-    }
-
-    /**
-     * Attaches a shared ActionListener to all buttons.
-     * --- MODIFIED: Added history buttons ---
-     */
-    public void setActionListener(ActionListener listener) {
-        // ... (signInButton, backButton, southPanel buttons unchanged) ...
-        signInButton.removeActionListener(listener);
-        signInButton.addActionListener(listener);
-        backButton.removeActionListener(listener);
-        backButton.addActionListener(listener);
-        JPanel southPanel = (JPanel) startPanel.getComponent(2);
-        for (Component comp : southPanel.getComponents()) {
-            if (comp instanceof JButton) {
-                ((JButton) comp).removeActionListener(listener);
-                ((JButton) comp).addActionListener(listener);
-            }
-        }
-
-        // Buttons from userActionsPanel (now includes view history)
-        for (JButton button : userActionsButtonList) {
-            button.removeActionListener(listener);
-            button.addActionListener(listener);
-        }
-
-        // Buttons from transactionPanel
-        for (JButton button : transactionButtonList) {
-            button.removeActionListener(listener);
-            button.addActionListener(listener);
-        }
-
-        // Buttons from ratingPanel
-        for (JButton button : ratingButtonList) {
-            button.removeActionListener(listener);
-            button.addActionListener(listener);
-        }
-
-        // Listener for the restaurant combo box
-        if (restaurantComboBox != null) {
-            restaurantComboBox.removeActionListener(listener);
-            restaurantComboBox.addActionListener(listener);
-            restaurantComboBox.setActionCommand("RESTAURANT_SELECTED");
-        }
-
-        // --- NEW: Listeners for history panel buttons ---
-        for (JButton button : historyButtonList) {
-            button.removeActionListener(listener);
-            button.addActionListener(listener);
-        }
-        // --- END: New ---
-    }
-
-    public JPanel getMainPanel() {
-        return mainPanel;
-    }
-
-    public CardLayout getCardLayout() {
-        return cardLayout;
     }
 
     /**
@@ -305,7 +211,7 @@ public class CustomerView extends JFrame {
         formPanel.add(foodItemComboBox, gbc);
         gbc.gridx = 2; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
         JButton addItemButton = new JButton("Add Item");
-        addItemButton.setActionCommand("ADD_ITEM");
+        addItemButton.setActionCommand("ADD ITEM");
         formPanel.add(addItemButton, gbc);
         gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.NORTHEAST;
         formPanel.add(new JLabel("Cart:"), gbc);
@@ -355,13 +261,13 @@ public class CustomerView extends JFrame {
         transactionButtonList.clear();
         transactionButtonList.add(addItemButton);
         JButton calculateButton = new JButton("Calculate Total");
-        calculateButton.setActionCommand("CALCULATE_TOTAL");
+        calculateButton.setActionCommand("CALCULATE TOTAL");
         transactionButtonList.add(calculateButton);
-        JButton proceedButton = new JButton("Proceed to Rating");
-        proceedButton.setActionCommand("PROCEED_TO_RATING");
+        JButton proceedButton = new JButton("Purchase and Proceed to Rating");
+        proceedButton.setActionCommand("PROCEED TO RATING");
         transactionButtonList.add(proceedButton);
         JButton backButton = new JButton("GO BACK");
-        backButton.setActionCommand("GO_BACK_FROM_TRANSACTION");
+        backButton.setActionCommand("GO BACK TRANSACTION");
         transactionButtonList.add(backButton);
         for (JButton btn : transactionButtonList) {
             buttonPanel.add(btn);
@@ -440,10 +346,10 @@ public class CustomerView extends JFrame {
         ratingButtonList.clear();
         ratingButtonList.add(calcButton);
         JButton submitButton = new JButton("Submit Final Rating");
-        submitButton.setActionCommand("SUBMIT_RATING");
+        submitButton.setActionCommand("SUBMIT RATING");
         ratingButtonList.add(submitButton);
         JButton backButton = new JButton("GO BACK");
-        backButton.setActionCommand("GO_BACK_TO_TRANSACTION");
+        backButton.setActionCommand("GO BACK FOOD RATING");
         ratingButtonList.add(backButton);
         for (JButton btn : ratingButtonList) {
             buttonPanel.add(btn);
@@ -576,11 +482,11 @@ public class CustomerView extends JFrame {
         historyButtonList.clear();
 
         JButton searchButton = new JButton("Search");
-        searchButton.setActionCommand("SEARCH_HISTORY");
+        searchButton.setActionCommand("SEARCH HISTORY");
         historyButtonList.add(searchButton);
 
         JButton backButton = new JButton("GO BACK");
-        backButton.setActionCommand("GO_BACK_FROM_HISTORY");
+        backButton.setActionCommand("GO BACK HISTORY");
         historyButtonList.add(backButton);
 
         for(JButton btn : historyButtonList) {
@@ -672,5 +578,93 @@ public class CustomerView extends JFrame {
                 });
             }
         }
+    }
+
+    /*
+    * --------------------------------------------------------------------------------------------
+    * LAYOUT AND BUTTON BACKBONE
+    * --------------------------------------------------------------------------------------------
+    */
+
+    /**
+     * Refreshes dynamic panels.
+     * --- MODIFIED: Added history panel ---
+     */
+    public void refreshPanels() {
+        mainPanel.remove(userActionsPanel);
+        mainPanel.remove(transactionPanel);
+        mainPanel.remove(foodRatingPanel);
+        mainPanel.remove(transactionHistoryPanel);
+
+        userActionsPanel = createUserActionsPanel();
+        transactionPanel = createTransactionPanel();
+        foodRatingPanel = createFoodRatingPanel();
+        transactionHistoryPanel = createTransactionHistoryPanel();
+
+        mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
+        mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
+        mainPanel.add(foodRatingPanel, "RATING_MENU");
+        mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
+
+        mainPanel.revalidate();
+        mainPanel.repaint();
+    }
+
+    /**
+     * Attaches a shared ActionListener to all buttons.
+     * --- MODIFIED: Added history buttons ---
+     */
+    public void setActionListener(ActionListener listener) {
+        signInButton.removeActionListener(listener);
+        signInButton.addActionListener(listener);
+        backToMainMenuButton.removeActionListener(listener);
+        backToMainMenuButton.addActionListener(listener);
+        JPanel southPanel = (JPanel) startPanel.getComponent(2);
+        for (Component comp : southPanel.getComponents()) {
+            if (comp instanceof JButton) {
+                ((JButton) comp).removeActionListener(listener);
+                ((JButton) comp).addActionListener(listener);
+            }
+        }
+
+        // Buttons from userActionsPanel (now includes view history)
+        for (JButton button : userActionsButtonList) {
+            button.removeActionListener(listener);
+            button.addActionListener(listener);
+        }
+
+        // Buttons from transactionPanel
+        for (JButton button : transactionButtonList) {
+            button.removeActionListener(listener);
+            button.addActionListener(listener);
+        }
+
+        // Buttons from ratingPanel
+        for (JButton button : ratingButtonList) {
+            button.removeActionListener(listener);
+            button.addActionListener(listener);
+        }
+
+        // Listener for the restaurant combo box
+        if (restaurantComboBox != null) {
+            restaurantComboBox.removeActionListener(listener);
+            restaurantComboBox.addActionListener(listener);
+            restaurantComboBox.setActionCommand("RESTAURANT_SELECTED");
+        }
+
+        // --- NEW: Listeners for history panel buttons ---
+        for (JButton button : historyButtonList) {
+            button.removeActionListener(listener);
+            button.addActionListener(listener);
+        }
+        // --- END: New ---
+    }
+
+    public JPanel getMainPanel() {
+        return mainPanel;
+    }
+
+    public CardLayout getCardLayout() {
+        return cardLayout;
     }
 }
