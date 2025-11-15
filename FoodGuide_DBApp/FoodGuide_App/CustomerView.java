@@ -59,10 +59,13 @@ public class CustomerView extends JFrame {
     private JPanel originScrollPanel = new JPanel(); //will be overridden
     private JScrollPane originScrollPlane = new JScrollPane();
     private JScrollPane eventScrollPlane = new JScrollPane();
+    private JScrollPane restaurantScrollPlane = new JScrollPane();
     private JTextField originSearchBar;
     private JTextField eventSearchBar;
     private CardLayout restaurantCardLayout;
     private JPanel restaurantCardPanel;
+    private ArrayList<JToggleButton> originToggles = new ArrayList<>();
+    private ArrayList<JToggleButton> eventToggles = new ArrayList<>();
 
     /**
      * Constructs the customer view, initializes all panels,
@@ -545,18 +548,19 @@ public class CustomerView extends JFrame {
 
         restaurantCardPanel.add(createSelectOrigin(), "VIEW SEARCH FOOD CULTURE");
         restaurantCardPanel.add(createSelectEvent(), "VIEW SEARCH FOOD EVENT");
-        restaurantCardLayout.show(restaurantCardPanel, "VIEW SEARCH FOOD CULTURE");
+        restaurantCardPanel.add(createRestaurantRecos(), "VIEW RESTAURANT RECOMMENDATION");
+        // restaurantCardLayout.show(restaurantCardPanel, "VIEW SEARCH FOOD CULTURE");
 
         // --- Button Panel (South) ---
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBackground(Color.decode("#2E5E19"));
 
         JButton backButton = new JButton("GO BACK");
-        backButton.setActionCommand("BACK TO USER ACTIONS");
+        backButton.setActionCommand("GO BACK RESTAURANT RECOMMENDATION");
         restaurantRecButtonList.add(backButton);
 
         JButton proceedButton = new JButton("Proceed");
-        proceedButton.setActionCommand("PROCEED TO FOOD EVENT");
+        proceedButton.setActionCommand("PROCEED RESTAURANT REC");
         restaurantRecButtonList.add(proceedButton);
 
         buttonPanel.add(backButton);
@@ -566,6 +570,7 @@ public class CustomerView extends JFrame {
         return panel;
     }
 
+    /// HELPER FUNCTIONS FOR RESTAURANT RECOMMENDATION;
     private JPanel createSelectOrigin() {
         JPanel searchFoodCulture = new JPanel(new BorderLayout());
         searchFoodCulture.setBorder(BorderFactory.createTitledBorder("Select Food Culture"));
@@ -610,8 +615,19 @@ public class CustomerView extends JFrame {
 
         return searchFoodEvent;
     }
+
+    private JPanel createRestaurantRecos() {
+        JPanel restaurantRecos = new JPanel(new BorderLayout());
+        restaurantRecos.setBorder(BorderFactory.createTitledBorder("Restaurant Recommendations"));
+
+        // Scroll plane
+        restaurantScrollPlane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        restaurantScrollPlane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        restaurantRecos.add(restaurantScrollPlane);
+
+        return restaurantRecos;
+    }
     
-    /// HELPER FUNCTIONS FOR RESTAURANT RECOMMENDATION;
     public void populateFoodOriginsScroll(ArrayList<String> origins) {
         populateFoodOriginsScroll(origins, "");
     }
@@ -620,7 +636,18 @@ public class CustomerView extends JFrame {
      * Puts origin toggle buttons inside the food origin scroll plane and repaints
      */
     public void populateFoodOriginsScroll(ArrayList<String> origins, String filter) {
-        JPanel plane = new JPanel(new GridLayout(0, 2, 5, 5));
+        JPanel plane = new JPanel(new GridBagLayout());
+        originToggles.clear();
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); // gap between buttons
+        gbc.fill = GridBagConstraints.HORIZONTAL; // make button fill width
+        gbc.weightx = 1.0; // let it expand horizontally
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+
+        int col = 0;
+
         for (String origin : origins) {
             System.out.println(origin);
             if (!origin.toLowerCase().contains(filter.toLowerCase())) //lower case it all
@@ -628,12 +655,26 @@ public class CustomerView extends JFrame {
 
             JToggleButton originButton = new JToggleButton(origin);
             originButton.setPreferredSize(new Dimension(0, 100));
-            originButton.setMaximumSize(new Dimension(0, 100));
-            plane.add(originButton);
+            originToggles.add(originButton);
+            plane.add(originButton, gbc);
+
+            col++;
+            if (col == 2) {
+                col = 0;
+                gbc.gridx = 0;
+                gbc.gridy++;
+            } else {
+                gbc.gridx = 1;
+            }
+
         }
-        JPanel bufferForBottomOfScroll = new JPanel();
-        bufferForBottomOfScroll.setPreferredSize(new Dimension(0, 100));
-        plane.add(bufferForBottomOfScroll);
+        // after loop: if last row has only 1 button, add invisible filler
+        if (col == 1) {
+            gbc.gridx = 1;
+            JPanel filler = new JPanel();
+            filler.setPreferredSize(new Dimension(0, 0)); // takes no vertical space
+            plane.add(filler, gbc);
+        }
 
         originScrollPlane.setViewportView(plane);
         originScrollPlane.revalidate();
@@ -648,7 +689,18 @@ public class CustomerView extends JFrame {
      * Puts origin toggle buttons inside the food origin scroll plane and repaints
      */
     public void populateFoodEventsScroll(ArrayList<String> events, String filter) {
-        JPanel plane = new JPanel(new GridLayout(0, 2, 5, 5));
+        JPanel plane = new JPanel(new GridBagLayout());
+        eventToggles.clear();
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); // gap between buttons
+        gbc.fill = GridBagConstraints.HORIZONTAL; // make button fill width
+        gbc.weightx = 1.0; // let it expand horizontally
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+
+        int col = 0;
+
         for (String event : events) {
             System.out.println(event);
             if (!event.toLowerCase().contains(filter.toLowerCase())) //lower case it all
@@ -656,18 +708,121 @@ public class CustomerView extends JFrame {
 
             JToggleButton eventButton = new JToggleButton(event);
             eventButton.setPreferredSize(new Dimension(0, 100));
-            eventButton.setMaximumSize(new Dimension(0, 100));
-            plane.add(eventButton);
+            eventToggles.add(eventButton);
+            plane.add(eventButton, gbc);
+
+            col++;
+            if (col == 2) {
+                col = 0;
+                gbc.gridx = 0;
+                gbc.gridy++;
+            } else {
+                gbc.gridx = 1;
+            }
         }
-        JPanel bufferForBottomOfScroll = new JPanel();
-        bufferForBottomOfScroll.setPreferredSize(new Dimension(0, 100));
-        plane.add(bufferForBottomOfScroll);
+        // after loop: if last row has only 1 button, add invisible filler
+        if (col == 1) {
+            gbc.gridx = 1;
+            JPanel filler = new JPanel();
+            filler.setPreferredSize(new Dimension(0, 0)); // takes no vertical space
+            plane.add(filler, gbc);
+        }
 
         eventScrollPlane.setViewportView(plane);
         eventScrollPlane.revalidate();
         eventScrollPlane.repaint();
     }
+    /**
+     * Puts origin toggle buttons inside the food origin scroll plane and repaints
+     */
+    public void populateRestaurantRecos(ArrayList<RestaurantData> restaurants) {
+        JPanel plane = new JPanel();
+        BoxLayout planeBLayout = new BoxLayout(plane, BoxLayout.Y_AXIS);
+        plane.setLayout(planeBLayout);
 
+        for (RestaurantData restaurant : restaurants) {
+            JPanel restaurantPlane = new JPanel();
+            BoxLayout bLayout = new BoxLayout(restaurantPlane, BoxLayout.Y_AXIS);
+            
+            restaurantPlane.setLayout(bLayout);
+            restaurantPlane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));;
+            restaurantPlane.setBackground(Color.WHITE);
+            restaurantPlane.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            // --- Labels ---
+            JLabel nameLabel = new JLabel("Name: " + restaurant.getRestaurantName());
+            nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            JLabel descLabel = new JLabel("Description: " + restaurant.getDescription());
+            descLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            JLabel ratingLabel = new JLabel("Rating: " + restaurant.getTotalRating());
+            ratingLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            restaurantPlane.add(nameLabel);
+            restaurantPlane.add(descLabel);
+            restaurantPlane.add(ratingLabel);
+
+            plane.add(restaurantPlane);
+            plane.add(Box.createVerticalStrut(10));
+        }
+        JPanel bufferForBottomOfScroll = new JPanel();
+        bufferForBottomOfScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+        plane.add(bufferForBottomOfScroll);
+
+        restaurantScrollPlane.setViewportView(plane);
+        restaurantScrollPlane.revalidate();
+        restaurantScrollPlane.repaint();
+    }
+
+    /**
+     * This hides switching layout in a layer of Abstraction
+     */
+    public void switchRestaurantCardPanel(String key) {
+        restaurantCardLayout.show(restaurantCardPanel, key);
+    }
+    /**
+     * Gets selected origins for restaurant recommendation
+     * @return ArrayList of Strings containing origin names
+     */
+    public ArrayList<String> getSelectedOrigins() {
+        ArrayList<String> origins = new ArrayList<>();
+        for (JToggleButton origin : originToggles) {
+            if (!origin.isSelected())
+                continue;
+
+            origins.add(origin.getText());
+        }
+
+        return origins;
+    }
+
+    /**
+     * Gets selected events for restaurant recommendation
+     * @return ArrayList of Strings containing event names
+     */
+    public ArrayList<String> getSelectedEvents() {
+        ArrayList<String> events = new ArrayList<>();
+        for (JToggleButton event : eventToggles) {
+            if (!event.isSelected())
+                continue;
+
+            events.add(event.getText());
+        }
+
+        return events;
+    }
+
+    /**
+     * Resets all selected toggles for restaurant recommendation
+     */
+    public void resetRestaurantRecommendation() {
+        for (JToggleButton btn : originToggles)
+            btn.setSelected(false);
+
+        for (JToggleButton btn : eventToggles)
+            btn.setSelected(false);
+    }
     /**
      * Gets the text inside the search for origins
      * @Returns String

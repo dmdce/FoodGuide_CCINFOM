@@ -127,4 +127,8 @@ public class AdminModel {
     public ArrayList<String> fetchFoodEventNames() {
         return db.fetchFoodEventNames();
     }
+
+    public ArrayList<RestaurantData> fetchRestaurantFromOriginAndEvent(ArrayList<String> origins, ArrayList<String> events) {
+        return db.fetchRestaurantFromOriginAndEvent(origins, events);
+    }
 }
