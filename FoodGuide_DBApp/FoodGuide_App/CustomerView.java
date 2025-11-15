@@ -794,6 +794,11 @@ public class CustomerView extends JFrame {
             origins.add(origin.getText());
         }
 
+        if (origins.isEmpty()) {
+            for (JToggleButton origin : originToggles)
+                origins.add(origin.getText());
+        }
+
         return origins;
     }
 
@@ -808,6 +813,12 @@ public class CustomerView extends JFrame {
                 continue;
 
             events.add(event.getText());
+        }
+
+        //if none is selected, return everything
+        if (events.isEmpty()) {
+            for (JToggleButton event : eventToggles)
+                events.add(event.getText());
         }
 
         return events;
