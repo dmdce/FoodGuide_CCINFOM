@@ -4,17 +4,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.Timestamp; // Import Timestamp
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-// No import for FoodItem here, it's correct!
 import java.util.stream.Collectors;
 
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
     private static final String USER = "root";
-    private static final String PASS = "Dlsu1234!";
+    private static final String PASS = "12345678";
 
     // --- USER TABLE ---
     private static final String USER_TABLE = "food_user";
@@ -467,7 +465,7 @@ public class FoodDataBase {
 
         //Query
         final String QUERY = 
-            "SELECT * FROM restaurant r " +
+            "SELECT DISTINCT r.* FROM restaurant r " +
             "JOIN food_menu fm ON fm.restaurant_id = r.restaurant_id " +
             "JOIN food f ON f.food_id = fm.food_id " +
             "LEFT JOIN origin o ON f.origin_id = o.origin_id " +

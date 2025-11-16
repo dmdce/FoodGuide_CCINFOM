@@ -162,38 +162,40 @@ public class CustomerController implements ActionListener {
                         );
                 break;
 
-            case "PROCEED RESTAURANT REC":
+            case "PROCEED RESTAURANT RECOMMENDATION":
                 if (restaurantCardLevel > 2)
                     restaurantCardLevel = 0;
 
                 if (restaurantCardLevel == 0) {
-                    /// --- MOVE TO SELECT EVENTS ---
+                    /// --- MOVE TO SELECT ORIGINS ---
                     //Clear and add all selected origins
                     selectedOrigins.clear();
                     selectedOrigins.addAll(view.getSelectedOrigins());
 
                     if (selectedOrigins.isEmpty()) {
-                        JOptionPane.showMessageDialog(view, "Error: Choose atleast one", "Submission Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(view, "Error: Choose at least one", "Submission Error", JOptionPane.ERROR_MESSAGE);
                         break;
                     }
 
-                    //move to food event
+                    // move to food event
                     view.populateFoodEventsScroll(model.getAm().fetchFoodEventNames());
                     view.switchRestaurantCardPanel("VIEW SEARCH FOOD EVENT");
                 } else if (restaurantCardLevel == 1) {
-                    /// --- MOVE TO RESTAURANT RECOMMENDATION ---
-                    //Clear and add all selected origins
+                    /// --- MOVE TO SELECT EVENTS ---
+                    //Clear and add all selected events
                     selectedEvents.clear();
                     selectedEvents.addAll(view.getSelectedEvents());
 
                     if (selectedEvents.isEmpty()) {
-                        JOptionPane.showMessageDialog(view, "Error: Choose atleast one", "Submission Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(view, "Error: Choose at least one", "Submission Error", JOptionPane.ERROR_MESSAGE);
                         break;
                     }
-                    //move to restaurant list
+
+                    /// --- MOVE TO RESTAURANT RECOMMENDATION ---
                     view.populateRestaurantRecos(
                             model.getAm().fetchRestaurantFromOriginAndEvent(selectedOrigins, selectedEvents)
                             );
+
                     view.switchRestaurantCardPanel("VIEW RESTAURANT RECOMMENDATION");
                 } else if (restaurantCardLevel == 2) {
                     restaurantCardLevel = 0;
@@ -210,7 +212,7 @@ public class CustomerController implements ActionListener {
                         );
                 break;
 
-            case "GO BACK RESTAURANT RECOMMENDATION":
+            case "GO BACK RESTAURANT RECOMMENDATION", "OK RESTAURANT RECOMMENDATION":
                 if (restaurantCardLevel < 0)
                     restaurantCardLevel = 0;
 
