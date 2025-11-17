@@ -13,9 +13,11 @@ import java.awt.event.ActionListener;
 public class CustomerView extends JFrame {
     private CardLayout cardLayout = new CardLayout();
     private JPanel mainPanel = new JPanel(cardLayout);
+
+    private JPanel startPanel;
+    private JPanel userRegistrationPanel;
     private JPanel transactionPanel;
     private JPanel foodRatingPanel;
-    private JPanel startPanel;
     private JPanel userActionsPanel;
     private JPanel transactionHistoryPanel;
     private JPanel restaurantRecommendationPanel;
@@ -24,8 +26,13 @@ public class CustomerView extends JFrame {
     private ArrayList<JButton> userActionsButtonList = new ArrayList<>();
     private ArrayList<JTextField> signInTextFieldList = new ArrayList<>();
     private JButton signInButton = new JButton("SIGN IN");
+    private JButton newUserButton = new JButton("IM A NEW USER");
     private JButton backToMainMenuButton = new JButton("BACK TO MAIN MENU");
     private JLabel userIdLabel;
+
+    // User Registration Panel components
+    private JButton userRegistrationButton = new JButton("REGISTER");
+    private JButton backUserRegistrationButton = new JButton("BACK TO MAIN MENU");
 
     // Transaction Panel components
     private ArrayList<JButton> transactionButtonList = new ArrayList<>();
@@ -54,7 +61,7 @@ public class CustomerView extends JFrame {
     private JTable historyTable;
     private DefaultTableModel historyTableModel;
 
-    //Restaurant Recommendation panels
+    // Restaurant Recommendation panels
     private ArrayList<JButton> restaurantRecButtonList = new ArrayList<>();
     private JPanel originScrollPanel = new JPanel(); //will be overridden
     private JScrollPane originScrollPlane = new JScrollPane();
@@ -79,30 +86,20 @@ public class CustomerView extends JFrame {
         setSize(850, 550); // Increased height for the new panel
 
         startPanel = createSignInPanel();
+        userRegistrationPanel = createUserRegistrationPanel();
         userActionsPanel = createUserActionsPanel();
         transactionPanel = createTransactionPanel();
         foodRatingPanel = createFoodRatingPanel();
-
-        // --- NEW: Create history panel ---
         transactionHistoryPanel = createTransactionHistoryPanel();
-        // --- END: New ---
-        //
-        // --- NEW: Create restaurantRecommendationPanel --- 
         restaurantRecommendationPanel = createRestaurantRecommendationPanel();
-        // --- END: New ---
 
         mainPanel.add(startPanel, "START_VIEW");
+        mainPanel.add(userRegistrationPanel, "USER_REGISTRATION_VIEW");
         mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
         mainPanel.add(foodRatingPanel, "RATING_MENU");
-
-        // --- NEW: Add history panel to layout ---
         mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
-        // --- END: New ---
-
-        // --- NEW: Add restaurant recommendation to layout ---
         mainPanel.add(restaurantRecommendationPanel, "RESTAURANT_RECOMMENDATION");
-        // --- END: New ---
 
         add(mainPanel);
 
@@ -115,17 +112,21 @@ public class CustomerView extends JFrame {
      * (Unchanged)
      */
     private JPanel createSignInPanel() {
+        // Main panel
         JPanel panel = new JPanel(new BorderLayout());
+
+        // Labels
         JPanel labelPanel = new JPanel(new GridBagLayout());
         JLabel titlePanel = new JLabel("Welcome customer! Please sign in to continue.");
         titlePanel.setFont(new Font("Verdana", Font.BOLD, 20));
         labelPanel.add(titlePanel);
         panel.add(labelPanel, BorderLayout.NORTH);
 
+        // TextFields
         JPanel textFieldPanel = new JPanel(new GridLayout(2, 1));
         textFieldPanel.setBorder(new EmptyBorder(90, 180, 90, 180));
         ArrayList<JLabel> signInLabelList = new ArrayList<>();
-        signInLabelList.add(new JLabel("Name:"));
+        signInLabelList.add(new JLabel("Username:"));
         signInLabelList.add(new JLabel("Email Address:"));
         signInTextFieldList.clear();
         signInTextFieldList.add(new JTextField(20));
@@ -136,12 +137,14 @@ public class CustomerView extends JFrame {
         }
         panel.add(textFieldPanel, BorderLayout.CENTER);
 
+        // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBackground(Color.decode("#2E5E19"));
         buttonPanel.add(signInButton);
+        buttonPanel.add(newUserButton);
         buttonPanel.add(backToMainMenuButton);
-
         panel.add(buttonPanel, BorderLayout.SOUTH);
+
         return panel;
     }
 
@@ -153,11 +156,52 @@ public class CustomerView extends JFrame {
     }
 
     /**
+     * Creates the new user registration panel.
+     */
+    private JPanel createUserRegistrationPanel() {
+        // Main panel
+        JPanel panel = new JPanel(new BorderLayout());
+
+        // Labels
+        JPanel labelPanel = new JPanel(new GridBagLayout());
+        JLabel titlePanel = new JLabel("Welcome new customer! Please enter your details.");
+        titlePanel.setFont(new Font("Verdana", Font.BOLD, 20));
+        labelPanel.add(titlePanel);
+        panel.add(labelPanel, BorderLayout.NORTH);
+
+        // TextFields
+        JPanel textFieldPanel = new JPanel(new GridLayout(2, 1));
+        textFieldPanel.setBorder(new EmptyBorder(90, 180, 90, 180));
+        ArrayList<JLabel> signInLabelList = new ArrayList<>();
+        signInLabelList.add(new JLabel("Username:"));
+        signInLabelList.add(new JLabel("Email Address:"));
+        signInTextFieldList.clear();
+        signInTextFieldList.add(new JTextField(20));
+        signInTextFieldList.add(new JTextField(20));
+        for (int i = 0; i < signInTextFieldList.size(); i++) {
+            textFieldPanel.add(signInLabelList.get(i));
+            textFieldPanel.add(signInTextFieldList.get(i));
+        }
+        panel.add(textFieldPanel, BorderLayout.CENTER);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#2E5E19"));
+        buttonPanel.add(userRegistrationButton);
+        buttonPanel.add(backUserRegistrationButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    /**
      * Creates the user actions panel.
      */
     private JPanel createUserActionsPanel() {
+        // Main panel
         JPanel panel = new JPanel(new BorderLayout());
 
+        // Labels
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         infoPanel.add(new JLabel("Logged in as User ID:"));
@@ -172,6 +216,7 @@ public class CustomerView extends JFrame {
         titlePanel.add(title);
         panel.add(titlePanel, BorderLayout.CENTER);
 
+        // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBackground(Color.decode("#2E5E19"));
 
@@ -181,17 +226,13 @@ public class CustomerView extends JFrame {
         createTransactionButton.setActionCommand("CREATE TRANSACTION");
         userActionsButtonList.add(createTransactionButton);
 
-        // --- NEW: View History Button ---
         JButton viewHistoryButton = new JButton("VIEW TRANSACTION HISTORY");
         viewHistoryButton.setActionCommand("VIEW TRANSACTION HISTORY");
         userActionsButtonList.add(viewHistoryButton);
-        // --- END: New ---
-        //
-        // --- NEW: Restaurant Recommendation Button ---
+
         JButton restaurantRecButton = new JButton("VIEW RESTAURANT RECOMMENDATION");
         restaurantRecButton.setActionCommand("VIEW RESTAURANT RECOMMENDATION");
         userActionsButtonList.add(restaurantRecButton);
-        // --- END: New ---
 
         JButton logOutButton = new JButton("LOG OUT");
         logOutButton.setActionCommand("LOG OUT");
@@ -253,7 +294,6 @@ public class CustomerView extends JFrame {
         // --- Row 3: Price Details ---
         gbc.gridx = 1; gbc.gridy = 3; gbc.gridwidth = 2; gbc.weighty = 0;
 
-        // --- THIS PANEL IS MODIFIED ---
         JPanel pricePanel = new JPanel(new GridLayout(0, 2, 5, 5)); // 0 rows, 2 cols
         pricePanel.setBorder(BorderFactory.createTitledBorder("Price Details"));
 
@@ -261,7 +301,6 @@ public class CustomerView extends JFrame {
         initialPriceLabel = new JLabel("P0.00");
         pricePanel.add(initialPriceLabel);
 
-        // --- MODIFICATION: Replaced static label with an input field ---
         pricePanel.add(new JLabel("Promo % (e.g., 0.10):"));
         promoInputField = new JTextField("0.10"); // Default 10%
         promoInputField.setToolTipText("Enter a value between 0.00 and 1.00");
@@ -271,7 +310,6 @@ public class CustomerView extends JFrame {
         pricePanel.add(new JLabel("Discount Amount:"));
         promoLabel = new JLabel("-P0.00");
         pricePanel.add(promoLabel);
-        // --- END MODIFICATION ---
 
         pricePanel.add(new JLabel("Final Price:"));
         finalPriceLabel = new JLabel("P0.00");
@@ -279,11 +317,10 @@ public class CustomerView extends JFrame {
         pricePanel.add(finalPriceLabel);
 
         formPanel.add(pricePanel, gbc);
-        // --- END OF MODIFIED PANEL ---
 
         panel.add(formPanel, BorderLayout.CENTER);
 
-        // ... (Button panel is unchanged) ...
+        // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBackground(Color.decode("#2E5E19"));
         transactionButtonList.clear();
@@ -999,8 +1036,19 @@ public class CustomerView extends JFrame {
     public void setActionListener(ActionListener listener) {
         signInButton.removeActionListener(listener);
         signInButton.addActionListener(listener);
+
+        newUserButton.removeActionListener(listener);
+        newUserButton.addActionListener(listener);
+
+        userRegistrationButton.removeActionListener(listener);
+        userRegistrationButton.addActionListener(listener);
+
+        backUserRegistrationButton.removeActionListener(listener);
+        backUserRegistrationButton.addActionListener(listener);
+
         backToMainMenuButton.removeActionListener(listener);
         backToMainMenuButton.addActionListener(listener);
+
         JPanel southPanel = (JPanel) startPanel.getComponent(2);
         for (Component comp : southPanel.getComponents()) {
             if (comp instanceof JButton) {
@@ -1034,19 +1082,17 @@ public class CustomerView extends JFrame {
             restaurantComboBox.setActionCommand("RESTAURANT_SELECTED");
         }
 
-        // --- NEW: Listeners for history panel buttons ---
+        // Listeners for history panel buttons
         for (JButton button : historyButtonList) {
             button.removeActionListener(listener);
             button.addActionListener(listener);
         }
-        // --- END: New ---
-        
-        // --- NEW: Listeners for restuarant rec buttons ---
+
+        // Listeners for restaurant rec buttons
         for (JButton button : restaurantRecButtonList) {
             button.removeActionListener(listener);
             button.addActionListener(listener);
         }
-        // --- END: New ---
     }
 
     public JPanel getMainPanel() {

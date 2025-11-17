@@ -205,7 +205,7 @@ public class AdminView extends JFrame {
 
         feedbackReportButtonList.clear();
         // Per your new convention: no underscores
-        backFeedbackReportButton.setActionCommand("Go Back Feedback Report");
+        backFeedbackReportButton.setActionCommand("GO BACK FEEDBACK REPORT");
         feedbackReportButtonList.add(backFeedbackReportButton);
 
         // Also add the fetch button to this list so the listener is attached
@@ -293,7 +293,7 @@ public class AdminView extends JFrame {
 
         revenueReportButtonList.clear();
 
-        backRevenueReportButton.setActionCommand("Go Back Revenue Report"); // No underscore
+        backRevenueReportButton.setActionCommand("GO BACK REVENUE REPORT"); // No underscore
         revenueReportButtonList.add(backRevenueReportButton);
 
         for(JButton btn : revenueReportButtonList) {
@@ -337,7 +337,7 @@ public class AdminView extends JFrame {
         generateReportsButtonPanel.setBackground(Color.decode("#FCD303"));
 
         generateReportsButtonList.clear();
-        generateReportsButtonList.add(new JButton("New User Registration"));
+        generateReportsButtonList.add(new JButton("Registered Users"));
         generateReportsButtonList.add(new JButton("User Referral Impact"));
         generateReportsButtonList.add(new JButton("Popular Menu Items"));
         generateReportsButtonList.add(new JButton("Food, Ratings and Feedback"));

@@ -14,12 +14,21 @@ public class CustomerController implements ActionListener {
     private CustomerModel model;
     private CustomerView view;
 
+    // For User Details
+    private ArrayList<String> signInInput;
+    private String username;
+    private String email;
+    private Integer loggedInUserId;
+    private boolean isSuccess;
+
+    // For Transactions
     private ArrayList<FoodItem> cart;
     private String currentTransactionRestaurant;
     private double currentTransactionInitialPrice;
     private double currentTransactionPromo;
     private double currentTransactionFinalPrice;
-    // NEW FOR RESTAURANT RECO
+
+    // For Restaurant Recommendations
     private ArrayList<String> selectedOrigins = new ArrayList<>();
     private ArrayList<String> selectedEvents = new ArrayList<>();
     private int restaurantCardLevel = 0;
@@ -47,15 +56,15 @@ public class CustomerController implements ActionListener {
 
         switch (e.getActionCommand()) {
             // ------------------ SIGN IN Panel component ------------------
-            case "SIGN IN": {
-                ArrayList<String> signInInput = view.getSignInInput();
-                String username = signInInput.get(0);
-                String email = signInInput.get(1);
+            case "SIGN IN":
+                signInInput = view.getSignInInput();
+                username = signInInput.get(0);
+                email = signInInput.get(1);
                 if (username.isEmpty() || email.isEmpty()) {
-                    JOptionPane.showMessageDialog(view, "Username and Email cannot be empty.", "Login Error", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(view, "Username and/or Email cannot be empty.", "Login Error", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                Integer loggedInUserId = model.getAm().loginCustomer(username, email); // Renamed to avoid conflict
+                loggedInUserId = model.getAm().loginCustomer(username, email); // Renamed to avoid conflict
                 if (loggedInUserId != null) {
                     model.setLoggedInUser(loggedInUserId);
                     view.setUserIdLabel(loggedInUserId.toString());
@@ -64,7 +73,47 @@ public class CustomerController implements ActionListener {
                     JOptionPane.showMessageDialog(view, "Invalid username or email. Please try again.", "Login Failed", JOptionPane.ERROR_MESSAGE);
                 }
                 break;
-            }
+            case "IM A NEW USER":
+                view.getCardLayout().show(view.getMainPanel(), "USER_REGISTRATION_VIEW");
+                break;
+
+            // USER REGISTRATION PANEL
+            case "REGISTER":
+                signInInput = view.getSignInInput();
+                username = signInInput.get(0);
+                email = signInInput.get(1);
+                if (username.isEmpty() || email.isEmpty()) {
+                    JOptionPane.showMessageDialog(view, "Username and/or Email cannot be empty.", "Login Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                // Check if user has already registered, if not, register the new user
+                isSuccess = model.getAm().registerNewUser(username, email);
+                if (isSuccess) {
+                    // Show a success message
+                    JOptionPane.showMessageDialog(view,
+                            "User registered successfully!",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    // Show an error message (e.g., user already exists)
+                    JOptionPane.showMessageDialog(view,
+                            "Error: Could not register user.\nCheck console for details (e.g., duplicate entry).",
+                            "Registration Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+
+                // Log in the new user
+                loggedInUserId = model.getAm().loginCustomer(username, email); // Renamed to avoid conflict
+                if (loggedInUserId != null) {
+                    model.setLoggedInUser(loggedInUserId);
+                    view.setUserIdLabel(loggedInUserId.toString());
+                    view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                } else {
+                    JOptionPane.showMessageDialog(view, "Unexpected error occurred.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+                }
+
+                break;
 
             // ------------------ LOG OUT component ------------------
             case "LOG OUT":
@@ -79,7 +128,7 @@ public class CustomerController implements ActionListener {
                 break;
 
             // ------------------ SUBMIT RATING panel component ------------------
-            case "SUBMIT RATING": {
+            case "SUBMIT RATING":
                 int finalQuality = (int) view.getQualityRatingComboBox().getSelectedItem();
                 int finalAuthenticity = (int) view.getAuthenticityRatingComboBox().getSelectedItem();
                 String comments = view.getRatingCommentsArea().getText();
@@ -93,7 +142,7 @@ public class CustomerController implements ActionListener {
                 for (FoodItem item : cart) {
                     itemQuantities.put(item, itemQuantities.getOrDefault(item, 0) + 1);
                 }
-                boolean isSuccess = model.getAm().submitTransactionAndRating(
+                isSuccess = model.getAm().submitTransactionAndRating(
                         userId, currentTransactionRestaurant, currentTransactionInitialPrice,
                         currentTransactionPromo, currentTransactionFinalPrice, itemQuantities,
                         finalQuality, finalAuthenticity, finalOverall, comments
@@ -105,7 +154,6 @@ public class CustomerController implements ActionListener {
                     JOptionPane.showMessageDialog(view, "Error: Could not submit transaction.\nCheck console for details.", "Database Error", JOptionPane.ERROR_MESSAGE);
                 }
                 break;
-            }
 
             // ------------------ History Panel component ------------------
             case "VIEW TRANSACTION HISTORY":

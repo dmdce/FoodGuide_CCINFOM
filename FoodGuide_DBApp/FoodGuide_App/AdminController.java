@@ -88,7 +88,7 @@ public class AdminController implements ActionListener {
                             "Error",
                             JOptionPane.ERROR_MESSAGE);
                 }
-               // view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
+                // view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
 
             // ------------------ Generate Reports panel component ------------------
@@ -96,7 +96,7 @@ public class AdminController implements ActionListener {
                 updateView();
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
-            case "New User Registration":
+            case "Registered Users":
                 // 1. Get the list of all users from the model
                 ArrayList<UserData> users = model.getAllUsers();
 
@@ -127,10 +127,6 @@ public class AdminController implements ActionListener {
                 RestaurantFeedbackReport data = model.getFeedbackReport(restaurant);
                 view.updateFeedbackReportPanel(data);
                 break;
-
-            case "Go Back Feedback Report":
-                view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
-                break;
             case "Revenue and Transaction":
                 ArrayList<RestaurantRevenueData> reportData = model.getRestaurantRevenueReport();
                 view.updateRevenueReportTable(reportData);
@@ -144,10 +140,7 @@ public class AdminController implements ActionListener {
             case "GO BACK USER REG":
                 view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
                 break;
-            case "GO BACK USER REPORT":
-                view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
-                break;
-            case "Go Back Revenue Report":
+            case "GO BACK USER REPORT", "GO BACK FEEDBACK REPORT", "GO BACK REVENUE REPORT":
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
             case "GO BACK TO MAIN":

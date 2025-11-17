@@ -19,6 +19,8 @@ public class FoodDataBase {
     private static final String USER_ID_COL = "food_user_id";
     private static final String USER_NAME_COL = "food_user_name";
     private static final String USER_EMAIL_COL = "food_user_email";
+    private static final String CHECK_EMAIL_QUERY =
+            "SELECT COUNT(*) FROM " + USER_TABLE + " WHERE " + USER_EMAIL_COL + " = ?";
     private static final String USER_INSERT_QUERY =
             "INSERT INTO " + USER_TABLE + " (" + USER_NAME_COL + ", " + USER_EMAIL_COL + ") VALUES (?, ?)";
     private static final String USER_LOGIN_QUERY =
@@ -157,6 +159,13 @@ public class FoodDataBase {
      * (Unchanged)
      */
     public boolean registerUser(String username, String email) {
+        // First check if email already exists
+        if (emailExists(email)) {
+            System.err.println("Registration failed: Email already exists.");
+            return false;
+        }
+
+        // Otherwise, proceed with registration
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(USER_INSERT_QUERY)) {
             stmt.setString(1, username);
@@ -167,6 +176,21 @@ public class FoodDataBase {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private boolean emailExists(String email) {
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(CHECK_EMAIL_QUERY)) {
+            stmt.setString(1, email);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     /**
