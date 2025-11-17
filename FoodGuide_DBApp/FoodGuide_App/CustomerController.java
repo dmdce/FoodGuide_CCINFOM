@@ -57,7 +57,7 @@ public class CustomerController implements ActionListener {
         switch (e.getActionCommand()) {
             // ------------------ SIGN IN Panel component ------------------
             case "SIGN IN":
-                signInInput = view.getSignInInput();
+                signInInput = view.getSignInInput("SIGN IN");
                 username = signInInput.get(0);
                 email = signInInput.get(1);
                 if (username.isEmpty() || email.isEmpty()) {
@@ -79,7 +79,7 @@ public class CustomerController implements ActionListener {
 
             // USER REGISTRATION PANEL
             case "REGISTER":
-                signInInput = view.getSignInInput();
+                signInInput = view.getSignInInput("REGISTER");
                 username = signInInput.get(0);
                 email = signInInput.get(1);
                 if (username.isEmpty() || email.isEmpty()) {
@@ -98,7 +98,7 @@ public class CustomerController implements ActionListener {
                 } else {
                     // Show an error message (e.g., user already exists)
                     JOptionPane.showMessageDialog(view,
-                            "Error: Could not register user.\nCheck console for details (e.g., duplicate entry).",
+                            "Error: Could not register user. If the user has already registered, the user will promptly log in.",
                             "Registration Failed",
                             JOptionPane.ERROR_MESSAGE);
                 }

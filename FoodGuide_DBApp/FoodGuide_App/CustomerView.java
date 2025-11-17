@@ -31,6 +31,7 @@ public class CustomerView extends JFrame {
     private JLabel userIdLabel;
 
     // User Registration Panel components
+    private ArrayList<JTextField> registerTextFieldList = new ArrayList<>();
     private JButton userRegistrationButton = new JButton("REGISTER");
     private JButton backUserRegistrationButton = new JButton("BACK TO MAIN MENU");
 
@@ -148,13 +149,6 @@ public class CustomerView extends JFrame {
         return panel;
     }
 
-    public ArrayList<String> getSignInInput() {
-        ArrayList<String> texts = new ArrayList<>();
-        for (JTextField jTextField : signInTextFieldList)
-            texts.add(jTextField.getText());
-        return texts;
-    }
-
     /**
      * Creates the new user registration panel.
      */
@@ -175,12 +169,12 @@ public class CustomerView extends JFrame {
         ArrayList<JLabel> signInLabelList = new ArrayList<>();
         signInLabelList.add(new JLabel("Username:"));
         signInLabelList.add(new JLabel("Email Address:"));
-        signInTextFieldList.clear();
-        signInTextFieldList.add(new JTextField(20));
-        signInTextFieldList.add(new JTextField(20));
-        for (int i = 0; i < signInTextFieldList.size(); i++) {
+        registerTextFieldList.clear();
+        registerTextFieldList.add(new JTextField(20));
+        registerTextFieldList.add(new JTextField(20));
+        for (int i = 0; i < registerTextFieldList.size(); i++) {
             textFieldPanel.add(signInLabelList.get(i));
-            textFieldPanel.add(signInTextFieldList.get(i));
+            textFieldPanel.add(registerTextFieldList.get(i));
         }
         panel.add(textFieldPanel, BorderLayout.CENTER);
 
@@ -192,6 +186,21 @@ public class CustomerView extends JFrame {
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    public ArrayList<String> getSignInInput(String panel) {
+        ArrayList<String> texts = new ArrayList<>();
+        ArrayList<JTextField> jTextFieldList = new ArrayList<>();
+
+        jTextFieldList = switch (panel) {
+            case "SIGN IN" -> signInTextFieldList;
+            case "REGISTER" -> registerTextFieldList;
+            default -> jTextFieldList;
+        };
+        for (JTextField jTextField : jTextFieldList)
+            texts.add(jTextField.getText());
+
+        return texts;
     }
 
     /**
@@ -222,7 +231,7 @@ public class CustomerView extends JFrame {
 
         userActionsButtonList.clear();
 
-        JButton createTransactionButton = new JButton("CREATE TRANSACTION");
+        JButton createTransactionButton = new JButton("DO A TRANSACTION");
         createTransactionButton.setActionCommand("CREATE TRANSACTION");
         userActionsButtonList.add(createTransactionButton);
 
@@ -258,7 +267,7 @@ public class CustomerView extends JFrame {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
         JPanel titlePanel = new JPanel(new GridBagLayout());
-        JLabel titleLabel = new JLabel("Create New Transaction");
+        JLabel titleLabel = new JLabel("Create A Transaction");
         titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
         titlePanel.add(titleLabel);
         panel.add(titlePanel, BorderLayout.NORTH);
