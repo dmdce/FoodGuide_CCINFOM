@@ -26,6 +26,7 @@ public class AdminView extends JFrame {
     private JPanel userRegPanel;
     private JPanel userCreationPanel;
     private JPanel userReportPanel;
+    private JPanel revenueReportPanel;
 
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
     private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
@@ -45,6 +46,11 @@ public class AdminView extends JFrame {
     private JTable userReportTable;
     private JButton backUserReportButton = new JButton("GO BACK");
 
+    private DefaultTableModel revenueReportTableModel;
+    private JTable revenueReportTable;
+    private JButton backRevenueReportButton = new JButton("GO BACK");
+    private ArrayList<JButton> revenueReportButtonList = new ArrayList<>();
+
     /**
      * Constructs the AdminView, initializes all sub-panels,
      * adds them to the CardLayout, and makes the frame visible.
@@ -62,6 +68,7 @@ public class AdminView extends JFrame {
         userRegPanel = createUserRegPanel();
         userCreationPanel = createUserCreationPanel();
         userReportPanel = createUserReportPanel();
+        revenueReportPanel = createRevenueReportPanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
@@ -69,6 +76,7 @@ public class AdminView extends JFrame {
         mainPanel.add(userRegPanel, "USER_REG");
         mainPanel.add(userCreationPanel, "USER_CREATE");
         mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
+        mainPanel.add(revenueReportPanel, "REVENUE_REPORT_PANEL");
 
         add(mainPanel);
 
@@ -152,6 +160,53 @@ public class AdminView extends JFrame {
         }
 
         panel.add(manageDatabaseButtonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    /**
+     * Creates a panel to display the ranked restaurant revenue report.
+     * @return a JPanel for the REVENUE_REPORT_PANEL card
+     */
+    private JPanel createRevenueReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Title
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel label = new JLabel("Restaurant Revenue & Transaction Report");
+        label.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(label);
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        // Results Table
+        String[] columnNames = {"Restaurant Name", "Total Revenue", "Total Transactions"};
+        revenueReportTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table cells not editable
+            }
+        };
+        revenueReportTable = new JTable(revenueReportTableModel);
+        JScrollPane scrollPane = new JScrollPane(revenueReportTable);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // Button Panel
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        buttonPanel.setBackground(Color.decode("#FCD303"));
+
+        revenueReportButtonList.clear();
+
+        backRevenueReportButton.setActionCommand("Go Back Revenue Report"); // No underscore
+        revenueReportButtonList.add(backRevenueReportButton);
+
+        for(JButton btn : revenueReportButtonList) {
+            buttonPanel.add(btn);
+        }
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -386,6 +441,7 @@ public class AdminView extends JFrame {
         mainPanel.remove(userRegPanel);
         mainPanel.remove(userCreationPanel);
         mainPanel.remove(userReportPanel);
+        mainPanel.remove(revenueReportPanel);
 
         // Generate and add
         manageDatabasePanel = createManageDatabasePanel();
@@ -393,12 +449,14 @@ public class AdminView extends JFrame {
         userRegPanel = createUserRegPanel();
         userCreationPanel = createUserCreationPanel();
         userReportPanel = createUserReportPanel();
+        revenueReportPanel = createRevenueReportPanel();
 
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
         mainPanel.add(userRegPanel, "USER_REG");
         mainPanel.add(userCreationPanel, "USER_CREATE");
         mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
+        mainPanel.add(revenueReportPanel, "REVENUE_REPORT_PANEL");
 
         // Revalidate and repaint
         mainPanel.revalidate();
@@ -440,9 +498,38 @@ public class AdminView extends JFrame {
             jButton.addActionListener(listener);
         }
 
+        for (JButton jButton : revenueReportButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
+
         // Add ActionCommands (actions with same names but different functions)
         backUserReportButton.setActionCommand("GO BACK USER REPORT");
         backUserRegButton.setActionCommand("GO BACK USER REG");
+    }
+
+    /**
+     * Clears and repopulates the revenue report table with fresh data.
+     * @param data An ArrayList of RestaurantRevenueData objects.
+     */
+    public void updateRevenueReportTable(ArrayList<RestaurantRevenueData> data) {
+        if (revenueReportTableModel == null) {
+            return;
+        }
+
+        // Clear old results
+        revenueReportTableModel.setRowCount(0);
+
+        // Add new results
+        if (data != null) {
+            for (RestaurantRevenueData row : data) {
+                revenueReportTableModel.addRow(new Object[]{
+                        row.getRestaurantName(),
+                        String.format("P%.2f", row.getTotalRevenue()),
+                        row.getTotalTransactions()
+                });
+            }
+        }
     }
 
     /**

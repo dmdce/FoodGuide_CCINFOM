@@ -88,7 +88,7 @@ public class AdminController implements ActionListener {
                             "Error",
                             JOptionPane.ERROR_MESSAGE);
                 }
-                view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
+               // view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
 
             // ------------------ Generate Reports panel component ------------------
@@ -116,7 +116,12 @@ public class AdminController implements ActionListener {
                 System.out.println(4);
                 break;
             case "Revenue and Transaction":
-                System.out.println(5);
+                // 1. Get the data from the model
+                ArrayList<RestaurantRevenueData> reportData = model.getRestaurantRevenueReport();
+                // 2. Pass the data to the view to update the table
+                view.updateRevenueReportTable(reportData);
+                // 3. Show the new report panel
+                view.getCardLayout().show(view.getMainPanel(), "REVENUE_REPORT_PANEL");
                 break;
 
             // ------------------ BASIC NAVIGATION BUTTONS ------------------
@@ -127,6 +132,9 @@ public class AdminController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
                 break;
             case "GO BACK USER REPORT":
+                view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
+                break;
+            case "Go Back Revenue Report":
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
             case "GO BACK TO MAIN":

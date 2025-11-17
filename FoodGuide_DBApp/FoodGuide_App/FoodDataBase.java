@@ -93,6 +93,20 @@ public class FoodDataBase {
     private static final String FOOD_EVENT_NAME_QUERY = 
         "SELECT " + FOOD_EVENT_NAME + " FROM " + FOOD_EVENT;
 
+    private static final String REVENUE_REPORT_QUERY =
+            "SELECT " +
+                    "    r." + RESTAURANT_NAME_COL + ", " +
+                    "    COALESCE(SUM(ft." + TRANSACTION_FINAL_PRICE_COL + "), 0) AS total_revenue, " +
+                    "    COUNT(ft." + TRANSACTION_ID_COL + ") AS total_transactions " +
+                    "FROM " +
+                    "    " + RESTAURANT_TABLE + " r " +
+                    "LEFT JOIN " +
+                    "    " + TRANSACTION_TABLE + " ft ON r." + RESTAURANT_NAME_COL + " = ft." + RESTAURANT_NAME_COL + " " +
+                    "GROUP BY " +
+                    "    r." + RESTAURANT_NAME_COL + " " +
+                    "ORDER BY " +
+                    "    total_revenue DESC, total_transactions DESC";
+
     /**
      * Attempts to get a connection to the database.
      * (Unchanged)
@@ -181,10 +195,34 @@ public class FoodDataBase {
         return menuItems;
     }
 
+    /**
+     * Fetches a report of all restaurants, their total revenue, and transaction counts,
+     * sorted by revenue then transaction count.
+     * @return An ArrayList of RestaurantRevenueData objects.
+     */
+    public ArrayList<RestaurantRevenueData> fetchRestaurantRevenueReport() {
+        ArrayList<RestaurantRevenueData> reportData = new ArrayList<>();
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(REVENUE_REPORT_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                reportData.add(new RestaurantRevenueData(
+                        rs.getString(RESTAURANT_NAME_COL),
+                        rs.getDouble("total_revenue"),
+                        rs.getInt("total_transactions")
+                ));
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return reportData;
+    }
 
     /**
      * Executes the complete transaction and rating submission...
-     * (Unchanged)
      */
     public boolean createFullTransaction(
             Integer userId, String restaurantName, double initialPrice, double promoAmount,

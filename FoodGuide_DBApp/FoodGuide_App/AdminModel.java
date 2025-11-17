@@ -131,4 +131,12 @@ public class AdminModel {
     public ArrayList<RestaurantData> fetchRestaurantFromOriginAndEvent(ArrayList<String> origins, ArrayList<String> events) {
         return db.fetchRestaurantFromOriginAndEvent(origins, events);
     }
+
+    /**
+     * Asks the database for the ranked restaurant revenue report.
+     * @return An ArrayList of RestaurantRevenueData objects.
+     */
+    public ArrayList<RestaurantRevenueData> getRestaurantRevenueReport() {
+        return db.fetchRestaurantRevenueReport();
+    }
 }
