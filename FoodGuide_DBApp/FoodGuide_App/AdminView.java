@@ -27,6 +27,7 @@ public class AdminView extends JFrame {
     private JPanel userCreationPanel;
     private JPanel userReportPanel;
     private JPanel revenueReportPanel;
+    private JPanel feedbackReportPanel;
 
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
     private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
@@ -51,6 +52,16 @@ public class AdminView extends JFrame {
     private JButton backRevenueReportButton = new JButton("GO BACK");
     private ArrayList<JButton> revenueReportButtonList = new ArrayList<>();
 
+    private JComboBox<String> feedbackRestaurantComboBox;
+    private JButton fetchFeedbackButton;
+    private JLabel overallRatingLabel;
+    private DefaultTableModel menuPopularityTableModel;
+    private JTable menuPopularityTable;
+    private DefaultTableModel commentsTableModel;
+    private JTable commentsTable;
+    private JButton backFeedbackReportButton = new JButton("GO BACK");
+    private ArrayList<JButton> feedbackReportButtonList = new ArrayList<>();
+
     /**
      * Constructs the AdminView, initializes all sub-panels,
      * adds them to the CardLayout, and makes the frame visible.
@@ -69,6 +80,7 @@ public class AdminView extends JFrame {
         userCreationPanel = createUserCreationPanel();
         userReportPanel = createUserReportPanel();
         revenueReportPanel = createRevenueReportPanel();
+        feedbackReportPanel = createFeedbackReportPanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
@@ -77,6 +89,7 @@ public class AdminView extends JFrame {
         mainPanel.add(userCreationPanel, "USER_CREATE");
         mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
         mainPanel.add(revenueReportPanel, "REVENUE_REPORT_PANEL");
+        mainPanel.add(feedbackReportPanel, "FEEDBACK_REPORT_PANEL");
 
         add(mainPanel);
 
@@ -119,6 +132,87 @@ public class AdminView extends JFrame {
         }
 
         panel.add(mainMenuButtonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    /**
+     * Creates a panel to display detailed feedback for a selected restaurant.
+     * @return a JPanel for the FEEDBACK_REPORT_PANEL card
+     */
+    private JPanel createFeedbackReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // --- Top Selection Panel ---
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topPanel.add(new JLabel("Select Restaurant:"));
+        feedbackRestaurantComboBox = new JComboBox<>();
+        topPanel.add(feedbackRestaurantComboBox);
+
+        // Per your new convention: no underscores
+        fetchFeedbackButton = new JButton("Fetch Report");
+        fetchFeedbackButton.setActionCommand("Fetch Feedback Report");
+        topPanel.add(fetchFeedbackButton);
+
+        panel.add(topPanel, BorderLayout.NORTH);
+
+        // --- Center Content Panel ---
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); // Vertical layout
+
+        // Overall Rating
+        JPanel ratingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        ratingPanel.setBorder(BorderFactory.createTitledBorder("Overall Rating"));
+        overallRatingLabel = new JLabel("N/A");
+        overallRatingLabel.setFont(new Font("Verdana", Font.BOLD, 18));
+        ratingPanel.add(overallRatingLabel);
+        // Make this panel align left in the BoxLayout
+        ratingPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(ratingPanel);
+
+        // Menu Popularity Table
+        String[] menuColumnNames = {"Menu Item", "Total Times Ordered"};
+        menuPopularityTableModel = new DefaultTableModel(menuColumnNames, 0) {
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        menuPopularityTable = new JTable(menuPopularityTableModel);
+        JScrollPane menuScrollPane = new JScrollPane(menuPopularityTable);
+        menuScrollPane.setBorder(BorderFactory.createTitledBorder("Menu Item Popularity (Ranked)"));
+        menuScrollPane.setPreferredSize(new Dimension(800, 150)); // Give it a preferred size
+        // Make this panel align left in the BoxLayout
+        menuScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(menuScrollPane);
+
+        // Comments Table
+        String[] commentsColumnNames = {"User Comments"};
+        commentsTableModel = new DefaultTableModel(commentsColumnNames, 0) {
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        commentsTable = new JTable(commentsTableModel);
+        JScrollPane commentsScrollPane = new JScrollPane(commentsTable);
+        commentsScrollPane.setBorder(BorderFactory.createTitledBorder("Feedback Comments"));
+        commentsScrollPane.setPreferredSize(new Dimension(800, 150)); // Give it a preferred size
+        // Make this panel align left in the BoxLayout
+        commentsScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(commentsScrollPane);
+
+        panel.add(centerPanel, BorderLayout.CENTER);
+
+        // --- Button Panel (South) ---
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#FCD303"));
+
+        feedbackReportButtonList.clear();
+        // Per your new convention: no underscores
+        backFeedbackReportButton.setActionCommand("Go Back Feedback Report");
+        feedbackReportButtonList.add(backFeedbackReportButton);
+
+        // Also add the fetch button to this list so the listener is attached
+        feedbackReportButtonList.add(fetchFeedbackButton);
+
+        buttonPanel.add(backFeedbackReportButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -442,6 +536,7 @@ public class AdminView extends JFrame {
         mainPanel.remove(userCreationPanel);
         mainPanel.remove(userReportPanel);
         mainPanel.remove(revenueReportPanel);
+        mainPanel.remove(feedbackReportPanel);
 
         // Generate and add
         manageDatabasePanel = createManageDatabasePanel();
@@ -450,6 +545,7 @@ public class AdminView extends JFrame {
         userCreationPanel = createUserCreationPanel();
         userReportPanel = createUserReportPanel();
         revenueReportPanel = createRevenueReportPanel();
+        feedbackReportPanel = createFeedbackReportPanel();
 
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
@@ -457,6 +553,7 @@ public class AdminView extends JFrame {
         mainPanel.add(userCreationPanel, "USER_CREATE");
         mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
         mainPanel.add(revenueReportPanel, "REVENUE_REPORT_PANEL");
+        mainPanel.add(feedbackReportPanel, "FEEDBACK_REPORT_PANEL");
 
         // Revalidate and repaint
         mainPanel.revalidate();
@@ -499,6 +596,11 @@ public class AdminView extends JFrame {
         }
 
         for (JButton jButton : revenueReportButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
+
+        for (JButton jButton : feedbackReportButtonList) {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
@@ -548,5 +650,76 @@ public class AdminView extends JFrame {
      */
     public CardLayout getCardLayout() {
         return cardLayout;
+    }
+
+    /**
+     * Gets the selected restaurant name from the feedback panel's JComboBox.
+     * @return The selected restaurant name.
+     */
+    public String getFeedbackSelectedRestaurant() {
+        Object item = feedbackRestaurantComboBox.getSelectedItem();
+        return (item != null) ? item.toString() : "[Select One]";
+    }
+
+    /**
+     * Populates the restaurant selection JComboBox on the feedback panel.
+     * @param restaurantNames An ArrayList of restaurant names.
+     */
+    public void populateFeedbackRestaurantComboBox(ArrayList<String> restaurantNames) {
+        if (feedbackRestaurantComboBox == null) return;
+        feedbackRestaurantComboBox.removeAllItems();
+        feedbackRestaurantComboBox.addItem("[Select One]");
+        for (String name : restaurantNames) {
+            feedbackRestaurantComboBox.addItem(name);
+        }
+    }
+
+    /**
+     * Updates all components on the feedback panel with new data.
+     * If data is null, it clears the panel.
+     * @param data The complete RestaurantFeedbackReport DTO.
+     */
+    public void updateFeedbackReportPanel(RestaurantFeedbackReport data) {
+        if (data == null) {
+            updateOverallRatingLabel(0.0);
+            updateMenuPopularityTable(null);
+            updateCommentsTable(null);
+        } else {
+            updateOverallRatingLabel(data.getOverallRating());
+            updateMenuPopularityTable(data.getMenuPopularity());
+            updateCommentsTable(data.getComments());
+        }
+    }
+
+    private void updateOverallRatingLabel(double rating) {
+        if (overallRatingLabel == null) return;
+        if (rating == 0.0) {
+            overallRatingLabel.setText("N/A (No ratings yet)");
+        } else {
+            overallRatingLabel.setText(String.format("%.2f / 5.0", rating));
+        }
+    }
+
+    private void updateMenuPopularityTable(ArrayList<MenuItemPopularityData> items) {
+        if (menuPopularityTableModel == null) return;
+        menuPopularityTableModel.setRowCount(0); // Clear old data
+        if (items != null) {
+            for (MenuItemPopularityData item : items) {
+                menuPopularityTableModel.addRow(new Object[]{
+                        item.getFoodAlias(),
+                        item.getTotalOrdered()
+                });
+            }
+        }
+    }
+
+    private void updateCommentsTable(ArrayList<String> comments) {
+        if (commentsTableModel == null) return;
+        commentsTableModel.setRowCount(0); // Clear old data
+        if (comments != null) {
+            for (String comment : comments) {
+                commentsTableModel.addRow(new Object[]{ comment });
+            }
+        }
     }
 }

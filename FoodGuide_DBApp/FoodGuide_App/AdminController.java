@@ -113,14 +113,27 @@ public class AdminController implements ActionListener {
                 System.out.println(3);
                 break;
             case "Food, Ratings and Feedback":
-                System.out.println(4);
+                ArrayList<String> restaurantNames = model.getRestaurantNames();
+                view.populateFeedbackRestaurantComboBox(restaurantNames);
+                view.updateFeedbackReportPanel(null);
+                view.getCardLayout().show(view.getMainPanel(), "FEEDBACK_REPORT_PANEL");
+                break;
+            case "Fetch Feedback Report":
+                String restaurant = view.getFeedbackSelectedRestaurant();
+                if (restaurant.equals("[Select One]")) {
+                    JOptionPane.showMessageDialog(view, "Please select a restaurant.", "Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                RestaurantFeedbackReport data = model.getFeedbackReport(restaurant);
+                view.updateFeedbackReportPanel(data);
+                break;
+
+            case "Go Back Feedback Report":
+                view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
             case "Revenue and Transaction":
-                // 1. Get the data from the model
                 ArrayList<RestaurantRevenueData> reportData = model.getRestaurantRevenueReport();
-                // 2. Pass the data to the view to update the table
                 view.updateRevenueReportTable(reportData);
-                // 3. Show the new report panel
                 view.getCardLayout().show(view.getMainPanel(), "REVENUE_REPORT_PANEL");
                 break;
 

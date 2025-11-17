@@ -139,4 +139,13 @@ public class AdminModel {
     public ArrayList<RestaurantRevenueData> getRestaurantRevenueReport() {
         return db.fetchRestaurantRevenueReport();
     }
+
+    /**
+     * Asks the database for the complete feedback report for a restaurant.
+     * @param restaurantName The name of the restaurant.
+     * @return A RestaurantFeedbackReport DTO.
+     */
+    public RestaurantFeedbackReport getFeedbackReport(String restaurantName) {
+        return db.fetchFeedbackReport(restaurantName);
+    }
 }

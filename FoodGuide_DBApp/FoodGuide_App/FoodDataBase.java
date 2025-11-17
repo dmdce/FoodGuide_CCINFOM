@@ -107,6 +107,42 @@ public class FoodDataBase {
                     "ORDER BY " +
                     "    total_revenue DESC, total_transactions DESC";
 
+    private static final String RATING_OVERALL_COL = "overall_rating";
+    private static final String RATING_SUGGESTION_COL = "suggestion";
+
+    private static final String OVERALL_RATING_QUERY =
+            "SELECT AVG(fr." + RATING_OVERALL_COL + ") AS avg_rating " +
+                    "FROM " + RATING_TABLE + " fr " +
+                    "JOIN " + RESTAURANT_TABLE + " r ON fr." + RESTAURANT_ID_COL + " = r." + RESTAURANT_ID_COL + " " +
+                    "WHERE r." + RESTAURANT_NAME_COL + " = ?";
+
+    private static final String MENU_POPULARITY_QUERY =
+            "SELECT " +
+                    "    fm." + FOOD_ALIAS_COL + ", " +
+                    "    COALESCE(SUM(fo.quantity), 0) AS total_ordered " +
+                    "FROM " +
+                    "    " + FOOD_MENU_TABLE + " fm " +
+                    "JOIN " +
+                    "    " + RESTAURANT_TABLE + " r ON fm." + RESTAURANT_ID_COL + " = r." + RESTAURANT_ID_COL + " " +
+                    "LEFT JOIN " +
+                    "    " + ORDER_TABLE + " fo ON fm." + FOOD_MENU_ID_COL + " = fo." + FOOD_MENU_ID_COL + " " +
+                    "WHERE " +
+                    "    r." + RESTAURANT_NAME_COL + " = ? " +
+                    "GROUP BY " +
+                    "    fm." + FOOD_MENU_ID_COL + ", fm." + FOOD_ALIAS_COL + " " + // Group by ID for accuracy
+                    "ORDER BY " +
+                    "    total_ordered DESC";
+
+    private static final String COMMENTS_QUERY =
+            "SELECT fr." + RATING_SUGGESTION_COL + " " +
+                    "FROM " + RATING_TABLE + " fr " +
+                    "JOIN " + RESTAURANT_TABLE + " r ON fr." + RESTAURANT_ID_COL + " = r." + RESTAURANT_ID_COL + " " +
+                    "WHERE r." + RESTAURANT_NAME_COL + " = ? " +
+                    "AND fr." + RATING_SUGGESTION_COL + " IS NOT NULL " + // Ignore nulls
+                    "AND fr." + RATING_SUGGESTION_COL + " != '' " + // Ignore empty strings
+                    "ORDER BY " +
+                    "    fr.food_rating_id DESC";
+
     /**
      * Attempts to get a connection to the database.
      * (Unchanged)
@@ -531,5 +567,60 @@ public class FoodDataBase {
         }
 
         return restaurants;
+    }
+
+    /**
+     * Fetches a complete feedback report for a single restaurant.
+     * @param restaurantName The name of the restaurant to query.
+     * @return A RestaurantFeedbackReport DTO containing the rating, menu popularity, and comments.
+     */
+    public RestaurantFeedbackReport fetchFeedbackReport(String restaurantName) {
+        double overallRating = 0.0;
+        ArrayList<MenuItemPopularityData> menuPopularity = new ArrayList<>();
+        ArrayList<String> comments = new ArrayList<>();
+
+        try (Connection conn = getConnection()) {
+
+            // Query 1: Get Overall Rating
+            try (PreparedStatement stmt = conn.prepareStatement(OVERALL_RATING_QUERY)) {
+                stmt.setString(1, restaurantName);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        overallRating = rs.getDouble("avg_rating");
+                    }
+                }
+            }
+
+            // Query 2: Get Menu Popularity
+            try (PreparedStatement stmt = conn.prepareStatement(MENU_POPULARITY_QUERY)) {
+                stmt.setString(1, restaurantName);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        menuPopularity.add(new MenuItemPopularityData(
+                                rs.getString(FOOD_ALIAS_COL),
+                                rs.getInt("total_ordered")
+                        ));
+                    }
+                }
+            }
+
+            // Query 3: Get Comments
+            try (PreparedStatement stmt = conn.prepareStatement(COMMENTS_QUERY)) {
+                stmt.setString(1, restaurantName);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        comments.add(rs.getString(RATING_SUGGESTION_COL));
+                    }
+                }
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+            // Return empty data on failure
+            return new RestaurantFeedbackReport(0.0, new ArrayList<>(), new ArrayList<>());
+        }
+
+        // Return the complete DTO
+        return new RestaurantFeedbackReport(overallRating, menuPopularity, comments);
     }
 }
