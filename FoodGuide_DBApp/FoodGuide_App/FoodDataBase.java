@@ -4,11 +4,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.Timestamp; // Import Timestamp
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-// No import for FoodItem here, it's correct!
+import java.util.stream.Collectors;
 
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
@@ -29,6 +28,9 @@ public class FoodDataBase {
     private static final String RESTAURANT_TABLE = "restaurant";
     private static final String RESTAURANT_ID_COL = "restaurant_id";
     private static final String RESTAURANT_NAME_COL = "restaurant_name";
+    private static final String RESTAURANT_DESCRIPTION_COL = "description";
+    private static final String RESTAURANT_NUM_OF_VISITS_COL = "num_of_visits";
+    private static final String RESTAURANT_TOTAL_RATING_COL = "total_rating";
     private static final String RESTAURANT_NAMES_QUERY =
             "SELECT " + RESTAURANT_NAME_COL + " FROM " + RESTAURANT_TABLE + " ORDER BY " + RESTAURANT_NAME_COL + " ASC";
     private static final String RESTAURANT_ID_QUERY =
@@ -79,6 +81,17 @@ public class FoodDataBase {
     private static final String ALL_USERS_QUERY =
             "SELECT " + USER_ID_COL + ", " + USER_NAME_COL + ", " + USER_EMAIL_COL +
                     " FROM " + USER_TABLE + " ORDER BY " + USER_ID_COL + " ASC";
+
+    // --- NEW: FOR RESTAURANT RECOMENDATION
+    private static final String FOOD_ADDRESS_ID_COL = "food_address_id";
+    private static final String ORIGINS = "origin";
+    private static final String ORIGIN_NAME = "name";
+    private static final String ALL_ORIGINS_QUERY = 
+        "SELECT * FROM " + ORIGINS;
+    private static final String FOOD_EVENT = "food_event";
+    private static final String FOOD_EVENT_NAME = "food_event_name";
+    private static final String FOOD_EVENT_NAME_QUERY = 
+        "SELECT " + FOOD_EVENT_NAME + " FROM " + FOOD_EVENT;
 
     /**
      * Attempts to get a connection to the database.
@@ -393,4 +406,92 @@ public class FoodDataBase {
         return users;
     }
 
+    /**
+     * Fetches a list of all food origins from the database.
+     * @return An ArrayList of Strings containing food origins
+     */
+    public ArrayList<String> fetchOriginNames() {
+        ArrayList<String> origins = new ArrayList<>();
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(ALL_ORIGINS_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                origins.add(rs.getString(ORIGIN_NAME));
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return origins;
+    }
+    
+    /**
+     * Fetches a list of all food origins from the database.
+     * @return An ArrayList of Strings containing food origins
+     */
+    public ArrayList<String> fetchFoodEventNames() {
+        ArrayList<String> events = new ArrayList<>();
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(FOOD_EVENT_NAME_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                events.add(rs.getString(FOOD_EVENT_NAME));
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return events;
+    }
+
+    public ArrayList<RestaurantData> fetchRestaurantFromOriginAndEvent(
+            ArrayList<String> origins,
+            ArrayList<String> events
+            ) {
+        ArrayList<RestaurantData> restaurants = new ArrayList<>();
+
+        //Build where in string for origins:
+        String originsList = origins.stream()
+            .map(o -> "'" + o + "'")
+            .collect(Collectors.joining(", ", "(", ")"));
+
+        String eventsList = events.stream()
+            .map(e -> "'" + e + "'")
+            .collect(Collectors.joining(", ", "(", ")"));
+
+        //Query
+        final String QUERY = 
+            "SELECT DISTINCT r.* FROM restaurant r " +
+            "JOIN food_menu fm ON fm.restaurant_id = r.restaurant_id " +
+            "JOIN food f ON f.food_id = fm.food_id " +
+            "LEFT JOIN origin o ON f.origin_id = o.origin_id " +
+            "LEFT JOIN food_event fe ON f.food_event_id = fe.food_event_id " +
+            "WHERE o.name IN " + originsList + " " +
+            "AND fe.food_event_name IN " + eventsList;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                restaurants.add(new RestaurantData(
+                            rs.getInt(RESTAURANT_ID_COL),
+                            rs.getInt(FOOD_ADDRESS_ID_COL),
+                            rs.getString(RESTAURANT_NAME_COL),
+                            rs.getString(RESTAURANT_DESCRIPTION_COL),
+                            rs.getInt(RESTAURANT_NUM_OF_VISITS_COL),
+                            rs.getFloat(RESTAURANT_TOTAL_RATING_COL)
+                            ));
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return restaurants;
+    }
 }

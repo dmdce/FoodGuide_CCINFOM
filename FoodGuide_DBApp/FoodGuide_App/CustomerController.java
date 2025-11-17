@@ -19,6 +19,10 @@ public class CustomerController implements ActionListener {
     private double currentTransactionInitialPrice;
     private double currentTransactionPromo;
     private double currentTransactionFinalPrice;
+    // NEW FOR RESTAURANT RECO
+    private ArrayList<String> selectedOrigins = new ArrayList<>();
+    private ArrayList<String> selectedEvents = new ArrayList<>();
+    private int restaurantCardLevel = 0;
 
     /**
      * Constructs a CustomerController...
@@ -134,6 +138,94 @@ public class CustomerController implements ActionListener {
             case "GO BACK", "BACK TO MAIN MENU":
                 view.dispose();
                 model.getAm().getMenuController().showMenuView();
+                break;
+
+            // New: a general action to return to user actions menu
+            case "BACK TO USER ACTIONS":
+                System.out.println("test");
+                view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                break;
+
+            // ------------------ Restaurant Recommendation component ------------------
+            case "VIEW RESTAURANT RECOMMENDATION":
+                //show panel
+                restaurantCardLevel = 0;
+                view.switchRestaurantCardPanel("VIEW SEARCH FOOD CULTURE");
+                view.populateFoodOriginsScroll(model.getAm().fetchOriginNames());
+                view.getCardLayout().show(view.getMainPanel(), "RESTAURANT_RECOMMENDATION");
+                break;
+
+            case "SEARCH ORIGIN":
+                view.populateFoodOriginsScroll(
+                        model.getAm().fetchOriginNames(),
+                        view.getOriginSearchBarField()
+                        );
+                break;
+
+            case "PROCEED RESTAURANT RECOMMENDATION":
+                if (restaurantCardLevel > 2)
+                    restaurantCardLevel = 0;
+
+                if (restaurantCardLevel == 0) {
+                    /// --- MOVE TO SELECT ORIGINS ---
+                    //Clear and add all selected origins
+                    selectedOrigins.clear();
+                    selectedOrigins.addAll(view.getSelectedOrigins());
+
+                    if (selectedOrigins.isEmpty()) {
+                        JOptionPane.showMessageDialog(view, "Error: Choose at least one", "Submission Error", JOptionPane.ERROR_MESSAGE);
+                        break;
+                    }
+
+                    // move to food event
+                    view.populateFoodEventsScroll(model.getAm().fetchFoodEventNames());
+                    view.switchRestaurantCardPanel("VIEW SEARCH FOOD EVENT");
+                } else if (restaurantCardLevel == 1) {
+                    /// --- MOVE TO SELECT EVENTS ---
+                    //Clear and add all selected events
+                    selectedEvents.clear();
+                    selectedEvents.addAll(view.getSelectedEvents());
+
+                    if (selectedEvents.isEmpty()) {
+                        JOptionPane.showMessageDialog(view, "Error: Choose at least one", "Submission Error", JOptionPane.ERROR_MESSAGE);
+                        break;
+                    }
+
+                    /// --- MOVE TO RESTAURANT RECOMMENDATION ---
+                    view.populateRestaurantRecos(
+                            model.getAm().fetchRestaurantFromOriginAndEvent(selectedOrigins, selectedEvents)
+                            );
+
+                    view.switchRestaurantCardPanel("VIEW RESTAURANT RECOMMENDATION");
+                } else if (restaurantCardLevel == 2) {
+                    restaurantCardLevel = 0;
+                    view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                }
+
+                restaurantCardLevel++;
+                break;
+
+            case "SEARCH EVENT":
+                view.populateFoodEventsScroll(
+                        model.getAm().fetchFoodEventNames(),
+                        view.getEventSearchBarField()
+                        );
+                break;
+
+            case "GO BACK RESTAURANT RECOMMENDATION", "OK RESTAURANT RECOMMENDATION":
+                if (restaurantCardLevel < 0)
+                    restaurantCardLevel = 0;
+
+                if (restaurantCardLevel == 0) {
+                    view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                } else if (restaurantCardLevel == 1) {
+                    view.populateFoodOriginsScroll(model.getAm().fetchOriginNames());
+                    view.switchRestaurantCardPanel("VIEW SEARCH FOOD CULTURE");
+                } else if (restaurantCardLevel == 2) {
+                    view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                }
+
+                restaurantCardLevel--;
                 break;
         }
     }

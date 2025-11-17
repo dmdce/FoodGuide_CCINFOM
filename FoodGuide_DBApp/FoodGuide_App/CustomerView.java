@@ -18,6 +18,7 @@ public class CustomerView extends JFrame {
     private JPanel startPanel;
     private JPanel userActionsPanel;
     private JPanel transactionHistoryPanel;
+    private JPanel restaurantRecommendationPanel;
 
     // Sign In Panel components
     private ArrayList<JButton> userActionsButtonList = new ArrayList<>();
@@ -53,6 +54,19 @@ public class CustomerView extends JFrame {
     private JTable historyTable;
     private DefaultTableModel historyTableModel;
 
+    //Restaurant Recommendation panels
+    private ArrayList<JButton> restaurantRecButtonList = new ArrayList<>();
+    private JPanel originScrollPanel = new JPanel(); //will be overridden
+    private JScrollPane originScrollPlane = new JScrollPane();
+    private JScrollPane eventScrollPlane = new JScrollPane();
+    private JScrollPane restaurantScrollPlane = new JScrollPane();
+    private JTextField originSearchBar;
+    private JTextField eventSearchBar;
+    private CardLayout restaurantCardLayout;
+    private JPanel restaurantCardPanel;
+    private ArrayList<JToggleButton> originToggles = new ArrayList<>();
+    private ArrayList<JToggleButton> eventToggles = new ArrayList<>();
+
     /**
      * Constructs the customer view, initializes all panels,
      * and displays the frame.
@@ -72,6 +86,10 @@ public class CustomerView extends JFrame {
         // --- NEW: Create history panel ---
         transactionHistoryPanel = createTransactionHistoryPanel();
         // --- END: New ---
+        //
+        // --- NEW: Create restaurantRecommendationPanel --- 
+        restaurantRecommendationPanel = createRestaurantRecommendationPanel();
+        // --- END: New ---
 
         mainPanel.add(startPanel, "START_VIEW");
         mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
@@ -80,6 +98,10 @@ public class CustomerView extends JFrame {
 
         // --- NEW: Add history panel to layout ---
         mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
+        // --- END: New ---
+
+        // --- NEW: Add restaurant recommendation to layout ---
+        mainPanel.add(restaurantRecommendationPanel, "RESTAURANT_RECOMMENDATION");
         // --- END: New ---
 
         add(mainPanel);
@@ -163,6 +185,12 @@ public class CustomerView extends JFrame {
         JButton viewHistoryButton = new JButton("VIEW TRANSACTION HISTORY");
         viewHistoryButton.setActionCommand("VIEW TRANSACTION HISTORY");
         userActionsButtonList.add(viewHistoryButton);
+        // --- END: New ---
+        //
+        // --- NEW: Restaurant Recommendation Button ---
+        JButton restaurantRecButton = new JButton("VIEW RESTAURANT RECOMMENDATION");
+        restaurantRecButton.setActionCommand("VIEW RESTAURANT RECOMMENDATION");
+        userActionsButtonList.add(restaurantRecButton);
         // --- END: New ---
 
         JButton logOutButton = new JButton("LOG OUT");
@@ -497,6 +525,359 @@ public class CustomerView extends JFrame {
         return panel;
     }
 
+    /**
+     * Creates the restaurant recommendation panel.
+     * @return JPanel for the RESTAURANT_RECOMMENDATION card
+     */
+    private JPanel createRestaurantRecommendationPanel() {
+        // Reset Restaurant Recommendation Button List to eliminate duplicates
+        restaurantRecButtonList.clear();
+
+        // Main Panel
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Title
+        JLabel titleLabel = new JLabel("Restaurant Recommendation");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(titleLabel, BorderLayout.NORTH);
+        
+        //Create a card layout to switch between panels
+        restaurantCardLayout = new CardLayout();
+        // Main panel holding card layout
+        restaurantCardPanel = new JPanel(restaurantCardLayout);
+        panel.add(restaurantCardPanel, BorderLayout.CENTER);
+
+        restaurantCardPanel.add(createSelectOrigin(), "VIEW SEARCH FOOD CULTURE");
+        restaurantCardPanel.add(createSelectEvent(), "VIEW SEARCH FOOD EVENT");
+        restaurantCardPanel.add(createRestaurantRecos(), "VIEW RESTAURANT RECOMMENDATION");
+        // restaurantCardLayout.show(restaurantCardPanel, "VIEW SEARCH FOOD CULTURE");
+
+        return panel;
+    }
+
+    /// HELPER FUNCTIONS FOR RESTAURANT RECOMMENDATION;
+    private JPanel createSelectOrigin() {
+        JPanel searchFoodCulture = new JPanel(new BorderLayout());
+        searchFoodCulture.setBorder(BorderFactory.createTitledBorder("Select Food Culture"));
+
+        // Search Bar
+        JPanel searchBarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        originSearchBar = new JTextField(55);
+        JButton searchOrigin = new JButton("Search");
+        searchOrigin.setActionCommand("SEARCH ORIGIN");
+        restaurantRecButtonList.add(searchOrigin);
+        searchBarPanel.add(originSearchBar);
+        searchBarPanel.add(searchOrigin);
+        searchFoodCulture.add(searchBarPanel, BorderLayout.NORTH);
+
+        // Scroll plane
+        originScrollPlane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        originScrollPlane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        searchFoodCulture.add(originScrollPlane);
+
+        // Button Panel (South)
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#2E5E19"));
+
+        JButton backButton = new JButton("GO BACK");
+        backButton.setActionCommand("GO BACK RESTAURANT RECOMMENDATION");
+        restaurantRecButtonList.add(backButton);
+
+        JButton proceedButton = new JButton("Proceed to Food Events");
+        proceedButton.setActionCommand("PROCEED RESTAURANT RECOMMENDATION");
+        restaurantRecButtonList.add(proceedButton);
+
+        buttonPanel.add(backButton);
+        buttonPanel.add(proceedButton);
+        searchFoodCulture.add(buttonPanel, BorderLayout.SOUTH);
+
+        return searchFoodCulture;
+    }
+
+    private JPanel createSelectEvent() {
+        JPanel searchFoodEvent = new JPanel(new BorderLayout());
+        searchFoodEvent.setBorder(BorderFactory.createTitledBorder("Select Food Event"));
+
+        //search bar
+        JPanel searchBarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        eventSearchBar = new JTextField(55);
+        JButton searchEvent = new JButton("Search");
+        searchEvent.setActionCommand("SEARCH EVENT");
+        restaurantRecButtonList.add(searchEvent);
+        searchBarPanel.add(eventSearchBar);
+        searchBarPanel.add(searchEvent);
+        searchFoodEvent.add(searchBarPanel, BorderLayout.NORTH);
+
+        // Scroll plane
+        eventScrollPlane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        eventScrollPlane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        searchFoodEvent.add(eventScrollPlane);
+
+        // Button Panel (South)
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#2E5E19"));
+
+        JButton backButton = new JButton("GO BACK");
+        backButton.setActionCommand("GO BACK RESTAURANT RECOMMENDATION");
+        restaurantRecButtonList.add(backButton);
+
+        JButton proceedButton = new JButton("Get Recommendations");
+        proceedButton.setActionCommand("PROCEED RESTAURANT RECOMMENDATION");
+        restaurantRecButtonList.add(proceedButton);
+
+        buttonPanel.add(backButton);
+        buttonPanel.add(proceedButton);
+        searchFoodEvent.add(buttonPanel, BorderLayout.SOUTH);
+
+        return searchFoodEvent;
+    }
+
+    private JPanel createRestaurantRecos() {
+        JPanel restaurantRecos = new JPanel(new BorderLayout());
+        restaurantRecos.setBorder(BorderFactory.createTitledBorder("Restaurant Recommendations"));
+
+        // Scroll plane
+        restaurantScrollPlane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        restaurantScrollPlane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        restaurantRecos.add(restaurantScrollPlane);
+
+        // Button panel (south)
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#2E5E19"));
+
+        JButton okButton = new JButton("OK");
+        okButton.setActionCommand("OK RESTAURANT RECOMMENDATION");
+        restaurantRecButtonList.add(okButton);
+
+        buttonPanel.add(okButton);
+        restaurantRecos.add(buttonPanel, BorderLayout.SOUTH);
+
+        return restaurantRecos;
+    }
+    
+    public void populateFoodOriginsScroll(ArrayList<String> origins) {
+        populateFoodOriginsScroll(origins, "");
+    }
+
+    /**
+     * Puts origin toggle buttons inside the food origin scroll plane and repaints
+     */
+    public void populateFoodOriginsScroll(ArrayList<String> origins, String filter) {
+        JPanel plane = new JPanel(new GridBagLayout());
+        originToggles.clear();
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); // gap between buttons
+        gbc.fill = GridBagConstraints.HORIZONTAL; // make button fill width
+        gbc.weightx = 1.0; // let it expand horizontally
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+
+        int col = 0;
+
+        for (String origin : origins) {
+            System.out.println(origin);
+            if (!origin.toLowerCase().contains(filter.toLowerCase())) //lower case it all
+                continue;
+
+            JToggleButton originButton = new JToggleButton(origin);
+            originButton.setPreferredSize(new Dimension(0, 100));
+            originToggles.add(originButton);
+            plane.add(originButton, gbc);
+
+            col++;
+            if (col == 2) {
+                col = 0;
+                gbc.gridx = 0;
+                gbc.gridy++;
+            } else {
+                gbc.gridx = 1;
+            }
+
+        }
+        // after loop: if last row has only 1 button, add invisible filler
+        if (col == 1) {
+            gbc.gridx = 1;
+            JPanel filler = new JPanel();
+            filler.setPreferredSize(new Dimension(0, 0)); // takes no vertical space
+            plane.add(filler, gbc);
+        }
+
+        originScrollPlane.setViewportView(plane);
+        originScrollPlane.revalidate();
+        originScrollPlane.repaint();
+    }
+    
+    public void populateFoodEventsScroll(ArrayList<String> events) {
+        populateFoodEventsScroll(events, "");
+    }
+
+    /**
+     * Puts origin toggle buttons inside the food origin scroll plane and repaints
+     */
+    public void populateFoodEventsScroll(ArrayList<String> events, String filter) {
+        JPanel plane = new JPanel(new GridBagLayout());
+        eventToggles.clear();
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); // gap between buttons
+        gbc.fill = GridBagConstraints.HORIZONTAL; // make button fill width
+        gbc.weightx = 1.0; // let it expand horizontally
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+
+        int col = 0;
+
+        for (String event : events) {
+            System.out.println(event);
+            if (!event.toLowerCase().contains(filter.toLowerCase())) //lower case it all
+                continue;
+
+            JToggleButton eventButton = new JToggleButton(event);
+            eventButton.setPreferredSize(new Dimension(0, 100));
+            eventToggles.add(eventButton);
+            plane.add(eventButton, gbc);
+
+            col++;
+            if (col == 2) {
+                col = 0;
+                gbc.gridx = 0;
+                gbc.gridy++;
+            } else {
+                gbc.gridx = 1;
+            }
+        }
+        // after loop: if last row has only 1 button, add invisible filler
+        if (col == 1) {
+            gbc.gridx = 1;
+            JPanel filler = new JPanel();
+            filler.setPreferredSize(new Dimension(0, 0)); // takes no vertical space
+            plane.add(filler, gbc);
+        }
+
+        eventScrollPlane.setViewportView(plane);
+        eventScrollPlane.revalidate();
+        eventScrollPlane.repaint();
+    }
+    /**
+     * Puts origin toggle buttons inside the food origin scroll plane and repaints
+     */
+    public void populateRestaurantRecos(ArrayList<RestaurantData> restaurants) {
+        JPanel plane = new JPanel();
+        BoxLayout planeBLayout = new BoxLayout(plane, BoxLayout.Y_AXIS);
+        plane.setLayout(planeBLayout);
+
+        for (RestaurantData restaurant : restaurants) {
+            JPanel restaurantPlane = new JPanel();
+            BoxLayout bLayout = new BoxLayout(restaurantPlane, BoxLayout.Y_AXIS);
+            
+            restaurantPlane.setLayout(bLayout);
+            restaurantPlane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));;
+            restaurantPlane.setBackground(Color.WHITE);
+            restaurantPlane.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            // --- Labels ---
+            JLabel nameLabel = new JLabel("Name: " + restaurant.getRestaurantName());
+            nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            JLabel descLabel = new JLabel("Description: " + restaurant.getDescription());
+            descLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            JLabel ratingLabel = new JLabel("Rating: " + restaurant.getTotalRating());
+            ratingLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            restaurantPlane.add(nameLabel);
+            restaurantPlane.add(descLabel);
+            restaurantPlane.add(ratingLabel);
+
+            plane.add(restaurantPlane);
+            plane.add(Box.createVerticalStrut(10));
+        }
+        JPanel bufferForBottomOfScroll = new JPanel();
+        bufferForBottomOfScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+        plane.add(bufferForBottomOfScroll);
+
+        restaurantScrollPlane.setViewportView(plane);
+        restaurantScrollPlane.revalidate();
+        restaurantScrollPlane.repaint();
+    }
+
+    /**
+     * This hides switching layout in a layer of Abstraction
+     */
+    public void switchRestaurantCardPanel(String key) {
+        restaurantCardLayout.show(restaurantCardPanel, key);
+    }
+    /**
+     * Gets selected origins for restaurant recommendation
+     * @return ArrayList of Strings containing origin names
+     */
+    public ArrayList<String> getSelectedOrigins() {
+        ArrayList<String> origins = new ArrayList<>();
+        for (JToggleButton origin : originToggles) {
+            if (!origin.isSelected())
+                continue;
+
+            origins.add(origin.getText());
+        }
+
+        if (origins.isEmpty()) {
+            for (JToggleButton origin : originToggles)
+                origins.add(origin.getText());
+        }
+
+        return origins;
+    }
+
+    /**
+     * Gets selected events for restaurant recommendation
+     * @return ArrayList of Strings containing event names
+     */
+    public ArrayList<String> getSelectedEvents() {
+        ArrayList<String> events = new ArrayList<>();
+        for (JToggleButton event : eventToggles) {
+            if (!event.isSelected())
+                continue;
+
+            events.add(event.getText());
+        }
+
+        //if none is selected, return everything
+        if (events.isEmpty()) {
+            for (JToggleButton event : eventToggles)
+                events.add(event.getText());
+        }
+
+        return events;
+    }
+
+    /**
+     * Resets all selected toggles for restaurant recommendation
+     */
+    public void resetRestaurantRecommendation() {
+        for (JToggleButton btn : originToggles)
+            btn.setSelected(false);
+
+        for (JToggleButton btn : eventToggles)
+            btn.setSelected(false);
+    }
+    /**
+     * Gets the text inside the search for origins
+     * @Returns String
+     */
+    public String getOriginSearchBarField() {
+        return originSearchBar.getText();
+    }
+
+    /**
+     * Gets the text inside the search for events
+     * @Returns String
+     */
+    public String getEventSearchBarField() {
+        return eventSearchBar.getText();
+    }
 
     // --- Getters for Transaction Panel (Unchanged) ---
     public JComboBox<FoodItem> getFoodItemComboBox() { return foodItemComboBox; }
@@ -523,7 +904,8 @@ public class CustomerView extends JFrame {
     public String getFilterMaxPrice() { return filterMaxPriceField.getText(); }
     public String getFilterPromo() { return filterPromoField.getText(); }
     // --- END: New Getters ---
-
+    public CardLayout getRestaurantCardLayout() {return restaurantCardLayout;}
+    public JPanel getRestaurantCardPanel() {return restaurantCardPanel;}
 
     // --- Update methods for ComboBoxes (Unchanged) ---
     public void updateRestaurantComboBox(ArrayList<String> restaurantNames) {
@@ -654,6 +1036,13 @@ public class CustomerView extends JFrame {
 
         // --- NEW: Listeners for history panel buttons ---
         for (JButton button : historyButtonList) {
+            button.removeActionListener(listener);
+            button.addActionListener(listener);
+        }
+        // --- END: New ---
+        
+        // --- NEW: Listeners for restuarant rec buttons ---
+        for (JButton button : restaurantRecButtonList) {
             button.removeActionListener(listener);
             button.addActionListener(listener);
         }

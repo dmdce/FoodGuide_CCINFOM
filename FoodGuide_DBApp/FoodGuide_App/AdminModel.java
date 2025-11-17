@@ -112,4 +112,23 @@ public class AdminModel {
         return db.fetchAllUsers();
     }
 
+    /**
+     * Asks the database for origin names
+     * @return an ArrayList of String
+     */
+    public ArrayList<String> fetchOriginNames() {
+        return db.fetchOriginNames();
+    }
+
+    /**
+     * Asks the database for event names
+     * @return an ArrayList of String
+     */
+    public ArrayList<String> fetchFoodEventNames() {
+        return db.fetchFoodEventNames();
+    }
+
+    public ArrayList<RestaurantData> fetchRestaurantFromOriginAndEvent(ArrayList<String> origins, ArrayList<String> events) {
+        return db.fetchRestaurantFromOriginAndEvent(origins, events);
+    }
 }
