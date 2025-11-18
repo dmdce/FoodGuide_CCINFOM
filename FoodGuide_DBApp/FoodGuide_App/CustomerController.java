@@ -132,7 +132,7 @@ public class CustomerController implements ActionListener {
             // ------------------ TRANSACTION CREATION (Refactored to helper) Panel component ------------------
             case "RESTAURANT_SELECTED", "RES_RESTAURANT_SELECTED", "CREATE TRANSACTION", "RESERVE TRANSACTION", "USE RESERVATION",
                  "ADD ITEM", "ADD RESERVE ITEM", "CALCULATE TOTAL", "CALCULATE RESERVATION TOTAL", "PROCEED TO RATING",
-                 "CALCULATE_RATING", "GO BACK FOOD RATING", "GO BACK TRANSACTION", "GO BACK RESERVATION":
+                 "CALCULATE_RATING", "GO BACK FOOD RATING", "GO BACK TRANSACTION", "GO BACK RESERVATION", "CANCEL USE RESERVATION":
                 handleTransactionEvents(e); // Helper function for clarity
                 break;
 
@@ -369,7 +369,8 @@ public class CustomerController implements ActionListener {
                 break;
 
             case "USE RESERVATION":
-                System.out.println("USE RESERVATION");
+                System.err.println("DEBUG: USE RESERVATION");
+                view.getCardLayout().show(view.getMainPanel(), "USE_RESERVATION_MENU");
                 break;
 
             case "ADD ITEM":
@@ -456,7 +457,7 @@ public class CustomerController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
                 break;
 
-            case "GO BACK TRANSACTION", "GO BACK RESERVATION":
+            case "GO BACK TRANSACTION", "GO BACK RESERVATION", "CANCEL USE RESERVATION":
                 view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
                 break;
         }

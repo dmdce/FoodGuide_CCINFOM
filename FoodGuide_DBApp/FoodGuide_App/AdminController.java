@@ -109,7 +109,7 @@ public class AdminController implements ActionListener {
                 try {
                     percentageOff = Float.parseFloat(inputs.get(1));
                 }
-                catch (NumberFormatException _){
+                catch (NumberFormatException ex){
                     JOptionPane.showMessageDialog(view,
                             "Error: Invalid percentage",
                             "Promo Code Failed",

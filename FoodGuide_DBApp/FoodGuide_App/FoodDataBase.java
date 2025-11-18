@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
     private static final String USER = "root";
-    private static final String PASS = "Dlsu1234!";
+    private static final String PASS = "12345678";
 
     // --- USER TABLE ---
     private static final String USER_TABLE = "food_user";
@@ -56,13 +56,11 @@ public class FoodDataBase {
 
     // --- TRANSACTION, ORDER, and RATING TABLES ---
     private static final String TRANSACTION_TABLE = "food_transaction";
-    // --- NEW: Columns for history query ---
     private static final String TRANSACTION_ID_COL = "food_transaction_id";
     private static final String TRANSACTION_DATE_COL = "transaction_date";
     private static final String TRANSACTION_INITIAL_PRICE_COL = "initial_price";
     private static final String TRANSACTION_PROMO_COL = "promo_id";
     private static final String TRANSACTION_FINAL_PRICE_COL = "final_price";
-    // --- (end new) ---
     private static final String TRANSACTION_INSERT_QUERY =
             "INSERT INTO " + TRANSACTION_TABLE +
                     " (restaurant_name, promo_id, final_price, initial_price, food_user_id, transaction_date) " +
@@ -80,11 +78,19 @@ public class FoodDataBase {
                     " (food_transaction_id, restaurant_id, suggestion, quality, authenticity, overall_rating) " +
                     "VALUES (?, ?, ?, ?, ?, ?)";
 
+    // --- RESERVATION TABLE ---
+    private static final String RESERVATION_TABLE = "food_reservation";
+    private static final String RESERVATION_INSERT_QUERY =
+            "INSERT INTO " + RESERVATION_TABLE +
+                    " (restaurant_name, initial_price, food_user_id, reservation_date) " +
+                    "VALUES (?, ?, ?, NOW())";
+
+    // --- FOR FETCHING ALL USERS ---
     private static final String ALL_USERS_QUERY =
             "SELECT " + USER_ID_COL + ", " + USER_NAME_COL + ", " + USER_EMAIL_COL +
                     " FROM " + USER_TABLE + " ORDER BY " + USER_ID_COL + " ASC";
 
-    // --- NEW: FOR RESTAURANT RECOMENDATION
+    // --- FOR RESTAURANT RECOMMENDATION ---
     private static final String FOOD_ADDRESS_ID_COL = "food_address_id";
     private static final String ORIGINS = "origin";
     private static final String ORIGIN_NAME = "name";
@@ -384,7 +390,7 @@ public class FoodDataBase {
     }
 
     /**
-     * Executes the order reservation submission TODO BY DARRYL
+     * Executes the order reservation submission
      */
     public boolean createReservation(
             Integer userId,
@@ -392,8 +398,83 @@ public class FoodDataBase {
             double initialPrice,
             HashMap<FoodItem, Integer> itemQuantities
     ) {
-        System.out.println("Congratulations, you managed to print this message!");
-        return false;
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            int restaurantId;
+            try (PreparedStatement stmt = conn.prepareStatement(RESTAURANT_ID_QUERY)) {
+                stmt.setString(1, restaurantName);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        restaurantId = rs.getInt(RESTAURANT_ID_COL);
+                    } else {
+                        throw new SQLException("Restaurant not found: " + restaurantName);
+                    }
+                }
+            }
+            int reservationId;
+            try (PreparedStatement stmt = conn.prepareStatement(RESERVATION_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setString(1, restaurantName);
+                stmt.setDouble(2, initialPrice);
+                stmt.setInt(3, userId);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected == 0) throw new SQLException("Creating transaction failed, no rows affected.");
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        reservationId = generatedKeys.getInt(1);
+                    } else {
+                        throw new SQLException("Creating transaction failed, no ID obtained.");
+                    }
+                }
+            }
+            try (PreparedStatement orderStmt = conn.prepareStatement(ORDER_INSERT_QUERY);
+                 PreparedStatement menuIdStmt = conn.prepareStatement(FOOD_MENU_IDS_QUERY)) {
+                for (Map.Entry<FoodItem, Integer> entry : itemQuantities.entrySet()) {
+                    FoodItem item = entry.getKey();
+                    int quantity = entry.getValue();
+                    menuIdStmt.setString(1, item.getName());
+                    menuIdStmt.setInt(2, restaurantId);
+                    int foodMenuId;
+                    int foodId;
+                    try (ResultSet rs = menuIdStmt.executeQuery()) {
+                        if (rs.next()) {
+                            foodMenuId = rs.getInt(FOOD_MENU_ID_COL);
+                            foodId = rs.getInt(FOOD_ID_COL);
+                        } else {
+                            throw new SQLException("Food item not found in menu: " + item.getName());
+                        }
+                    }
+                    orderStmt.setInt(1, reservationId);
+                    orderStmt.setInt(2, foodMenuId);
+                    orderStmt.setInt(3, quantity);
+                    orderStmt.setInt(4, foodId);
+                    orderStmt.addBatch();
+                }
+                orderStmt.executeBatch();
+            }
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     /**

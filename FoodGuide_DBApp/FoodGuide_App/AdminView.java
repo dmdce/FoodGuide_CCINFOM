@@ -229,7 +229,7 @@ public class AdminView extends JFrame {
     }
 
     /**
-     * Builds the truck simulation selection panel.
+     * Builds the database management selection panel.
      * @return a JPanel for the MANAGE_DATABASE_MENU card
      */
     private JPanel createManageDatabasePanel() {
@@ -328,20 +328,12 @@ public class AdminView extends JFrame {
         // LABELS
         JPanel titlePanel = new JPanel(new GridBagLayout());
 
-        // GridBagLayout is used for multiple labels
-        // GridBagConstraints gbc = new GridBagConstraints();
-        // gbc.insets = new Insets(20, 0, 10, 0);
-
         JLabel label = new JLabel("Choose a report to generate");
         label.setFont(new Font("Verdana", Font.BOLD, 20));
 
         titlePanel.add(label);
 
         panel.add(titlePanel, BorderLayout.CENTER);
-
-        // Create a vertical scroll panel
-        // JScrollPane scrollPane = new JScrollPane(infoPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        // JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
 
         // BUTTONS
         JPanel generateReportsButtonPanel = new JPanel(new GridLayout(0, 1));
@@ -361,7 +353,6 @@ public class AdminView extends JFrame {
 
         generateReportsButtonPanel.add(backGenerateReportsButton);
 
-        // panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(generateReportsButtonPanel, BorderLayout.SOUTH);
 
         return panel;
@@ -380,9 +371,6 @@ public class AdminView extends JFrame {
         titlePanel.add(label);
 
         panel.add(titlePanel, BorderLayout.NORTH);
-
-        // QUERY RESULT
-
 
         // BUTTONS
         JPanel userRegButtonPanel = new JPanel(new GridLayout(0, 1));
@@ -407,7 +395,7 @@ public class AdminView extends JFrame {
         titlePanel.add(label);
         panel.add(titlePanel, BorderLayout.NORTH);
 
-        // --- NEW: REGISTRATION FORM ---
+        // REGISTRATION FORM
         JPanel formPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // 0 rows, 2 cols, 10px gaps
         formPanel.setBorder(new EmptyBorder(20, 150, 20, 150)); // Add padding
 
@@ -430,9 +418,9 @@ public class AdminView extends JFrame {
         formPanel.add(emailLabel);
         formPanel.add(emailField);
 
-        panel.add(formPanel, BorderLayout.CENTER); // Add form to the center
+        panel.add(formPanel, BorderLayout.CENTER);
 
-        // --- UPDATED: BUTTONS ---
+        // BUTTONS
         JPanel userRegButtonPanel = new JPanel(new FlowLayout()); // Use FlowLayout like your others
         userRegButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
         userRegButtonPanel.setBackground(Color.decode("#FCD303"));
@@ -509,7 +497,7 @@ public class AdminView extends JFrame {
     }
 
     /** 
-     * Sets the drop down menu for restuarant names and clears fields
+     * Sets the drop-down menu for restaurant names and clears fields
      */
     public void resetCreatePromoCode(ArrayList<String> restaurantNames) {
         for (JTextField field : createPromoFields)  {
@@ -529,8 +517,8 @@ public class AdminView extends JFrame {
     }
 
     /**
-     * Gets the values inputed in the create promo text fields
-     * @returns an ArrayList of Strings containing the inputed Data
+     * Gets the values inputted in the CreatePromo text fields
+     * @return an ArrayList of Strings containing the inputted Data
      */
     public ArrayList<String> getCreatePromoFields() {
         ArrayList<String> fields = new ArrayList<>();
