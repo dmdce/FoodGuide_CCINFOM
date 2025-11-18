@@ -11,10 +11,10 @@ public class TransactionData {
     private Timestamp transactionDate;
     private String restaurantName;
     private double initialPrice;
-    private double promo;
+    private int promo;
     private double finalPrice;
 
-    public TransactionData(int transactionId, Timestamp transactionDate, String restaurantName, double initialPrice, double promo, double finalPrice) {
+    public TransactionData(int transactionId, Timestamp transactionDate, String restaurantName, double initialPrice, int promo, double finalPrice) {
         this.transactionId = transactionId;
         this.transactionDate = transactionDate;
         this.restaurantName = restaurantName;
@@ -46,7 +46,7 @@ public class TransactionData {
         return initialPrice;
     }
 
-    public double getPromo() {
+    public int getPromo() {
         // Your schema stores promo as a decimal (e.g., 0.10)
         // Let's format it as a percentage for display
         return promo;

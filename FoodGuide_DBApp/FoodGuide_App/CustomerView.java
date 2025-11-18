@@ -310,9 +310,9 @@ public class CustomerView extends JFrame {
         initialPriceLabel = new JLabel("P0.00");
         pricePanel.add(initialPriceLabel);
 
-        pricePanel.add(new JLabel("Promo % (e.g., 0.10):"));
-        promoInputField = new JTextField("0.10"); // Default 10%
-        promoInputField.setToolTipText("Enter a value between 0.00 and 1.00");
+        pricePanel.add(new JLabel("Promo Code:"));
+        promoInputField = new JTextField(); // Default 10%
+        promoInputField.setToolTipText("Enter a valid code");
         pricePanel.add(promoInputField);
 
         // This label now shows the calculated discount *amount*
@@ -517,7 +517,7 @@ public class CustomerView extends JFrame {
         gbc.gridx = 0; gbc.gridy = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0.0;
-        filterPanel.add(new JLabel("Promo % (e.g., 0.10):"), gbc);
+        filterPanel.add(new JLabel("Promo Code:"), gbc);
 
         // Promo Field
         gbc.gridx = 1;
@@ -530,7 +530,7 @@ public class CustomerView extends JFrame {
         panel.add(filterPanel, BorderLayout.CENTER);
 
         // --- Results Table (Center) ---
-        String[] columnNames = {"ID", "Date", "Restaurant", "Initial Price", "Promo %", "Final Price"};
+        String[] columnNames = {"ID", "Date", "Restaurant", "Initial Price", "Promo Code", "Final Price"};
         historyTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -930,6 +930,7 @@ public class CustomerView extends JFrame {
     public JTextArea getTransactionCartArea() { return transactionCartArea; }
     public JLabel getInitialPriceLabel() { return initialPriceLabel; }
     public JLabel getPromoLabel() { return promoLabel; }
+    public JTextField getPromoField() { return promoInputField; }
     public JLabel getFinalPriceLabel() { return finalPriceLabel; }
     public JComboBox<String> getRestaurantComboBox() { return restaurantComboBox; }
 
@@ -1001,7 +1002,7 @@ public class CustomerView extends JFrame {
                         transaction.getTransactionDate(),
                         transaction.getRestaurantName(),
                         String.format("%.2f", transaction.getInitialPrice()),
-                        String.format("%.2f", transaction.getPromo()), // Will show 0.10
+                        transaction.getPromo(), // Will show 0.10
                         String.format("%.2f", transaction.getFinalPrice())
                 });
             }
