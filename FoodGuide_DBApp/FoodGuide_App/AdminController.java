@@ -3,6 +3,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 /**
  * Class: AdminController
@@ -12,6 +13,10 @@ import javax.swing.*;
 public class AdminController implements ActionListener {
     private AdminModel model;
     private AdminView view;
+    private ArrayList<AdminView.FoodItem> cart;
+
+    private String currentTransactionRestaurant;
+    private double currentTransactionFinalPrice;
 
     /**
      * Constructs an AdminController with the specified model and view.
@@ -22,6 +27,7 @@ public class AdminController implements ActionListener {
     public AdminController(AdminModel m, AdminView v) {
         this.model = m;
         this.view = v;
+        this.cart = new ArrayList<>();
         view.setActionListener(this);
     }
 
@@ -63,17 +69,14 @@ public class AdminController implements ActionListener {
                     boolean isSuccess = model.registerNewUser(username, email);
 
                     if (isSuccess) {
-                        // 3. Show a success message
                         JOptionPane.showMessageDialog(view,
                                 "User registered successfully!",
                                 "Success",
                                 JOptionPane.INFORMATION_MESSAGE);
 
-                        // 4. Go back to the manage database menu
                         view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
 
                     } else {
-                        // 3. Show an error message (e.g., user already exists)
                         JOptionPane.showMessageDialog(view,
                                 "Error: Could not register user.\nCheck console for details (e.g., duplicate entry).",
                                 "Registration Failed",
@@ -81,14 +84,12 @@ public class AdminController implements ActionListener {
                     }
 
                 } catch (Exception ex) {
-                    // Catch any other unexpected errors
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(view,
                             "An unexpected error occurred: " + ex.getMessage(),
                             "Error",
                             JOptionPane.ERROR_MESSAGE);
                 }
-                // view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
 
             // ------------------ Generate Reports panel component ------------------
@@ -97,13 +98,8 @@ public class AdminController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
             case "Registered Users":
-                // 1. Get the list of all users from the model
                 ArrayList<UserData> users = model.getAllUsers();
-
-                // 2. Pass the list to the view to update its *report* table
                 view.updateUserReportTable(users);
-
-                // 3. Show the (now populated) user *report* panel
                 view.getCardLayout().show(view.getMainPanel(), "USER_REPORT_PANEL");
                 break;
             case "User Referral Impact":
@@ -133,20 +129,315 @@ public class AdminController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "REVENUE_REPORT_PANEL");
                 break;
 
+            // ------------------ MANAGE FOOD EVENTS AND ORIGIN ------------------
+            case "Manage Food Events":
+                refreshFoodEventTable();
+                view.getCardLayout().show(view.getMainPanel(), "FOOD_EVENT_MENU");
+                break;
+
+            case "Manage Origins":
+                refreshOriginTable();
+                view.getCardLayout().show(view.getMainPanel(), "ORIGIN_MENU");
+                break;
+
+            // ------------------ FOOD EVENT MANAGEMENT ------------------
+            case "ADD_FOOD_EVENT":
+                String eventName = view.getFoodEventNameField().getText().trim();
+                String eventDescription = view.getFoodEventDescriptionArea().getText().trim();
+
+                if (eventName.isEmpty()) {
+                    JOptionPane.showMessageDialog(view,
+                        "Event name cannot be empty.",
+                        "Input Error",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                try {
+                    boolean addSuccess = model.addFoodEvent(eventName, eventDescription);
+                    if (addSuccess) {
+                        JOptionPane.showMessageDialog(view,
+                            "Food event added successfully!",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                        view.getFoodEventNameField().setText("");
+                        view.getFoodEventDescriptionArea().setText("");
+                        refreshFoodEventTable();
+                    } else {
+                        JOptionPane.showMessageDialog(view,
+                            "Failed to add food event.\n\n" +
+                            "Check console for more details.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(view,
+                        "Error: " + ex.getMessage() + "\n\nCheck console for details.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                }
+                break;
+
+            case "EDIT_FOOD_EVENT":
+                int selectedRow = view.getFoodEventTable().getSelectedRow();
+                if (selectedRow == -1) {
+                    JOptionPane.showMessageDialog(view,
+                        "Please select a food event to edit.",
+                        "Selection Error",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                String eventIdStr = (String) view.getFoodEventTableModel().getValueAt(selectedRow, 0);
+                int eventId = Integer.parseInt(eventIdStr);
+                String newEventName = view.getFoodEventNameField().getText().trim();
+                String newEventDescription = view.getFoodEventDescriptionArea().getText().trim();
+
+                if (newEventName.isEmpty()) {
+                    JOptionPane.showMessageDialog(view,
+                        "Event name cannot be empty.",
+                        "Input Error",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                try {
+                    boolean updateSuccess = model.updateFoodEvent(eventId, newEventName, newEventDescription);
+                    if (updateSuccess) {
+                        JOptionPane.showMessageDialog(view,
+                            "Food event updated successfully!",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                        view.getFoodEventNameField().setText("");
+                        view.getFoodEventDescriptionArea().setText("");
+                        refreshFoodEventTable();
+                    } else {
+                        JOptionPane.showMessageDialog(view,
+                            "Failed to update food event.\n\n" +
+                            "Check console for detailed error messages",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(view,
+                        "Error: " + ex.getMessage() + "\n\nCheck console for details.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                }
+                break;
+
+            case "DELETE_FOOD_EVENT":
+                int deleteRow = view.getFoodEventTable().getSelectedRow();
+                if (deleteRow == -1) {
+                    JOptionPane.showMessageDialog(view,
+                        "Please select a food event to delete.",
+                        "Selection Error",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                String deleteEventIdStr = (String) view.getFoodEventTableModel().getValueAt(deleteRow, 0);
+                int deleteEventId = Integer.parseInt(deleteEventIdStr);
+                String deleteEventName = (String) view.getFoodEventTableModel().getValueAt(deleteRow, 1);
+
+                int confirm = JOptionPane.showConfirmDialog(view,
+                    "Are you sure you want to delete '" + deleteEventName + "'?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        boolean deleteSuccess = model.deleteFoodEvent(deleteEventId);
+                        if (deleteSuccess) {
+                            JOptionPane.showMessageDialog(view,
+                                "Food event deleted successfully!",
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
+                            view.getFoodEventNameField().setText("");
+                            view.getFoodEventDescriptionArea().setText("");
+                            refreshFoodEventTable();
+                        } else {
+                            JOptionPane.showMessageDialog(view,
+                                "Failed to delete food event.\n\n" +
+                                "Check console for detailed error messages",
+                                "Deletion Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(view,
+                            "Error: " + ex.getMessage() + "\n\nCheck console for details.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                        ex.printStackTrace();
+                    }
+                }
+                break;
+
+            case "REFRESH_FOOD_EVENT_TABLE":
+                refreshFoodEventTable();
+                break;
+
+            // ------------------ ORIGIN MANAGEMENT ------------------
+            case "ADD_ORIGIN":
+                String originName = view.getOriginNameField().getText().trim();
+
+                if (originName.isEmpty()) {
+                    JOptionPane.showMessageDialog(view,
+                        "Origin name cannot be empty.",
+                        "Input Error",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                try {
+                    boolean addOriginSuccess = model.addOrigin(originName);
+                    if (addOriginSuccess) {
+                        JOptionPane.showMessageDialog(view,
+                            "Origin added successfully!",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                        view.getOriginNameField().setText("");
+                        refreshOriginTable();
+                    } else {
+                        JOptionPane.showMessageDialog(view,
+                            "Failed to add origin.\n\n" +
+                            "Check console for more details.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(view,
+                        "Error: " + ex.getMessage() + "\n\nCheck console for details.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                }
+                break;
+
+            case "EDIT_ORIGIN":
+                int originSelectedRow = view.getOriginTable().getSelectedRow();
+                if (originSelectedRow == -1) {
+                    JOptionPane.showMessageDialog(view,
+                        "Please select an origin to edit.",
+                        "Selection Error",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                String originIdStr = (String) view.getOriginTableModel().getValueAt(originSelectedRow, 0);
+                int originId = Integer.parseInt(originIdStr);
+                String newOriginName = view.getOriginNameField().getText().trim();
+
+                if (newOriginName.isEmpty()) {
+                    JOptionPane.showMessageDialog(view,
+                        "Origin name cannot be empty.",
+                        "Input Error",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                try {
+                    boolean updateOriginSuccess = model.updateOrigin(originId, newOriginName);
+                    if (updateOriginSuccess) {
+                        JOptionPane.showMessageDialog(view,
+                            "Origin updated successfully!",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                        view.getOriginNameField().setText("");
+                        refreshOriginTable();
+                    } else {
+                        JOptionPane.showMessageDialog(view,
+                            "Failed to update origin.\n\n" +
+                            "Check console for detailed error messages",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(view,
+                        "Error: " + ex.getMessage() + "\n\nCheck console for details.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                }
+                break;
+
+            case "DELETE_ORIGIN":
+                int originDeleteRow = view.getOriginTable().getSelectedRow();
+                if (originDeleteRow == -1) {
+                    JOptionPane.showMessageDialog(view,
+                        "Please select an origin to delete.",
+                        "Selection Error",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                String deleteOriginIdStr = (String) view.getOriginTableModel().getValueAt(originDeleteRow, 0);
+                int deleteOriginId = Integer.parseInt(deleteOriginIdStr);
+                String deleteOriginName = (String) view.getOriginTableModel().getValueAt(originDeleteRow, 1);
+
+                int originConfirm = JOptionPane.showConfirmDialog(view,
+                    "Are you sure you want to delete '" + deleteOriginName + "'?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+
+                if (originConfirm == JOptionPane.YES_OPTION) {
+                    try {
+                        boolean deleteOriginSuccess = model.deleteOrigin(deleteOriginId);
+                        if (deleteOriginSuccess) {
+                            JOptionPane.showMessageDialog(view,
+                                "Origin deleted successfully!",
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
+                            view.getOriginNameField().setText("");
+                            refreshOriginTable();
+                        } else {
+                            JOptionPane.showMessageDialog(view,
+                                "Failed to delete origin.\n\n" +
+                                "Check console for detailed error messages",
+                                "Deletion Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(view,
+                            "Error: " + ex.getMessage() + "\n\nCheck console for details.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                        ex.printStackTrace();
+                    }
+                }
+                break;
+
+            case "REFRESH_ORIGIN_TABLE":
+                refreshOriginTable();
+                break;
+
             // ------------------ BASIC NAVIGATION BUTTONS ------------------
-            case "GO BACK", "GO BACK GENERATE REPORTS":
+            case "GO BACK":
+            case "GO BACK GENERATE REPORTS":
                 view.getCardLayout().show(view.getMainPanel(), "MAIN_MENU");
                 break;
+
             case "GO BACK USER REG":
+            case "GO BACK FOOD EVENT":   // 🔹 NEW
+            case "GO BACK ORIGIN":       // 🔹 NEW
                 view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
                 break;
-            case "GO BACK USER REPORT", "GO BACK FEEDBACK REPORT", "GO BACK REVENUE REPORT":
+
+            case "GO BACK USER REPORT":
+            case "GO BACK FEEDBACK REPORT":
+            case "GO BACK REVENUE REPORT":
                 view.getCardLayout().show(view.getMainPanel(), "GENERATE_REPORTS_MENU");
                 break;
+
             case "GO BACK TO MAIN":
                 view.dispose();
                 model.getMenuController().showMenuView();
                 break;
+
         }
     }
 
@@ -157,5 +448,25 @@ public class AdminController implements ActionListener {
     private void updateView() {
         view.refreshPanels();
         view.setActionListener(this);
+    }
+
+    private void refreshFoodEventTable() {
+        DefaultTableModel tableModel = view.getFoodEventTableModel();
+        tableModel.setRowCount(0); // Clear existing rows
+
+        ArrayList<String[]> events = model.getAllFoodEvents();
+        for (String[] event : events) {
+            tableModel.addRow(event);
+        }
+    }
+
+    private void refreshOriginTable() {
+        DefaultTableModel tableModel = view.getOriginTableModel();
+        tableModel.setRowCount(0); // Clear existing rows
+
+        ArrayList<String[]> origins = model.getAllOrigins();
+        for (String[] origin : origins) {
+            tableModel.addRow(origin);
+        }
     }
 }

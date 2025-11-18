@@ -159,4 +159,66 @@ public class AdminModel {
     public RestaurantFeedbackReport getFeedbackReport(String restaurantName) {
         return db.fetchFeedbackReport(restaurantName);
     }
+
+    // ------------------------------------------------------------
+    // ✅ EXTRA METHODS NEEDED FOR FOOD EVENTS & ORIGINS (CRUD)
+    // ------------------------------------------------------------
+
+    /**
+     * Gets all food events from the database.
+     * @return ArrayList of String arrays containing [id, name, description]
+     */
+    public ArrayList<String[]> getAllFoodEvents() {
+        return db.getAllFoodEvents();
+    }
+
+    /**
+     * Adds a new food event to the database.
+     */
+    public boolean addFoodEvent(String eventName, String description) {
+        return db.addFoodEvent(eventName, description);
+    }
+
+    /**
+     * Updates an existing food event in the database.
+     */
+    public boolean updateFoodEvent(int eventId, String eventName, String description) {
+        return db.updateFoodEvent(eventId, eventName, description);
+    }
+
+    /**
+     * Deletes a food event from the database.
+     */
+    public boolean deleteFoodEvent(int eventId) {
+        return db.deleteFoodEvent(eventId);
+    }
+
+    /**
+     * Gets all origins from the database.
+     * @return ArrayList of String arrays containing [id, name]
+     */
+    public ArrayList<String[]> getAllOrigins() {
+        return db.getAllOrigins();
+    }
+
+    /**
+     * Adds a new origin to the database.
+     */
+    public boolean addOrigin(String originName) {
+        return db.addOrigin(originName);
+    }
+
+    /**
+     * Updates an existing origin in the database.
+     */
+    public boolean updateOrigin(int originId, String originName) {
+        return db.updateOrigin(originId, originName);
+    }
+
+    /**
+     * Deletes an origin from the database.
+     */
+    public boolean deleteOrigin(int originId) {
+        return db.deleteOrigin(originId);
+    }
 }
