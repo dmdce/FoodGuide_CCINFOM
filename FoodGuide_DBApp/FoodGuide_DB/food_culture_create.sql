@@ -66,10 +66,10 @@ CREATE TABLE
     `restaurant_name` varchar(100) NOT NULL,
     `initial_price` decimal(14, 2) NOT NULL COMMENT 'base price of food',
     `food_user_id` int unsigned NOT NULL,
-    `transaction_date` timestamp NOT NULL,
+    `reservation_date` timestamp NOT NULL,
     PRIMARY KEY (`food_reservation_id`),
     KEY `food_reservation_relation_1` (`food_user_id`),
-    CONSTRAINT `food_transaction_relation_1` FOREIGN KEY (`food_user_id`) REFERENCES `food_user` (`food_user_id`)
+    CONSTRAINT `food_reservation_relation_1` FOREIGN KEY (`food_user_id`) REFERENCES `food_user` (`food_user_id`)
   );
 
 CREATE TABLE
