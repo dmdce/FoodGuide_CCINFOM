@@ -120,3 +120,14 @@ CREATE TABLE
     CONSTRAINT `food_order_relation_2` FOREIGN KEY (`food_menu_id`) REFERENCES `food_menu` (`food_menu_id`),
     CONSTRAINT `food_order_relation_3` FOREIGN KEY (`food_id`) REFERENCES `food` (`food_id`)
   );
+
+CREATE TABLE
+    `food_promo` (
+        `food_promo_id` int unsigned NOT NULL AUTO_INCREMENT,
+        `restaurant_id` int unsigned NULL, -- sometimes null
+        `promo_code` varchar(50) NOT NULL UNIQUE,
+        `percentage_off` decimal(5, 4) NOT NULL,  -- 0.10 = 10% off
+        `promo_description` varchar(100) NULL,
+        PRIMARY KEY(`food_promo_id`),
+        CONSTRAINT `restaurant_id` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurant` (`restaurant_id`)
+    );

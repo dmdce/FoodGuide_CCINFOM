@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
     private static final String USER = "root";
-    private static final String PASS = "12345678";
+    private static final String PASS = "Dlsu1234!";
 
     // --- USER TABLE ---
     private static final String USER_TABLE = "food_user";
