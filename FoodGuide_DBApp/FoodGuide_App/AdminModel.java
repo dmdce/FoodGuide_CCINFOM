@@ -67,7 +67,7 @@ public class AdminModel {
             Integer userId,
             String restaurantName,
             double initialPrice,
-            double promoAmount,
+            Integer promoID,
             double finalPrice,
             HashMap<FoodItem, Integer> itemQuantities,
             int quality,
@@ -76,7 +76,7 @@ public class AdminModel {
             String comments
     ) {
         return db.createFullTransaction(
-                userId, restaurantName, initialPrice, promoAmount, finalPrice,
+                userId, restaurantName, initialPrice, promoID, finalPrice,
                 itemQuantities, quality, authenticity, overallRating, comments
         );
     }
@@ -158,5 +158,17 @@ public class AdminModel {
      */
     public RestaurantFeedbackReport getFeedbackReport(String restaurantName) {
         return db.fetchFeedbackReport(restaurantName);
+    }
+
+    public void createPromoCode(String code, float percentageOff, String description, String restaurantName) {
+        db.createPromoCode(code, percentageOff, description, restaurantName);
+    }
+
+    public Boolean promoCodeAlreadyExists(String code) {
+        return db.promoCodeAlreadyExists(code);
+    }
+
+    public FoodPromo getFoodPromo(String code, String restaurantName) {
+        return db.getFoodPromo(code, restaurantName);
     }
 }

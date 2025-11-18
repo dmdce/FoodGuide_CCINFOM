@@ -28,7 +28,7 @@ public class CustomerController implements ActionListener {
     private FoodItem selectedItem;
     private double initialPrice;
     private double currentTransactionInitialPrice;
-    private double currentTransactionPromo;
+    private Integer promoID;
     private double currentTransactionFinalPrice;
     private HashMap<FoodItem, Integer> itemQuantities;
 
@@ -183,7 +183,7 @@ public class CustomerController implements ActionListener {
                 }
                 isSuccess = model.getAm().submitTransactionAndRating(
                         userId, currentTransactionRestaurant, currentTransactionInitialPrice,
-                        currentTransactionPromo, currentTransactionFinalPrice, itemQuantities,
+                        promoID, currentTransactionFinalPrice, itemQuantities,
                         finalQuality, finalAuthenticity, finalOverall, comments
                 );
                 if (isSuccess) {
@@ -347,6 +347,7 @@ public class CustomerController implements ActionListener {
                 view.getTransactionCartArea().setText("");
                 view.getInitialPriceLabel().setText("P0.00");
                 view.getPromoLabel().setText("-P0.00");
+                view.getPromoField().setText("");
                 view.getFinalPriceLabel().setText("P0.00");
                 restaurantList = model.getAm().getRestaurantNames();
                 view.updateRestaurantComboBox(restaurantList);
@@ -390,25 +391,28 @@ public class CustomerController implements ActionListener {
                 for (FoodItem item : cart) {
                     initialPrice += item.getPrice();
                 }
-                double promoPercent = 0.0;
-                try {
-                    // 1. Get text from the new field
-                    promoPercent = Double.parseDouble(view.getPromoInput());
 
-                    // 2. Validate the range
-                    if (promoPercent < 0.0 || promoPercent > 1.0) {
-                        JOptionPane.showMessageDialog(view, "Promo must be between 0.00 and 1.00.", "Input Error", JOptionPane.WARNING_MESSAGE);
-                        promoPercent = 0.0; // Default to 0 if out of range
+                double promoPercent = 0.0;
+                promoID = null;
+                String codeInput = view.getPromoInput();
+                if (!codeInput.isEmpty()) {
+                    FoodPromo promo = model.getAm().getFoodPromo(
+                            view.getPromoInput(), 
+                            (String) view.getRestaurantComboBox().getSelectedItem()
+                            );
+                    if (promo == null) {
+                        JOptionPane.showMessageDialog(view, "Invalid promo! Promo might be for another restaurant or entered incorrectly", "Input Error", JOptionPane.WARNING_MESSAGE);
+                        break;
+                    } else {
+                        promoPercent = promo.getPercentageOff();
+                        promoID = promo.getId();
                     }
-                } catch (NumberFormatException nfe) {
-                    JOptionPane.showMessageDialog(view, "Invalid promo format. Please enter a number (e.g., 0.10).", "Input Error", JOptionPane.WARNING_MESSAGE);
-                    promoPercent = 0.0; // Default to 0 if not a number
                 }
+
 
                 double promoAmount = initialPrice * promoPercent;
                 double finalPrice = initialPrice - promoAmount;
                 currentTransactionInitialPrice = initialPrice;
-                currentTransactionPromo = promoAmount;
                 currentTransactionFinalPrice = finalPrice;
                 view.getInitialPriceLabel().setText(String.format("P%.2f", initialPrice));
                 view.getPromoLabel().setText(String.format("-P%.2f", promoAmount));

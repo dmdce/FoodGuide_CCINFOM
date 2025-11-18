@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class FoodDataBase {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/food_culture";
     private static final String USER = "root";
-    private static final String PASS = "12345678";
+    private static final String PASS = "Dlsu1234!";
 
     // --- USER TABLE ---
     private static final String USER_TABLE = "food_user";
@@ -60,12 +60,12 @@ public class FoodDataBase {
     private static final String TRANSACTION_ID_COL = "food_transaction_id";
     private static final String TRANSACTION_DATE_COL = "transaction_date";
     private static final String TRANSACTION_INITIAL_PRICE_COL = "initial_price";
-    private static final String TRANSACTION_PROMO_COL = "promo";
+    private static final String TRANSACTION_PROMO_COL = "promo_id";
     private static final String TRANSACTION_FINAL_PRICE_COL = "final_price";
     // --- (end new) ---
     private static final String TRANSACTION_INSERT_QUERY =
             "INSERT INTO " + TRANSACTION_TABLE +
-                    " (restaurant_name, promo, final_price, initial_price, food_user_id, transaction_date) " +
+                    " (restaurant_name, promo_id, final_price, initial_price, food_user_id, transaction_date) " +
                     "VALUES (?, ?, ?, ?, ?, NOW())";
 
     private static final String ORDER_TABLE = "food_order";
@@ -285,7 +285,7 @@ public class FoodDataBase {
      * Executes the complete transaction and rating submission
      */
     public boolean createFullTransaction(
-            Integer userId, String restaurantName, double initialPrice, double promoAmount,
+            Integer userId, String restaurantName, double initialPrice, Integer promoCode,
             double finalPrice, HashMap<FoodItem, Integer> itemQuantities, int quality,
             int authenticity, double overallRating, String comments
     ) {
@@ -305,10 +305,13 @@ public class FoodDataBase {
                 }
             }
             int transactionId = -1;
-            double promoPercent = (initialPrice > 0) ? (promoAmount / initialPrice) : 0.0;
             try (PreparedStatement stmt = conn.prepareStatement(TRANSACTION_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, restaurantName);
-                stmt.setDouble(2, promoPercent);
+                if (promoCode == null || promoCode == -1) {
+                    stmt.setNull(2, java.sql.Types.INTEGER);
+                } else {
+                    stmt.setInt(2, promoCode);
+                }
                 stmt.setDouble(3, finalPrice);
                 stmt.setDouble(4, initialPrice);
                 stmt.setInt(5, userId);
@@ -447,7 +450,7 @@ public class FoodDataBase {
         if (promo != null && !promo.trim().isEmpty()) {
             try {
                 // Validate that it's a number
-                double promoVal = Double.parseDouble(promo);
+                int promoVal = Integer.parseInt(promo);
                 sql.append(" AND " + TRANSACTION_PROMO_COL + " = ?");
                 parameters.add(promoVal);
             } catch (NumberFormatException e) {
@@ -477,7 +480,7 @@ public class FoodDataBase {
                             rs.getTimestamp(TRANSACTION_DATE_COL),
                             rs.getString(RESTAURANT_NAME_COL),
                             rs.getDouble(TRANSACTION_INITIAL_PRICE_COL),
-                            rs.getDouble(TRANSACTION_PROMO_COL),
+                            rs.getInt(TRANSACTION_PROMO_COL),
                             rs.getDouble(TRANSACTION_FINAL_PRICE_COL)
                     ));
                 }
@@ -658,4 +661,139 @@ public class FoodDataBase {
         // Return the complete DTO
         return new RestaurantFeedbackReport(overallRating, menuPopularity, comments);
     }
+
+    public void createPromoCode(String code, float percentageOff, String description, String restaurantName) {
+        try (Connection conn = getConnection()) {
+            Integer restaurantId = null;
+            if (restaurantName != null && !restaurantName.isEmpty()) {
+                String query = "SELECT restaurant_id FROM restaurant WHERE restaurant_name = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, restaurantName);
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            restaurantId = rs.getInt("restaurant_id");
+                        }
+                    }
+                }
+            }
+
+            String query = "INSERT INTO food_promo (promo_code, percentage_off, promo_description, restaurant_id) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+                pstmt.setString(1, code);
+                pstmt.setFloat(2, percentageOff);
+                pstmt.setString(3, description);
+
+                if (restaurantId != null) {
+                    pstmt.setInt(4, restaurantId);
+                } else {
+                    pstmt.setNull(4, java.sql.Types.INTEGER);
+                }
+
+                pstmt.executeUpdate();
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Validates the uniqueness of promo_code
+     * @return true if it already exists (bad), false if not (good)
+     */
+    public Boolean promoCodeAlreadyExists(String code) {
+        String query = "SELECT COUNT(*) FROM food_promo WHERE promo_code = ?";
+        try (Connection conn = getConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, code);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return true;
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /** Depreciated */
+    public Boolean checkIfPromoCodeHasRestaurant(String code, String restaurantName) {
+        String sql = 
+            "SELECT fp.restaurant_id " +
+            "FROM food_promo fp " +
+            "LEFT JOIN restaurant r ON fp.restaurant_id = r.restaurant_id " +
+            "WHERE fp.promo_code = ?";
+
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, code);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int restaurantId = rs.getInt("restaurant_id");
+                    if (rs.wasNull()) {
+                        // restaurant_id is NULL, this means its a global promo code works for any restaurant
+                        return true;
+                    } else {
+                        // Promo code is for a specific restaurant
+                        // Check if the restaurant name matches
+                        String queryRestaurantName = "SELECT restaurant_name FROM restaurant WHERE restaurant_id = ?";
+                        try (PreparedStatement rStmt = conn.prepareStatement(queryRestaurantName)) {
+                            rStmt.setInt(1, restaurantId);
+                            try (ResultSet rRs = rStmt.executeQuery()) {
+                                if (rRs.next()) {
+                                    String dbRestaurantName = rRs.getString("restaurant_name");
+                                    return dbRestaurantName.equalsIgnoreCase(restaurantName);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public FoodPromo getFoodPromo(String code, String restaurantName) {
+        // Return promo if:
+        //  - promo_code matches
+        //  - AND (restaurant_id IS NULL OR restaurant_name matches the given one)
+        final String QUERY =
+            "SELECT fp.food_promo_id, fp.restaurant_id, fp.promo_code, " +
+            "       fp.percentage_off, fp.promo_description " +
+            "FROM food_promo fp " +
+            "LEFT JOIN restaurant r ON fp.restaurant_id = r.restaurant_id " +
+            "WHERE fp.promo_code = ? " +
+            "AND (fp.restaurant_id IS NULL OR r.restaurant_name = ?)";
+
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(QUERY)) {
+
+            stmt.setString(1, code);
+            stmt.setString(2, restaurantName);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new FoodPromo(
+                            rs.getInt("food_promo_id"),
+                            rs.getInt("restaurant_id"),
+                            rs.getString("promo_code"),
+                            rs.getFloat("percentage_off"),
+                            rs.getString("promo_description")
+                            );
+                }
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
 }

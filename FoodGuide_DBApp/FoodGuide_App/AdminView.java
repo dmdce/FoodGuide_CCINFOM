@@ -6,6 +6,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.sql.ResultSetMetaData;
+
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
 
@@ -28,6 +30,7 @@ public class AdminView extends JFrame {
     private JPanel userReportPanel;
     private JPanel revenueReportPanel;
     private JPanel feedbackReportPanel;
+    private JPanel createPromoPanel;
 
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
     private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
@@ -62,6 +65,12 @@ public class AdminView extends JFrame {
     private JButton backFeedbackReportButton = new JButton("GO BACK");
     private ArrayList<JButton> feedbackReportButtonList = new ArrayList<>();
 
+    private ArrayList<JTextField> createPromoFields = new ArrayList<>();
+    private ArrayList<JButton> createPromoButtonList = new ArrayList<>();
+    private JComboBox<String> chooseRestaurantForPromo = new JComboBox<>();
+    private JButton createPromo = new JButton("CREATE PROMO");
+    private JButton backPromoCodeButton = new JButton("GO BACK");
+
     /**
      * Constructs the AdminView, initializes all sub-panels,
      * adds them to the CardLayout, and makes the frame visible.
@@ -81,6 +90,7 @@ public class AdminView extends JFrame {
         userReportPanel = createUserReportPanel();
         revenueReportPanel = createRevenueReportPanel();
         feedbackReportPanel = createFeedbackReportPanel();
+        createPromoPanel = createPromoCodePanel();
 
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
@@ -90,6 +100,7 @@ public class AdminView extends JFrame {
         mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
         mainPanel.add(revenueReportPanel, "REVENUE_REPORT_PANEL");
         mainPanel.add(feedbackReportPanel, "FEEDBACK_REPORT_PANEL");
+        mainPanel.add(createPromoPanel, "CREATE_PROMO_CODE_PANEL");
 
         add(mainPanel);
 
@@ -247,6 +258,7 @@ public class AdminView extends JFrame {
         manageDatabaseButtonList.add(new JButton("Log a New Dish"));
         manageDatabaseButtonList.add(new JButton("Create User"));
         manageDatabaseButtonList.add(new JButton("Create Transaction"));
+        manageDatabaseButtonList.add(new JButton("Create Promo"));
         manageDatabaseButtonList.add(new JButton("GO BACK"));
 
         for (JButton jButton : manageDatabaseButtonList) {
@@ -429,8 +441,8 @@ public class AdminView extends JFrame {
         userRegButtonList.clear();
 
         // Add buttons to list
-        userRegButtonList.add(registerButton);
-        userRegButtonList.add(backUserRegButton);
+        userRegButtonList.add(createPromo);
+        userRegButtonList.add(backPromoCodeButton);
 
         // Add buttons from the list to the panel
         for (JButton button : userRegButtonList) {
@@ -440,6 +452,106 @@ public class AdminView extends JFrame {
         panel.add(userRegButtonPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    /**
+     * Creates a panel to display the creation menu for Promos
+     * @return a JPanel for CREATE_PROMO card 
+     */
+    private JPanel createPromoCodePanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        
+        JLabel titleLabel = new JLabel("Create Promo Code");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel createPromoPanel = new JPanel(new GridLayout(0, 2, 10, 10));
+        createPromoPanel.setBorder(BorderFactory.createTitledBorder("Select Food Culture"));
+        
+        ArrayList<JLabel> labels = new ArrayList<>();
+        labels.add(new JLabel("Enter Code: "));
+        labels.add(new JLabel("Enter Percentage (0.10 = 10%): "));
+        labels.add(new JLabel("Enter Description: "));
+        labels.add(new JLabel("(Optional) Choose Restaurant: "));
+
+        createPromoFields.add(new JTextField());
+        createPromoFields.add(new JTextField());
+        createPromoFields.add(new JTextField());
+
+        for (int i = 0; i < 4 ; i++) {
+            createPromoPanel.add(labels.get(i));
+            if (i == 3) break;
+            createPromoPanel.add(createPromoFields.get(i));
+        }
+        createPromoPanel.add(chooseRestaurantForPromo);
+        panel.add(createPromoPanel, BorderLayout.CENTER);
+
+        // --- UPDATED: BUTTONS ---
+        JPanel createPromoButtonPanel = new JPanel(new FlowLayout()); // Use FlowLayout like your others
+        createPromoButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        createPromoButtonPanel.setBackground(Color.decode("#FCD303"));
+
+        // Initialize button list (clears it for refreshPanels)
+        createPromoButtonList.clear();
+
+        // Add buttons to list
+        createPromoButtonList.add(createPromo);
+        createPromoButtonList.add(backUserRegButton);
+
+        // Add buttons from the list to the panel
+        for (JButton button : createPromoButtonList) {
+            createPromoButtonPanel.add(button);
+        }
+
+        panel.add(createPromoButtonPanel, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    /** 
+     * Sets the drop down menu for restuarant names and clears fields
+     */
+    public void resetCreatePromoCode(ArrayList<String> restaurantNames) {
+        for (JTextField field : createPromoFields)  {
+            field.setText("");
+            field.revalidate();
+            field.repaint();
+        }
+
+        chooseRestaurantForPromo.removeAllItems();
+        chooseRestaurantForPromo.addItem("");
+        for (String name : restaurantNames) {
+            chooseRestaurantForPromo.addItem(name);
+        }
+
+        chooseRestaurantForPromo.revalidate();
+        chooseRestaurantForPromo.repaint();
+    }
+
+    /**
+     * Gets the values inputed in the create promo text fields
+     * @returns an ArrayList of Strings containing the inputed Data
+     */
+    public ArrayList<String> getCreatePromoFields() {
+        ArrayList<String> fields = new ArrayList<>();
+        for (JTextField field : createPromoFields) {
+            if (field.getText().isEmpty())
+                continue;
+            fields.add(field.getText());
+        }
+        return fields;
+    }
+
+    /**
+     * Gets chosen restaurant in create promo Field
+     * returns "" if nothing is chosen
+     * @return String or "" if nothing is chosen
+     */
+    public String getChosenRestaurantForPromo() {
+        if (chooseRestaurantForPromo.getSelectedIndex() == -1) //no chosen restaurant 
+            return "";
+
+        return (String) chooseRestaurantForPromo.getSelectedItem();
     }
 
     /**
