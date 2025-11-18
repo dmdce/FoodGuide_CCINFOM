@@ -194,6 +194,7 @@ VALUES ('SAVE10', 0.10, '10% off your entire order');
 INSERT INTO food_promo (restaurant_id, promo_code, percentage_off, promo_description)
 VALUES (1, 'COFFEE15', 0.15, '15% off for Winikko Cafe And Catering');
 /*
+
 -----------------------------------
 	SELECT QUERIES FOR TESTING
 -----------------------------------
