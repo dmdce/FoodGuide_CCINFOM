@@ -647,4 +647,102 @@ public class FoodDataBase {
         // Return the complete DTO
         return new RestaurantFeedbackReport(overallRating, menuPopularity, comments);
     }
+
+    public void createPromoCode(String code, float percentageOff, String description, String restaurantName) {
+        try (Connection conn = getConnection()) {
+            Integer restaurantId = null;
+            if (restaurantName != null && !restaurantName.isEmpty()) {
+                String query = "SELECT restaurant_id FROM restaurant WHERE restaurant_name = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, restaurantName);
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            restaurantId = rs.getInt("restaurant_id");
+                        }
+                    }
+                }
+            }
+
+            String query = "INSERT INTO food_promo (promo_code, percentage_off, promo_description, restaurant_id) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+                pstmt.setString(1, code);
+                pstmt.setFloat(2, percentageOff);
+                pstmt.setString(3, description);
+
+                if (restaurantId != null) {
+                    pstmt.setInt(4, restaurantId);
+                } else {
+                    pstmt.setNull(4, java.sql.Types.INTEGER);
+                }
+
+                pstmt.executeUpdate();
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Validates the uniqueness of promo_code
+     * @return true if it already exists (bad), false if not (good)
+     */
+    public Boolean promoCodeAlreadyExists(String code) {
+        String query = "SELECT COUNT(*) FROM food_promo WHERE promo_code = ?";
+        try (Connection conn = getConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, code);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return true;
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public Boolean checkIfPromoCodeHasRestaurant(String code, String restaurantName) {
+        String sql = 
+            "SELECT fp.restaurant_id " +
+            "FROM food_promo fp " +
+            "LEFT JOIN restaurant r ON fp.restaurant_id = r.restaurant_id " +
+            "WHERE fp.promo_code = ?";
+
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, code);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int restaurantId = rs.getInt("restaurant_id");
+                    if (rs.wasNull()) {
+                        // restaurant_id is NULL, this means its a global promo code works for any restaurant
+                        return true;
+                    } else {
+                        // Promo code is for a specific restaurant
+                        // Check if the restaurant name matches
+                        String queryRestaurantName = "SELECT restaurant_name FROM restaurant WHERE restaurant_id = ?";
+                        try (PreparedStatement rStmt = conn.prepareStatement(queryRestaurantName)) {
+                            rStmt.setInt(1, restaurantId);
+                            try (ResultSet rRs = rStmt.executeQuery()) {
+                                if (rRs.next()) {
+                                    String dbRestaurantName = rRs.getString("restaurant_name");
+                                    return dbRestaurantName.equalsIgnoreCase(restaurantName);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+
 }

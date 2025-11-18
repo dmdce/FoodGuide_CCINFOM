@@ -34,17 +34,29 @@ CREATE TABLE
   );
 
 CREATE TABLE
+    `food_promo` (
+        `food_promo_id` int unsigned NOT NULL AUTO_INCREMENT,
+        `restaurant_id` int unsigned NULL, -- sometimes null
+        `promo_code` varchar(50) NULL UNIQUE,
+        `percentage_off` decimal(5, 4) NOT NULL,  -- 0.10 = 10% off
+        `promo_description` varchar(100) NOT NULL,
+        PRIMARY KEY(`food_promo_id`),
+        CONSTRAINT `restaurant_id` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurant` (`restaurant_id`)
+    );
+
+CREATE TABLE
   `food_transaction` (
     `food_transaction_id` int unsigned NOT NULL AUTO_INCREMENT,
     `restaurant_name` varchar(100) NOT NULL,
-    `promo` decimal(3, 2) NOT NULL COMMENT 'sale, discount, etc.',
+    `promo_id` int unsigned NULL,
     `final_price` decimal(14, 2) NOT NULL COMMENT 'initial_price calculated with promo',
     `initial_price` decimal(14, 2) NOT NULL COMMENT 'base price of food',
     `food_user_id` int unsigned NOT NULL,
     `transaction_date` timestamp NOT NULL,
     PRIMARY KEY (`food_transaction_id`),
     KEY `food_transaction_relation_1` (`food_user_id`),
-    CONSTRAINT `food_transaction_relation_1` FOREIGN KEY (`food_user_id`) REFERENCES `food_user` (`food_user_id`)
+    CONSTRAINT `food_transaction_relation_1` FOREIGN KEY (`food_user_id`) REFERENCES `food_user` (`food_user_id`),
+    CONSTRAINT `food_promo_id` FOREIGN KEY (`promo_id`) REFERENCES `food_promo` (`food_promo_id`)
   );
 
 CREATE TABLE
@@ -121,13 +133,3 @@ CREATE TABLE
     CONSTRAINT `food_order_relation_3` FOREIGN KEY (`food_id`) REFERENCES `food` (`food_id`)
   );
 
-CREATE TABLE
-    `food_promo` (
-        `food_promo_id` int unsigned NOT NULL AUTO_INCREMENT,
-        `restaurant_id` int unsigned NULL, -- sometimes null
-        `promo_code` varchar(50) NOT NULL UNIQUE,
-        `percentage_off` decimal(5, 4) NOT NULL,  -- 0.10 = 10% off
-        `promo_description` varchar(100) NULL,
-        PRIMARY KEY(`food_promo_id`),
-        CONSTRAINT `restaurant_id` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurant` (`restaurant_id`)
-    );

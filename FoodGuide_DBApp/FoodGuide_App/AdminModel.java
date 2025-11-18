@@ -148,4 +148,12 @@ public class AdminModel {
     public RestaurantFeedbackReport getFeedbackReport(String restaurantName) {
         return db.fetchFeedbackReport(restaurantName);
     }
+
+    public void createPromoCode(String code, float percentageOff, String description, String restaurantName) {
+        db.createPromoCode(code, percentageOff, description, restaurantName);
+    }
+
+    public Boolean promoCodeAlreadyExists(String code) {
+        return db.promoCodeAlreadyExists(code);
+    }
 }
