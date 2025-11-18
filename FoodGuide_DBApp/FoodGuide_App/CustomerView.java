@@ -17,6 +17,7 @@ public class CustomerView extends JFrame {
     private JPanel startPanel;
     private JPanel userRegistrationPanel;
     private JPanel transactionPanel;
+    private JPanel reservationPanel;
     private JPanel foodRatingPanel;
     private JPanel userActionsPanel;
     private JPanel transactionHistoryPanel;
@@ -44,6 +45,12 @@ public class CustomerView extends JFrame {
     private JLabel initialPriceLabel;
     private JLabel promoLabel;
     private JLabel finalPriceLabel;
+
+    // Reservation Panel components
+    private ArrayList<JButton> reservationButtonList = new ArrayList<>();
+    private JComboBox<FoodItem> resFoodItemComboBox;
+    private JComboBox<String> resRestaurantComboBox;
+    private JTextArea reservationCartArea;
 
     // Rating Panel components
     private ArrayList<JButton> ratingButtonList = new ArrayList<>();
@@ -84,12 +91,13 @@ public class CustomerView extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-        setSize(850, 550); // Increased height for the new panel
+        setSize(1050, 550); // Increased height for the new panel
 
         startPanel = createSignInPanel();
         userRegistrationPanel = createUserRegistrationPanel();
         userActionsPanel = createUserActionsPanel();
         transactionPanel = createTransactionPanel();
+        reservationPanel = createReservationPanel();
         foodRatingPanel = createFoodRatingPanel();
         transactionHistoryPanel = createTransactionHistoryPanel();
         restaurantRecommendationPanel = createRestaurantRecommendationPanel();
@@ -98,6 +106,7 @@ public class CustomerView extends JFrame {
         mainPanel.add(userRegistrationPanel, "USER_REGISTRATION_VIEW");
         mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
+        mainPanel.add(reservationPanel, "RESERVATION_CREATE");
         mainPanel.add(foodRatingPanel, "RATING_MENU");
         mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
         mainPanel.add(restaurantRecommendationPanel, "RESTAURANT_RECOMMENDATION");
@@ -214,7 +223,7 @@ public class CustomerView extends JFrame {
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         infoPanel.add(new JLabel("Logged in as User ID:"));
-        userIdLabel = new JLabel("N/A");
+        userIdLabel = new JLabel("Default");
         userIdLabel.setFont(new Font("Verdana", Font.BOLD, 14));
         infoPanel.add(userIdLabel);
         panel.add(infoPanel, BorderLayout.NORTH);
@@ -234,6 +243,10 @@ public class CustomerView extends JFrame {
         JButton createTransactionButton = new JButton("DO A TRANSACTION");
         createTransactionButton.setActionCommand("CREATE TRANSACTION");
         userActionsButtonList.add(createTransactionButton);
+
+        JButton createReservationButton = new JButton("RESERVE TRANSACTION");
+        createReservationButton.setActionCommand("RESERVE TRANSACTION");
+        userActionsButtonList.add(createReservationButton);
 
         JButton viewHistoryButton = new JButton("VIEW TRANSACTION HISTORY");
         viewHistoryButton.setActionCommand("VIEW TRANSACTION HISTORY");
@@ -260,7 +273,6 @@ public class CustomerView extends JFrame {
 
     /**
      * Creates the transaction panel.
-     * (Unchanged)
      */
     private JPanel createTransactionPanel() {
         // ... (panel, title, form, gbc setup is unchanged) ...
@@ -346,6 +358,90 @@ public class CustomerView extends JFrame {
         for (JButton btn : transactionButtonList) {
             buttonPanel.add(btn);
         }
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    /**
+     * Creates the reservation panel.
+     */
+    private JPanel createReservationPanel() {
+        // Main panel
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Labels
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel titleLabel = new JLabel("Reserve A Transaction");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(titleLabel);
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        // ComboBoxes & Options
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Select Restaurant:"), gbc);
+        gbc.gridx = 1; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
+        resRestaurantComboBox = new JComboBox<>();
+        formPanel.add(resRestaurantComboBox, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(new JLabel("Select Food Item:"), gbc);
+        gbc.gridx = 1; gbc.gridy = 1; gbc.anchor = GridBagConstraints.WEST;
+        resFoodItemComboBox = new JComboBox<>();
+        formPanel.add(resFoodItemComboBox, gbc);
+
+        gbc.gridx = 2; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
+        JButton addItemButton = new JButton("Add Item");
+        addItemButton.setActionCommand("ADD RESERVE ITEM");
+        formPanel.add(addItemButton, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.NORTHEAST;
+        formPanel.add(new JLabel("Cart:"), gbc);
+        gbc.gridx = 1; gbc.gridy = 2; gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.BOTH; gbc.weighty = 1.0;
+        reservationCartArea = new JTextArea(5, 20);
+        reservationCartArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(reservationCartArea);
+        formPanel.add(scrollPane, gbc);
+
+        // Price Details panel
+        gbc.gridx = 1; gbc.gridy = 3; gbc.gridwidth = 2; gbc.weighty = 0;
+
+        JPanel pricePanel = new JPanel(new GridLayout(0, 2, 5, 5)); // 0 rows, 2 cols
+        pricePanel.setBorder(BorderFactory.createTitledBorder("Price Details"));
+
+        pricePanel.add(new JLabel("Initial Price:"));
+        initialPriceLabel = new JLabel("P0.00");
+        pricePanel.add(initialPriceLabel);
+
+        formPanel.add(pricePanel, gbc);
+
+        panel.add(formPanel, BorderLayout.CENTER);
+
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#2E5E19"));
+        reservationButtonList.clear();
+        reservationButtonList.add(addItemButton);
+        JButton calculateButton = new JButton("Calculate Total");
+        calculateButton.setActionCommand("CALCULATE RESERVATION TOTAL");
+        reservationButtonList.add(calculateButton);
+        JButton reserveButton = new JButton("Reserve Order");
+        reserveButton.setActionCommand("RESERVE ORDER");
+        reservationButtonList.add(reserveButton);
+        JButton backButton = new JButton("GO BACK");
+        backButton.setActionCommand("GO BACK RESERVATION");
+        reservationButtonList.add(backButton);
+        for (JButton btn : reservationButtonList) {
+            buttonPanel.add(btn);
+        }
+
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
@@ -925,7 +1021,7 @@ public class CustomerView extends JFrame {
         return eventSearchBar.getText();
     }
 
-    // --- Getters for Transaction Panel (Unchanged) ---
+    // --- Getters for Transaction Panel ---
     public JComboBox<FoodItem> getFoodItemComboBox() { return foodItemComboBox; }
     public JTextArea getTransactionCartArea() { return transactionCartArea; }
     public JLabel getInitialPriceLabel() { return initialPriceLabel; }
@@ -933,14 +1029,19 @@ public class CustomerView extends JFrame {
     public JLabel getFinalPriceLabel() { return finalPriceLabel; }
     public JComboBox<String> getRestaurantComboBox() { return restaurantComboBox; }
 
-    // --- Getters for Rating Panel (Unchanged) ---
+    // --- Getters for Reservation Panel ---
+    public JComboBox<FoodItem> getResFoodItemComboBox() { return resFoodItemComboBox; }
+    public JComboBox<String> getResRestaurantComboBox() { return resRestaurantComboBox; }
+    public JTextArea getReservationCartArea() { return reservationCartArea; }
+    public JLabel getReservationPriceLabel() { return initialPriceLabel; }
+
+    // --- Getters for Rating Panel ---
     public JComboBox<Integer> getQualityRatingComboBox() { return qualityRatingComboBox; }
     public JComboBox<Integer> getAuthenticityRatingComboBox() { return authenticityRatingComboBox; }
     public JTextArea getRatingCommentsArea() { return ratingCommentsArea; }
     public JLabel getOverallRatingLabel() { return overallRatingLabel; }
 
-
-    // --- NEW: Getters for History Filter Fields ---
+    // --- Getters for History Filter Fields ---
     public String getFilterStartDate() { return filterStartDateField.getText(); }
     public String getFilterEndDate() { return filterEndDateField.getText(); }
     public String getFilterRestaurant() {
@@ -949,17 +1050,26 @@ public class CustomerView extends JFrame {
     }
     public String getFilterMaxPrice() { return filterMaxPriceField.getText(); }
     public String getFilterPromo() { return filterPromoField.getText(); }
-    // --- END: New Getters ---
+
     public CardLayout getRestaurantCardLayout() {return restaurantCardLayout;}
     public JPanel getRestaurantCardPanel() {return restaurantCardPanel;}
 
-    // --- Update methods for ComboBoxes (Unchanged) ---
+    // --- Update methods for ComboBoxes ---
     public void updateRestaurantComboBox(ArrayList<String> restaurantNames) {
         if (restaurantComboBox == null) return;
         restaurantComboBox.removeAllItems();
         restaurantComboBox.addItem("[Select One]");
         for (String name : restaurantNames) {
             restaurantComboBox.addItem(name);
+        }
+    }
+
+    public void updateResRestaurantComboBox(ArrayList<String> restaurantNames) {
+        if (resRestaurantComboBox == null) return;
+        resRestaurantComboBox.removeAllItems();
+        resRestaurantComboBox.addItem("[Select One]");
+        for (String name : restaurantNames) {
+            resRestaurantComboBox.addItem(name);
         }
     }
 
@@ -973,7 +1083,17 @@ public class CustomerView extends JFrame {
         }
     }
 
-    // --- NEW: Method to update history filter ComboBox ---
+    public void updateResFoodItemComboBox(ArrayList<FoodItem> items) {
+        if (resFoodItemComboBox == null) return;
+        resFoodItemComboBox.removeAllItems();
+        if (items != null && !items.isEmpty()) {
+            for (FoodItem item : items) {
+                resFoodItemComboBox.addItem(item);
+            }
+        }
+    }
+
+    // --- Method to update history filter ComboBox ---
     public void updateHistoryRestaurantFilter(ArrayList<String> restaurantNames) {
         if (filterRestaurantComboBox == null) return;
         filterRestaurantComboBox.removeAllItems();
@@ -1016,21 +1136,23 @@ public class CustomerView extends JFrame {
 
     /**
      * Refreshes dynamic panels.
-     * --- MODIFIED: Added history panel ---
      */
     public void refreshPanels() {
         mainPanel.remove(userActionsPanel);
         mainPanel.remove(transactionPanel);
+        mainPanel.remove(reservationPanel);
         mainPanel.remove(foodRatingPanel);
         mainPanel.remove(transactionHistoryPanel);
 
         userActionsPanel = createUserActionsPanel();
         transactionPanel = createTransactionPanel();
+        reservationPanel = createReservationPanel();
         foodRatingPanel = createFoodRatingPanel();
         transactionHistoryPanel = createTransactionHistoryPanel();
 
         mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
+        mainPanel.add(reservationPanel, "RESERVATION_CREATE");
         mainPanel.add(foodRatingPanel, "RATING_MENU");
         mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
 
@@ -1040,7 +1162,6 @@ public class CustomerView extends JFrame {
 
     /**
      * Attaches a shared ActionListener to all buttons.
-     * --- MODIFIED: Added history buttons ---
      */
     public void setActionListener(ActionListener listener) {
         signInButton.removeActionListener(listener);
@@ -1078,6 +1199,12 @@ public class CustomerView extends JFrame {
             button.addActionListener(listener);
         }
 
+        // Buttons from reservationPanel
+        for (JButton button : reservationButtonList) {
+            button.removeActionListener(listener);
+            button.addActionListener(listener);
+        }
+
         // Buttons from ratingPanel
         for (JButton button : ratingButtonList) {
             button.removeActionListener(listener);
@@ -1089,6 +1216,13 @@ public class CustomerView extends JFrame {
             restaurantComboBox.removeActionListener(listener);
             restaurantComboBox.addActionListener(listener);
             restaurantComboBox.setActionCommand("RESTAURANT_SELECTED");
+        }
+
+        // Listener for the restaurant reservation combo box
+        if (resRestaurantComboBox != null) {
+            resRestaurantComboBox.removeActionListener(listener);
+            resRestaurantComboBox.addActionListener(listener);
+            resRestaurantComboBox.setActionCommand("RES_RESTAURANT_SELECTED");
         }
 
         // Listeners for history panel buttons

@@ -282,7 +282,7 @@ public class FoodDataBase {
     }
 
     /**
-     * Executes the complete transaction and rating submission...
+     * Executes the complete transaction and rating submission
      */
     public boolean createFullTransaction(
             Integer userId, String restaurantName, double initialPrice, double promoAmount,
@@ -380,7 +380,18 @@ public class FoodDataBase {
         }
     }
 
-    // --- NEW: Method to get transaction history ---
+    /**
+     * Executes the order reservation submission TODO BY DARRYL
+     */
+    public boolean createReservation(
+            Integer userId,
+            String restaurantName,
+            double initialPrice,
+            HashMap<FoodItem, Integer> itemQuantities
+    ) {
+        System.out.println("Congratulations, you managed to print this message!");
+        return false;
+    }
 
     /**
      * Searches the database for transactions matching the given filters.

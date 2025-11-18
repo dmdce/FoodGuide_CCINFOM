@@ -62,7 +62,6 @@ public class AdminModel {
 
     /**
      * Passes all transaction and rating data to the database layer to be processed.
-     * (Unchanged)
      */
     public boolean submitTransactionAndRating(
             Integer userId,
@@ -80,6 +79,18 @@ public class AdminModel {
                 userId, restaurantName, initialPrice, promoAmount, finalPrice,
                 itemQuantities, quality, authenticity, overallRating, comments
         );
+    }
+
+    /**
+     * Passes order reservation data to the database layer to be processed.
+     */
+    public boolean submitReservation(
+            Integer userId,
+            String restaurantName,
+            double initialPrice,
+            HashMap<FoodItem, Integer> itemQuantities
+    ) {
+        return db.createReservation(userId, restaurantName, initialPrice, itemQuantities);
     }
 
     /**

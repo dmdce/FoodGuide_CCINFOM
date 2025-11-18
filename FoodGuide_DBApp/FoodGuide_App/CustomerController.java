@@ -23,10 +23,18 @@ public class CustomerController implements ActionListener {
 
     // For Transactions
     private ArrayList<FoodItem> cart;
+    private ArrayList<String> restaurantList;
     private String currentTransactionRestaurant;
+    private FoodItem selectedItem;
+    private double initialPrice;
     private double currentTransactionInitialPrice;
     private double currentTransactionPromo;
     private double currentTransactionFinalPrice;
+    private HashMap<FoodItem, Integer> itemQuantities;
+
+    // For Reservations
+    private String currentReservationRestaurant;
+    private double currentReservationPrice;
 
     // For Restaurant Recommendations
     private ArrayList<String> selectedOrigins = new ArrayList<>();
@@ -77,7 +85,7 @@ public class CustomerController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "USER_REGISTRATION_VIEW");
                 break;
 
-            // USER REGISTRATION PANEL
+            // ------------------ USER REGISTRATION Panel component ------------------
             case "REGISTER":
                 signInInput = view.getSignInInput("REGISTER");
                 username = signInInput.get(0);
@@ -122,9 +130,40 @@ public class CustomerController implements ActionListener {
                 break;
 
             // ------------------ TRANSACTION CREATION (Refactored to helper) Panel component ------------------
-            case "RESTAURANT_SELECTED", "CREATE TRANSACTION", "ADD ITEM", "CALCULATE TOTAL",
-                 "PROCEED TO RATING", "CALCULATE_RATING", "GO BACK FOOD RATING", "GO BACK TRANSACTION":
+            case "RESTAURANT_SELECTED", "RES_RESTAURANT_SELECTED", "CREATE TRANSACTION", "RESERVE TRANSACTION", "USE RESERVATION",
+                 "ADD ITEM", "ADD RESERVE ITEM", "CALCULATE TOTAL", "CALCULATE RESERVATION TOTAL", "PROCEED TO RATING",
+                 "CALCULATE_RATING", "GO BACK FOOD RATING", "GO BACK TRANSACTION", "GO BACK RESERVATION":
                 handleTransactionEvents(e); // Helper function for clarity
+                break;
+
+            // ------------------ Reservation panel component ------------------
+            case "RESERVE ORDER":
+                currentReservationRestaurant = (String) view.getResRestaurantComboBox().getSelectedItem();
+                if (currentReservationRestaurant == null || currentReservationRestaurant.equals("[Select One]")) {
+                    JOptionPane.showMessageDialog(view, "Please select a valid restaurant.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (currentReservationPrice == 0.0 || cart.isEmpty()) {
+                    JOptionPane.showMessageDialog(view, "Please add items and calculate the total.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                if (userId == null) {
+                    JOptionPane.showMessageDialog(view, "Error: You are not logged in.", "Submission Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                itemQuantities = new HashMap<>();
+                for (FoodItem item : cart) {
+                    itemQuantities.put(item, itemQuantities.getOrDefault(item, 0) + 1);
+                }
+
+                isSuccess = model.getAm().submitReservation(userId, currentReservationRestaurant, currentReservationPrice, itemQuantities);
+                if (isSuccess) {
+                    JOptionPane.showMessageDialog(view, "Orders reserved! The promo and rating can be done when the reservation will be used.");
+                    view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
+                } else {
+                    JOptionPane.showMessageDialog(view, "Error: Could not reserve transaction.\nCheck console for details.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                }
                 break;
 
             // ------------------ SUBMIT RATING panel component ------------------
@@ -138,7 +177,7 @@ public class CustomerController implements ActionListener {
                     JOptionPane.showMessageDialog(view, "Error: You are not logged in.", "Submission Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                HashMap<FoodItem, Integer> itemQuantities = new HashMap<>();
+                itemQuantities = new HashMap<>();
                 for (FoodItem item : cart) {
                     itemQuantities.put(item, itemQuantities.getOrDefault(item, 0) + 1);
                 }
@@ -293,28 +332,61 @@ public class CustomerController implements ActionListener {
                 }
                 break;
 
+            case "RES_RESTAURANT_SELECTED":
+                String selectedResRestaurant = (String) view.getResRestaurantComboBox().getSelectedItem();
+                if (selectedResRestaurant == null || selectedResRestaurant.equals("[Select One]")) {
+                    view.updateResFoodItemComboBox(new ArrayList<>());
+                } else {
+                    ArrayList<FoodItem> menuItems = model.getAm().getFoodMenu(selectedResRestaurant);
+                    view.updateResFoodItemComboBox(menuItems);
+                }
+                break;
+
             case "CREATE TRANSACTION":
                 cart.clear();
                 view.getTransactionCartArea().setText("");
                 view.getInitialPriceLabel().setText("P0.00");
                 view.getPromoLabel().setText("-P0.00");
                 view.getFinalPriceLabel().setText("P0.00");
-                ArrayList<String> restaurantList = model.getAm().getRestaurantNames();
+                restaurantList = model.getAm().getRestaurantNames();
                 view.updateRestaurantComboBox(restaurantList);
                 view.updateFoodItemComboBox(new ArrayList<>());
                 view.getRestaurantComboBox().setSelectedIndex(0);
                 view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
                 break;
 
+            case "RESERVE TRANSACTION":
+                updateView();
+                cart.clear();
+                view.getReservationCartArea().setText("");
+                view.getReservationPriceLabel().setText("P0.00");
+                restaurantList = model.getAm().getRestaurantNames();
+                view.updateResRestaurantComboBox(restaurantList);
+                view.updateResFoodItemComboBox(new ArrayList<>());
+                view.getResRestaurantComboBox().setSelectedIndex(0);
+                view.getCardLayout().show(view.getMainPanel(), "RESERVATION_CREATE");
+                break;
+
+            case "USE RESERVATION":
+                System.out.println("USE RESERVATION");
+                break;
+
             case "ADD ITEM":
-                FoodItem selectedItem = (FoodItem) view.getFoodItemComboBox().getSelectedItem();
+                selectedItem = (FoodItem) view.getFoodItemComboBox().getSelectedItem();
                 if (selectedItem == null) return;
                 cart.add(selectedItem);
-                updateCartView();
+                updateCartView("ADD ITEM");
+                break;
+
+            case "ADD RESERVE ITEM":
+                selectedItem = (FoodItem) view.getResFoodItemComboBox().getSelectedItem();
+                if (selectedItem == null) return;
+                cart.add(selectedItem);
+                updateCartView("ADD RESERVE ITEM");
                 break;
 
             case "CALCULATE TOTAL":
-                double initialPrice = 0.0;
+                initialPrice = 0.0;
                 for (FoodItem item : cart) {
                     initialPrice += item.getPrice();
                 }
@@ -341,6 +413,15 @@ public class CustomerController implements ActionListener {
                 view.getInitialPriceLabel().setText(String.format("P%.2f", initialPrice));
                 view.getPromoLabel().setText(String.format("-P%.2f", promoAmount));
                 view.getFinalPriceLabel().setText(String.format("P%.2f", finalPrice));
+                break;
+
+            case "CALCULATE RESERVATION TOTAL":
+                initialPrice = 0.0;
+                for (FoodItem item : cart) {
+                    initialPrice += item.getPrice();
+                }
+                currentReservationPrice = initialPrice;
+                view.getReservationPriceLabel().setText(String.format("P%.2f", initialPrice));
                 break;
 
             case "PROCEED TO RATING":
@@ -371,7 +452,7 @@ public class CustomerController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
                 break;
 
-            case "GO BACK TRANSACTION":
+            case "GO BACK TRANSACTION", "GO BACK RESERVATION":
                 view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
                 break;
         }
@@ -401,12 +482,21 @@ public class CustomerController implements ActionListener {
     /**
      * Helper method to update the cart display.
      */
-    private void updateCartView() {
-        JTextArea cartArea = view.getTransactionCartArea();
-        cartArea.setText("");
-        if (cart.isEmpty()) {
-            cartArea.setText("Cart is empty.");
-        } else {
+    private void updateCartView(String caseName) {
+        JTextArea cartArea = switch (caseName) {
+            case "ADD ITEM" -> view.getTransactionCartArea();
+            case "ADD RESERVE ITEM" -> view.getReservationCartArea();
+            default -> null;
+        };
+
+        if (cartArea != null) cartArea.setText("");
+        else {
+            System.err.println("Error: No cart exists to update view.");
+            return;
+        }
+
+        if (cart.isEmpty()) cartArea.setText("Cart is empty.");
+        else {
             for (FoodItem item : cart) {
                 cartArea.append(item.toString() + "\n");
             }
@@ -414,7 +504,7 @@ public class CustomerController implements ActionListener {
     }
 
     /**
-     * Refreshes all panels...
+     * Refreshes all panels
      */
     private void updateView() {
         view.refreshPanels();
