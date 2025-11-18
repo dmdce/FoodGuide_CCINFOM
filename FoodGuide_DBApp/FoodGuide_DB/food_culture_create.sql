@@ -55,7 +55,7 @@ CREATE TABLE
     `transaction_date` timestamp NOT NULL,
     PRIMARY KEY (`food_transaction_id`),
     KEY `food_transaction_relation_1` (`food_user_id`),
-    KEY `food_transaction_relation_2` (`food_promo_id`),
+    KEY `food_transaction_relation_2` (`promo_id`),
     CONSTRAINT `food_transaction_relation_1` FOREIGN KEY (`food_user_id`) REFERENCES `food_user` (`food_user_id`),
     CONSTRAINT `food_promo_id` FOREIGN KEY (`promo_id`) REFERENCES `food_promo` (`food_promo_id`)
   );
