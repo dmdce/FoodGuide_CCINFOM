@@ -54,6 +54,12 @@ public class FoodDataBase {
                     "FROM " + FOOD_MENU_TABLE + " " +
                     "WHERE " + FOOD_ALIAS_COL + " = ? AND " + RESTAURANT_ID_COL + " = ?";
 
+    // --- FOOD TABLE (for inserting new dishes) ---
+    private static final String FOOD_TABLE = "food";
+    private static final String FOOD_NAME_COL = "food_name";
+    private static final String ORIGIN_ID_COL = "origin_id";
+    private static final String FOOD_EVENT_ID_COL = "food_event_id";
+
     // --- TRANSACTION, ORDER, and RATING TABLES ---
     private static final String TRANSACTION_TABLE = "food_transaction";
     // --- NEW: Columns for history query ---
@@ -545,6 +551,176 @@ public class FoodDataBase {
             e.printStackTrace();
         }
         return events;
+    }
+
+    // --------------------------------------------------------------------
+    // NEW: insertNewDish for Admin "Log a New Dish"
+    // --------------------------------------------------------------------
+
+    /**
+     * Inserts a brand new dish into the database:
+     *  1. Finds or creates origin and food_event
+     *  2. Inserts into food table
+     *  3. Inserts into food_menu for the selected restaurant with alias + price
+     *
+     * @param foodAlias      Dish name / alias
+     * @param price          Price for this restaurant
+     * @param restaurantName Restaurant where this dish belongs
+     * @param originName     Origin name (can be null/empty)
+     * @param eventName      Food event name (can be null/empty)
+     * @return true if everything was inserted successfully, false otherwise
+     */
+    public boolean insertNewDish(String foodAlias,
+                                 double price,
+                                 String restaurantName,
+                                 String originName,
+                                 String eventName) {
+        Connection conn = null;
+
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Get restaurant_id from restaurantName
+            int restaurantId;
+            try (PreparedStatement restStmt = conn.prepareStatement(RESTAURANT_ID_QUERY)) {
+                restStmt.setString(1, restaurantName);
+                try (ResultSet rs = restStmt.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new SQLException("Restaurant not found: " + restaurantName);
+                    }
+                    restaurantId = rs.getInt(RESTAURANT_ID_COL);
+                }
+            }
+
+            // 2. Get or create origin_id
+            Integer originId = null;
+            if (originName != null && !originName.trim().isEmpty()) {
+                String findOriginSql = "SELECT origin_id FROM origin WHERE name = ?";
+                try (PreparedStatement findOrigin = conn.prepareStatement(findOriginSql)) {
+                    findOrigin.setString(1, originName);
+                    try (ResultSet rs = findOrigin.executeQuery()) {
+                        if (rs.next()) {
+                            originId = rs.getInt("origin_id");
+                        }
+                    }
+                }
+
+                if (originId == null) {
+                    String insertOriginSql = "INSERT INTO origin (name) VALUES (?)";
+                    try (PreparedStatement insOrigin = conn.prepareStatement(insertOriginSql, Statement.RETURN_GENERATED_KEYS)) {
+                        insOrigin.setString(1, originName);
+                        insOrigin.executeUpdate();
+                        try (ResultSet keys = insOrigin.getGeneratedKeys()) {
+                            if (keys.next()) {
+                                originId = keys.getInt(1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Get or create food_event_id
+            Integer eventId = null;
+            if (eventName != null && !eventName.trim().isEmpty()) {
+                String findEventSql = "SELECT food_event_id FROM food_event WHERE food_event_name = ?";
+                try (PreparedStatement findEvent = conn.prepareStatement(findEventSql)) {
+                    findEvent.setString(1, eventName);
+                    try (ResultSet rs = findEvent.executeQuery()) {
+                        if (rs.next()) {
+                            eventId = rs.getInt("food_event_id");
+                        }
+                    }
+                }
+
+                if (eventId == null) {
+                    String insertEventSql = "INSERT INTO food_event (food_event_name, description) VALUES (?, NULL)";
+                    try (PreparedStatement insEvent = conn.prepareStatement(insertEventSql, Statement.RETURN_GENERATED_KEYS)) {
+                        insEvent.setString(1, eventName);
+                        insEvent.executeUpdate();
+                        try (ResultSet keys = insEvent.getGeneratedKeys()) {
+                            if (keys.next()) {
+                                eventId = keys.getInt(1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 4. Insert into food table
+            int foodId;
+            String insertFoodSql =
+                    "INSERT INTO " + FOOD_TABLE +
+                            " (" + FOOD_NAME_COL + ", " + ORIGIN_ID_COL + ", " + FOOD_EVENT_ID_COL + ") " +
+                            "VALUES (?, ?, ?)";
+
+            try (PreparedStatement foodStmt = conn.prepareStatement(insertFoodSql, Statement.RETURN_GENERATED_KEYS)) {
+                foodStmt.setString(1, foodAlias);
+
+                if (originId == null) {
+                    foodStmt.setNull(2, java.sql.Types.INTEGER);
+                } else {
+                    foodStmt.setInt(2, originId);
+                }
+
+                if (eventId == null) {
+                    foodStmt.setNull(3, java.sql.Types.INTEGER);
+                } else {
+                    foodStmt.setInt(3, eventId);
+                }
+
+                int rows = foodStmt.executeUpdate();
+                if (rows == 0) {
+                    throw new SQLException("Inserting food failed, no rows affected.");
+                }
+
+                try (ResultSet keys = foodStmt.getGeneratedKeys()) {
+                    if (!keys.next()) {
+                        throw new SQLException("Inserting food failed, no ID obtained.");
+                    }
+                    foodId = keys.getInt(1);
+                }
+            }
+
+            // 5. Insert into food_menu for this restaurant
+            String insertMenuSql =
+                    "INSERT INTO " + FOOD_MENU_TABLE +
+                            " (" + FOOD_ID_COL + ", " + RESTAURANT_ID_COL + ", " + FOOD_ALIAS_COL + ", " + PRICE_COL + ") " +
+                            "VALUES (?, ?, ?, ?)";
+
+            try (PreparedStatement menuStmt = conn.prepareStatement(insertMenuSql)) {
+                menuStmt.setInt(1, foodId);
+                menuStmt.setInt(2, restaurantId);
+                menuStmt.setString(3, foodAlias);
+                menuStmt.setDouble(4, price);
+                menuStmt.executeUpdate();
+            }
+
+            conn.commit();
+            System.out.println("New dish inserted: " + foodAlias + " @ " + restaurantName);
+            return true;
+
+        } catch (Exception e) {
+            System.err.println("Error in insertNewDish: " + e.getMessage());
+            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     // --------------------------------------------------------------------

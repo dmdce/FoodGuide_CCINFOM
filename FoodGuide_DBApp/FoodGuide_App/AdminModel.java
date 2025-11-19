@@ -27,7 +27,6 @@ public class AdminModel {
         return menuController;
     }
 
-
     /**
      * Passes the registration request to the database class.
      * (Unchanged)
@@ -53,11 +52,38 @@ public class AdminModel {
     }
 
     /**
+     * Asks the database for a list of all origin names.
+     * Used by AdminController when logging a new dish.
+     */
+    public ArrayList<String> getOriginNames() {
+        return db.fetchOriginNames();
+    }
+
+    /**
+     * Asks the database for a list of all food event names.
+     * Used by AdminController when logging a new dish.
+     */
+    public ArrayList<String> getFoodEventNames() {
+        return db.fetchFoodEventNames();
+    }
+
+    /**
      * Asks the database for a list of food items for a specific restaurant.
      * (Unchanged)
      */
     public ArrayList<FoodItem> getFoodMenu(String restaurantName) {
         return db.getFoodMenuForRestaurant(restaurantName);
+    }
+
+    /**
+     * 🔹 NEW: Admin - insert a completely new dish
+     */
+    public boolean addNewDish(String foodAlias,
+                              double price,
+                              String restaurantName,
+                              String originName,
+                              String eventName) {
+        return db.insertNewDish(foodAlias, price, restaurantName, originName, eventName);
     }
 
     /**
@@ -114,7 +140,6 @@ public class AdminModel {
         return db.getTransactionHistory(userId, startDate, endDate, restaurantName, maxPrice, promo);
     }
 
-
     /**
      * Asks the database for a list of all registered users.
      * @return An ArrayList of UserData objects.
@@ -161,7 +186,7 @@ public class AdminModel {
     }
 
     // ------------------------------------------------------------
-    // ✅ EXTRA METHODS NEEDED FOR FOOD EVENTS & ORIGINS (CRUD)
+    // EXTRA METHODS NEEDED FOR FOOD EVENTS & ORIGINS (CRUD)
     // ------------------------------------------------------------
 
     /**
@@ -222,3 +247,4 @@ public class AdminModel {
         return db.deleteOrigin(originId);
     }
 }
+    
