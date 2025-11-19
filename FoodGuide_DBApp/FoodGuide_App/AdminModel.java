@@ -246,6 +246,8 @@ public class AdminModel {
      */
     public boolean deleteOrigin(int originId) {
         return db.deleteOrigin(originId);
+    }
+
     public void createPromoCode(String code, float percentageOff, String description, String restaurantName) {
         db.createPromoCode(code, percentageOff, description, restaurantName);
     }
