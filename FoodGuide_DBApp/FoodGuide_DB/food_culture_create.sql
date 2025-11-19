@@ -146,18 +146,3 @@ CREATE TABLE
     CONSTRAINT `food_order_relation_3` FOREIGN KEY (`food_id`) REFERENCES `food` (`food_id`)
   );
 
-CREATE TABLE
-  `reservation_order` (
-    `reservation_order_id` int unsigned NOT NULL AUTO_INCREMENT,
-    `food_reservation_id` int unsigned NOT NULL,
-    `food_menu_id` int unsigned NOT NULL,
-    `quantity` int NOT NULL DEFAULT '1',
-    `food_id` int unsigned NOT NULL,
-    PRIMARY KEY (`reservation_order_id`),
-    KEY `reservation_order_relation_1` (`food_reservation_id`),
-    KEY `reservation_order_relation_2` (`food_menu_id`),
-    KEY `reservation_order_relation_3` (`food_id`),
-    CONSTRAINT `reservation_order_relation_1` FOREIGN KEY (`food_reservation_id`) REFERENCES `food_reservation` (`food_reservation_id`),
-    CONSTRAINT `reservation_order_relation_2` FOREIGN KEY (`food_menu_id`) REFERENCES `food_menu` (`food_menu_id`),
-    CONSTRAINT `reservation_order_relation_3` FOREIGN KEY (`food_id`) REFERENCES `food` (`food_id`)
-  );

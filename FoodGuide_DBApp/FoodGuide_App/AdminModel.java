@@ -140,14 +140,6 @@ public class AdminModel {
         return db.getTransactionHistory(userId, startDate, endDate, restaurantName, maxPrice, promo);
     }
 
-    /**
-     * Asks the database for a filtered list of reservations for a user.
-     * @param userId The user's ID.
-     * @return An ArrayList of ReservationData objects.
-     */
-    public ArrayList<ReservationData> fetchReservationHistory (Integer userId) {
-        return db.getReservationHistory(userId);
-    }
 
     /**
      * Asks the database for a list of all registered users.

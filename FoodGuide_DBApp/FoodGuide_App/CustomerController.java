@@ -15,7 +15,6 @@ public class CustomerController implements ActionListener {
     private CustomerView view;
 
     // For User Details
-    private Integer userId;
     private ArrayList<String> signInInput;
     private String username;
     private String email;
@@ -61,7 +60,7 @@ public class CustomerController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         // Get the logged-in user ID for cases that need it
-        userId = model.getLoggedInUserId();
+        Integer userId = model.getLoggedInUserId();
 
         switch (e.getActionCommand()) {
             // ------------------ SIGN IN Panel component ------------------
@@ -371,13 +370,6 @@ public class CustomerController implements ActionListener {
 
             case "USE RESERVATION":
                 System.err.println("DEBUG: USE RESERVATION");
-                if (userId == null) {
-                    JOptionPane.showMessageDialog(view, "Error: You are not logged in.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                searchReservationHistory(userId);
-
                 view.getCardLayout().show(view.getMainPanel(), "USE_RESERVATION_MENU");
                 break;
 
@@ -490,16 +482,6 @@ public class CustomerController implements ActionListener {
 
         // 3. Update the view's table with the results
         view.updateHistoryTable(transactions);
-    }
-
-    /**
-     * Gets filter values from the view, calls the model, and updates the table.
-     * @param userId The ID of the logged-in user.
-     */
-    private void searchReservationHistory(Integer userId) {
-        ArrayList<ReservationData> reservations = model.getAm().fetchReservationHistory(userId);
-
-        view.updateReservationHistoryTable(reservations);
     }
 
     /**

@@ -473,32 +473,6 @@ public class CustomerView extends JFrame {
 
         panel.add(titlePanel, BorderLayout.NORTH);
 
-        // Display reservations to a table
-        JPanel filterPanel = new JPanel(new GridBagLayout());
-        filterPanel.setBorder(BorderFactory.createTitledBorder("Filter By"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(2, 5, 2, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-
-        String[] columnNames = {"ID", "Date", "Restaurant", "Initial Price", "Promo Code", "Final Price"};
-        historyTableModel = new DefaultTableModel(columnNames, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        historyTable = new JTable(historyTableModel);
-        JScrollPane scrollPane = new JScrollPane(historyTable);
-
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 4; // Span all columns
-        gbc.fill = GridBagConstraints.BOTH; // Table fills both ways
-        gbc.weightx = 1.0; // Table cell gets full width
-        gbc.weighty = 1.0; // Make table take remaining vertical space
-        filterPanel.add(scrollPane, gbc);
-
-        panel.add(filterPanel, BorderLayout.CENTER);
 
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout());
@@ -520,6 +494,7 @@ public class CustomerView extends JFrame {
 
     /**
      * Creates the panel for rating a food transaction.
+     * (Unchanged)
      */
     private JPanel createFoodRatingPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));

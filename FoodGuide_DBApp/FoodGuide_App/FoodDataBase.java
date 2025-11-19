@@ -91,12 +91,6 @@ public class FoodDataBase {
                     " (restaurant_name, initial_price, food_user_id, reservation_date) " +
                     "VALUES (?, ?, ?, NOW())";
 
-    private static final String RESERVE_ORDER_TABLE = "reservation_order";
-    private static final String RESERVE_ORDER_INSERT_QUERY =
-            "INSERT INTO " + RESERVE_ORDER_TABLE +
-                    " (food_reservation_id, food_menu_id, quantity, food_id) " +
-                    "VALUES (?, ?, ?, ?)";
-
     // --- FOR FETCHING ALL USERS ---
     private static final String ALL_USERS_QUERY =
             "SELECT " + USER_ID_COL + ", " + USER_NAME_COL + ", " + USER_EMAIL_COL +
@@ -179,7 +173,7 @@ public class FoodDataBase {
     public boolean registerUser(String username, String email) {
         // First check if email already exists
         if (emailExists(email)) {
-            System.err.println("Error: Registration failed. Email already exists.");
+            System.err.println("Registration failed: Email already exists.");
             return false;
         }
 
@@ -440,7 +434,7 @@ public class FoodDataBase {
                     }
                 }
             }
-            try (PreparedStatement orderStmt = conn.prepareStatement(RESERVE_ORDER_INSERT_QUERY);
+            try (PreparedStatement orderStmt = conn.prepareStatement(ORDER_INSERT_QUERY);
                  PreparedStatement menuIdStmt = conn.prepareStatement(FOOD_MENU_IDS_QUERY)) {
                 for (Map.Entry<FoodItem, Integer> entry : itemQuantities.entrySet()) {
                     FoodItem item = entry.getKey();
@@ -575,61 +569,6 @@ public class FoodDataBase {
         }
 
         return transactions;
-    }
-
-    // TODO BY DARRYL and fix
-    /**
-     * Searches the database for reservations matching the given filters.
-     * @return An ArrayList of ReservationData objects.
-     */
-    public ArrayList<ReservationData> getReservationHistory(Integer userId) {
-        ArrayList<ReservationData> reservations = new ArrayList<>();
-
-        // --- Dynamic Query Building ---
-        StringBuilder sql = new StringBuilder(
-                "SELECT " + TRANSACTION_ID_COL + ", " + TRANSACTION_DATE_COL + ", " +
-                        RESTAURANT_NAME_COL + ", " + TRANSACTION_INITIAL_PRICE_COL + ", " +
-                        TRANSACTION_PROMO_COL + ", " + TRANSACTION_FINAL_PRICE_COL + " " +
-                        "FROM " + TRANSACTION_TABLE + " " +
-                        "WHERE " + USER_ID_COL + " = ? " // Base filter is always the user
-        );
-
-        // This list will hold the values for the prepared statement
-        ArrayList<Object> parameters = new ArrayList<>();
-        parameters.add(userId);
-
-        // Add ordering
-        sql.append(" ORDER BY " + TRANSACTION_DATE_COL + " DESC");
-        // --- End of Dynamic Query Building ---
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-
-            // Set all the parameters we collected
-            int paramIndex = 1;
-            for (Object param : parameters) {
-                stmt.setObject(paramIndex++, param);
-            }
-
-            // Execute the query
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    reservations.add(new ReservationData(
-                            rs.getInt(TRANSACTION_ID_COL),
-                            rs.getTimestamp(TRANSACTION_DATE_COL),
-                            rs.getString(RESTAURANT_NAME_COL),
-                            rs.getDouble(TRANSACTION_INITIAL_PRICE_COL),
-                            rs.getInt(TRANSACTION_PROMO_COL),
-                            rs.getDouble(TRANSACTION_FINAL_PRICE_COL)
-                    ));
-                }
-            }
-
-        } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return reservations;
     }
 
     /**
