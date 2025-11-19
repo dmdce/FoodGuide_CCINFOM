@@ -93,7 +93,7 @@ public class AdminModel {
             Integer userId,
             String restaurantName,
             double initialPrice,
-            double promoAmount,
+            Integer promoID,
             double finalPrice,
             HashMap<FoodItem, Integer> itemQuantities,
             int quality,
@@ -102,7 +102,7 @@ public class AdminModel {
             String comments
     ) {
         return db.createFullTransaction(
-                userId, restaurantName, initialPrice, promoAmount, finalPrice,
+                userId, restaurantName, initialPrice, promoID, finalPrice,
                 itemQuantities, quality, authenticity, overallRating, comments
         );
     }
@@ -138,6 +138,15 @@ public class AdminModel {
             String promo
     ) {
         return db.getTransactionHistory(userId, startDate, endDate, restaurantName, maxPrice, promo);
+    }
+
+    /**
+     * Asks the database for a filtered list of reservations for a user.
+     * @param userId The user's ID.
+     * @return An ArrayList of ReservationData objects.
+     */
+    public ArrayList<ReservationData> fetchReservationHistory (Integer userId) {
+        return db.getReservationHistory(userId);
     }
 
     /**
@@ -245,6 +254,16 @@ public class AdminModel {
      */
     public boolean deleteOrigin(int originId) {
         return db.deleteOrigin(originId);
+    public void createPromoCode(String code, float percentageOff, String description, String restaurantName) {
+        db.createPromoCode(code, percentageOff, description, restaurantName);
+    }
+
+    public Boolean promoCodeAlreadyExists(String code) {
+        return db.promoCodeAlreadyExists(code);
+    }
+
+    public FoodPromo getFoodPromo(String code, String restaurantName) {
+        return db.getFoodPromo(code, restaurantName);
     }
 }
     

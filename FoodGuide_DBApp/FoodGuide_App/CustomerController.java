@@ -15,6 +15,7 @@ public class CustomerController implements ActionListener {
     private CustomerView view;
 
     // For User Details
+    private Integer userId;
     private ArrayList<String> signInInput;
     private String username;
     private String email;
@@ -28,7 +29,7 @@ public class CustomerController implements ActionListener {
     private FoodItem selectedItem;
     private double initialPrice;
     private double currentTransactionInitialPrice;
-    private double currentTransactionPromo;
+    private Integer promoID;
     private double currentTransactionFinalPrice;
     private HashMap<FoodItem, Integer> itemQuantities;
 
@@ -60,7 +61,7 @@ public class CustomerController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         // Get the logged-in user ID for cases that need it
-        Integer userId = model.getLoggedInUserId();
+        userId = model.getLoggedInUserId();
 
         switch (e.getActionCommand()) {
             // ------------------ SIGN IN Panel component ------------------
@@ -132,7 +133,7 @@ public class CustomerController implements ActionListener {
             // ------------------ TRANSACTION CREATION (Refactored to helper) Panel component ------------------
             case "RESTAURANT_SELECTED", "RES_RESTAURANT_SELECTED", "CREATE TRANSACTION", "RESERVE TRANSACTION", "USE RESERVATION",
                  "ADD ITEM", "ADD RESERVE ITEM", "CALCULATE TOTAL", "CALCULATE RESERVATION TOTAL", "PROCEED TO RATING",
-                 "CALCULATE_RATING", "GO BACK FOOD RATING", "GO BACK TRANSACTION", "GO BACK RESERVATION":
+                 "CALCULATE_RATING", "GO BACK FOOD RATING", "GO BACK TRANSACTION", "GO BACK RESERVATION", "CANCEL USE RESERVATION":
                 handleTransactionEvents(e); // Helper function for clarity
                 break;
 
@@ -183,7 +184,7 @@ public class CustomerController implements ActionListener {
                 }
                 isSuccess = model.getAm().submitTransactionAndRating(
                         userId, currentTransactionRestaurant, currentTransactionInitialPrice,
-                        currentTransactionPromo, currentTransactionFinalPrice, itemQuantities,
+                        promoID, currentTransactionFinalPrice, itemQuantities,
                         finalQuality, finalAuthenticity, finalOverall, comments
                 );
                 if (isSuccess) {
@@ -347,6 +348,7 @@ public class CustomerController implements ActionListener {
                 view.getTransactionCartArea().setText("");
                 view.getInitialPriceLabel().setText("P0.00");
                 view.getPromoLabel().setText("-P0.00");
+                view.getPromoField().setText("");
                 view.getFinalPriceLabel().setText("P0.00");
                 restaurantList = model.getAm().getRestaurantNames();
                 view.updateRestaurantComboBox(restaurantList);
@@ -368,7 +370,15 @@ public class CustomerController implements ActionListener {
                 break;
 
             case "USE RESERVATION":
-                System.out.println("USE RESERVATION");
+                System.err.println("DEBUG: USE RESERVATION");
+                if (userId == null) {
+                    JOptionPane.showMessageDialog(view, "Error: You are not logged in.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                searchReservationHistory(userId);
+
+                view.getCardLayout().show(view.getMainPanel(), "USE_RESERVATION_MENU");
                 break;
 
             case "ADD ITEM":
@@ -390,25 +400,28 @@ public class CustomerController implements ActionListener {
                 for (FoodItem item : cart) {
                     initialPrice += item.getPrice();
                 }
-                double promoPercent = 0.0;
-                try {
-                    // 1. Get text from the new field
-                    promoPercent = Double.parseDouble(view.getPromoInput());
 
-                    // 2. Validate the range
-                    if (promoPercent < 0.0 || promoPercent > 1.0) {
-                        JOptionPane.showMessageDialog(view, "Promo must be between 0.00 and 1.00.", "Input Error", JOptionPane.WARNING_MESSAGE);
-                        promoPercent = 0.0; // Default to 0 if out of range
+                double promoPercent = 0.0;
+                promoID = null;
+                String codeInput = view.getPromoInput();
+                if (!codeInput.isEmpty()) {
+                    FoodPromo promo = model.getAm().getFoodPromo(
+                            view.getPromoInput(), 
+                            (String) view.getRestaurantComboBox().getSelectedItem()
+                            );
+                    if (promo == null) {
+                        JOptionPane.showMessageDialog(view, "Invalid promo! Promo might be for another restaurant or entered incorrectly", "Input Error", JOptionPane.WARNING_MESSAGE);
+                        break;
+                    } else {
+                        promoPercent = promo.getPercentageOff();
+                        promoID = promo.getId();
                     }
-                } catch (NumberFormatException nfe) {
-                    JOptionPane.showMessageDialog(view, "Invalid promo format. Please enter a number (e.g., 0.10).", "Input Error", JOptionPane.WARNING_MESSAGE);
-                    promoPercent = 0.0; // Default to 0 if not a number
                 }
+
 
                 double promoAmount = initialPrice * promoPercent;
                 double finalPrice = initialPrice - promoAmount;
                 currentTransactionInitialPrice = initialPrice;
-                currentTransactionPromo = promoAmount;
                 currentTransactionFinalPrice = finalPrice;
                 view.getInitialPriceLabel().setText(String.format("P%.2f", initialPrice));
                 view.getPromoLabel().setText(String.format("-P%.2f", promoAmount));
@@ -452,7 +465,7 @@ public class CustomerController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "TRANSACTION_CREATE");
                 break;
 
-            case "GO BACK TRANSACTION", "GO BACK RESERVATION":
+            case "GO BACK TRANSACTION", "GO BACK RESERVATION", "CANCEL USE RESERVATION":
                 view.getCardLayout().show(view.getMainPanel(), "USER_ACTIONS_MENU");
                 break;
         }
@@ -477,6 +490,16 @@ public class CustomerController implements ActionListener {
 
         // 3. Update the view's table with the results
         view.updateHistoryTable(transactions);
+    }
+
+    /**
+     * Gets filter values from the view, calls the model, and updates the table.
+     * @param userId The ID of the logged-in user.
+     */
+    private void searchReservationHistory(Integer userId) {
+        ArrayList<ReservationData> reservations = model.getAm().fetchReservationHistory(userId);
+
+        view.updateReservationHistoryTable(reservations);
     }
 
     /**

@@ -18,6 +18,7 @@ public class CustomerView extends JFrame {
     private JPanel userRegistrationPanel;
     private JPanel transactionPanel;
     private JPanel reservationPanel;
+    private JPanel useReservationPanel;
     private JPanel foodRatingPanel;
     private JPanel userActionsPanel;
     private JPanel transactionHistoryPanel;
@@ -51,6 +52,9 @@ public class CustomerView extends JFrame {
     private JComboBox<FoodItem> resFoodItemComboBox;
     private JComboBox<String> resRestaurantComboBox;
     private JTextArea reservationCartArea;
+
+    // Use Reservation Panel components
+    private ArrayList<JButton> useReservationButtonList = new ArrayList<>();
 
     // Rating Panel components
     private ArrayList<JButton> ratingButtonList = new ArrayList<>();
@@ -91,13 +95,14 @@ public class CustomerView extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-        setSize(1050, 550); // Increased height for the new panel
+        setSize(850, 550); // Increased height for the new panel
 
         startPanel = createSignInPanel();
         userRegistrationPanel = createUserRegistrationPanel();
         userActionsPanel = createUserActionsPanel();
         transactionPanel = createTransactionPanel();
         reservationPanel = createReservationPanel();
+        useReservationPanel = createUseReservationPanel();
         foodRatingPanel = createFoodRatingPanel();
         transactionHistoryPanel = createTransactionHistoryPanel();
         restaurantRecommendationPanel = createRestaurantRecommendationPanel();
@@ -107,6 +112,7 @@ public class CustomerView extends JFrame {
         mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
         mainPanel.add(reservationPanel, "RESERVATION_CREATE");
+        mainPanel.add(useReservationPanel, "USE_RESERVATION_MENU");
         mainPanel.add(foodRatingPanel, "RATING_MENU");
         mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
         mainPanel.add(restaurantRecommendationPanel, "RESTAURANT_RECOMMENDATION");
@@ -114,7 +120,7 @@ public class CustomerView extends JFrame {
         add(mainPanel);
 
         setVisible(true);
-        setResizable(true); // Allow resizing
+        setResizable(true); // Allow resizing TODO: SET TO false BEFORE SUBMISSION
     }
 
     /**
@@ -235,7 +241,8 @@ public class CustomerView extends JFrame {
         panel.add(titlePanel, BorderLayout.CENTER);
 
         // Buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JPanel buttonPanel = new JPanel(new GridLayout(0, 1));
+        buttonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
         buttonPanel.setBackground(Color.decode("#2E5E19"));
 
         userActionsButtonList.clear();
@@ -247,6 +254,10 @@ public class CustomerView extends JFrame {
         JButton createReservationButton = new JButton("RESERVE TRANSACTION");
         createReservationButton.setActionCommand("RESERVE TRANSACTION");
         userActionsButtonList.add(createReservationButton);
+
+        JButton createUseReservationButton = new JButton("USE RESERVATION");
+        createUseReservationButton.setActionCommand("USE RESERVATION");
+        userActionsButtonList.add(createUseReservationButton);
 
         JButton viewHistoryButton = new JButton("VIEW TRANSACTION HISTORY");
         viewHistoryButton.setActionCommand("VIEW TRANSACTION HISTORY");
@@ -322,9 +333,9 @@ public class CustomerView extends JFrame {
         initialPriceLabel = new JLabel("P0.00");
         pricePanel.add(initialPriceLabel);
 
-        pricePanel.add(new JLabel("Promo % (e.g., 0.10):"));
-        promoInputField = new JTextField("0.10"); // Default 10%
-        promoInputField.setToolTipText("Enter a value between 0.00 and 1.00");
+        pricePanel.add(new JLabel("Promo Code:"));
+        promoInputField = new JTextField(); // Default 10%
+        promoInputField.setToolTipText("Enter a valid code");
         pricePanel.add(promoInputField);
 
         // This label now shows the calculated discount *amount*
@@ -376,6 +387,7 @@ public class CustomerView extends JFrame {
         JLabel titleLabel = new JLabel("Reserve A Transaction");
         titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
         titlePanel.add(titleLabel);
+
         panel.add(titlePanel, BorderLayout.NORTH);
 
         // ComboBoxes & Options
@@ -447,9 +459,67 @@ public class CustomerView extends JFrame {
         return panel;
     }
 
+    // TODO BY DARRYL
+    private JPanel createUseReservationPanel() {
+        // Main panel
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Labels
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel titleLabel = new JLabel("Use A Reservation");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(titleLabel);
+
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        // Display reservations to a table
+        JPanel filterPanel = new JPanel(new GridBagLayout());
+        filterPanel.setBorder(BorderFactory.createTitledBorder("Filter By"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 5, 2, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        String[] columnNames = {"ID", "Date", "Restaurant", "Initial Price", "Promo Code", "Final Price"};
+        historyTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        historyTable = new JTable(historyTableModel);
+        JScrollPane scrollPane = new JScrollPane(historyTable);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 4; // Span all columns
+        gbc.fill = GridBagConstraints.BOTH; // Table fills both ways
+        gbc.weightx = 1.0; // Table cell gets full width
+        gbc.weighty = 1.0; // Make table take remaining vertical space
+        filterPanel.add(scrollPane, gbc);
+
+        panel.add(filterPanel, BorderLayout.CENTER);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#2E5E19"));
+        useReservationButtonList.clear();
+
+        JButton backButton = new JButton("CANCEL USAGE");
+        backButton.setActionCommand("CANCEL USE RESERVATION");
+        useReservationButtonList.add(backButton);
+
+        for (JButton btn : useReservationButtonList) {
+            buttonPanel.add(btn);
+        }
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
     /**
      * Creates the panel for rating a food transaction.
-     * (Unchanged)
      */
     private JPanel createFoodRatingPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
@@ -613,7 +683,7 @@ public class CustomerView extends JFrame {
         gbc.gridx = 0; gbc.gridy = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0.0;
-        filterPanel.add(new JLabel("Promo % (e.g., 0.10):"), gbc);
+        filterPanel.add(new JLabel("Promo Code:"), gbc);
 
         // Promo Field
         gbc.gridx = 1;
@@ -626,7 +696,7 @@ public class CustomerView extends JFrame {
         panel.add(filterPanel, BorderLayout.CENTER);
 
         // --- Results Table (Center) ---
-        String[] columnNames = {"ID", "Date", "Restaurant", "Initial Price", "Promo %", "Final Price"};
+        String[] columnNames = {"ID", "Date", "Restaurant", "Initial Price", "Promo Code", "Final Price"};
         historyTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -820,7 +890,6 @@ public class CustomerView extends JFrame {
         int col = 0;
 
         for (String origin : origins) {
-            System.out.println(origin);
             if (!origin.toLowerCase().contains(filter.toLowerCase())) //lower case it all
                 continue;
 
@@ -873,7 +942,6 @@ public class CustomerView extends JFrame {
         int col = 0;
 
         for (String event : events) {
-            System.out.println(event);
             if (!event.toLowerCase().contains(filter.toLowerCase())) //lower case it all
                 continue;
 
@@ -1026,6 +1094,7 @@ public class CustomerView extends JFrame {
     public JTextArea getTransactionCartArea() { return transactionCartArea; }
     public JLabel getInitialPriceLabel() { return initialPriceLabel; }
     public JLabel getPromoLabel() { return promoLabel; }
+    public JTextField getPromoField() { return promoInputField; }
     public JLabel getFinalPriceLabel() { return finalPriceLabel; }
     public JComboBox<String> getRestaurantComboBox() { return restaurantComboBox; }
 
@@ -1121,7 +1190,7 @@ public class CustomerView extends JFrame {
                         transaction.getTransactionDate(),
                         transaction.getRestaurantName(),
                         String.format("%.2f", transaction.getInitialPrice()),
-                        String.format("%.2f", transaction.getPromo()), // Will show 0.10
+                        transaction.getPromo(), // Will show 0.10
                         String.format("%.2f", transaction.getFinalPrice())
                 });
             }
@@ -1201,6 +1270,12 @@ public class CustomerView extends JFrame {
 
         // Buttons from reservationPanel
         for (JButton button : reservationButtonList) {
+            button.removeActionListener(listener);
+            button.addActionListener(listener);
+        }
+
+        // Buttons from useReservationPanel
+        for (JButton button : useReservationButtonList) {
             button.removeActionListener(listener);
             button.addActionListener(listener);
         }

@@ -34,17 +34,42 @@ CREATE TABLE
   );
 
 CREATE TABLE
+    `food_promo` (
+        `food_promo_id` int unsigned NOT NULL AUTO_INCREMENT,
+        `restaurant_id` int unsigned NULL COMMENT 'not null if restaurant-exclusive', -- sometimes null
+        `promo_code` varchar(50) NULL UNIQUE,
+        `percentage_off` decimal(5, 4) NOT NULL COMMENT 'e.g. 0.10 = 10% off',
+        `promo_description` tinytext NOT NULL,
+        PRIMARY KEY(`food_promo_id`),
+        CONSTRAINT `restaurant_id` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurant` (`restaurant_id`)
+    );
+
+CREATE TABLE
   `food_transaction` (
     `food_transaction_id` int unsigned NOT NULL AUTO_INCREMENT,
     `restaurant_name` varchar(100) NOT NULL,
-    `promo` decimal(3, 2) NOT NULL COMMENT 'sale, discount, etc.',
+    `promo_id` int unsigned NULL,
     `final_price` decimal(14, 2) NOT NULL COMMENT 'initial_price calculated with promo',
     `initial_price` decimal(14, 2) NOT NULL COMMENT 'base price of food',
     `food_user_id` int unsigned NOT NULL,
     `transaction_date` timestamp NOT NULL,
     PRIMARY KEY (`food_transaction_id`),
     KEY `food_transaction_relation_1` (`food_user_id`),
-    CONSTRAINT `food_transaction_relation_1` FOREIGN KEY (`food_user_id`) REFERENCES `food_user` (`food_user_id`)
+    KEY `food_transaction_relation_2` (`promo_id`),
+    CONSTRAINT `food_transaction_relation_1` FOREIGN KEY (`food_user_id`) REFERENCES `food_user` (`food_user_id`),
+    CONSTRAINT `food_promo_id` FOREIGN KEY (`promo_id`) REFERENCES `food_promo` (`food_promo_id`)
+  );
+
+CREATE TABLE
+  `food_reservation` (
+    `food_reservation_id` int unsigned NOT NULL AUTO_INCREMENT,
+    `restaurant_name` varchar(100) NOT NULL,
+    `initial_price` decimal(14, 2) NOT NULL COMMENT 'base price of food',
+    `food_user_id` int unsigned NOT NULL,
+    `reservation_date` timestamp NOT NULL,
+    PRIMARY KEY (`food_reservation_id`),
+    KEY `food_reservation_relation_1` (`food_user_id`),
+    CONSTRAINT `food_reservation_relation_1` FOREIGN KEY (`food_user_id`) REFERENCES `food_user` (`food_user_id`)
   );
 
 CREATE TABLE
@@ -119,4 +144,20 @@ CREATE TABLE
     CONSTRAINT `food_order_relation_1` FOREIGN KEY (`food_transaction_id`) REFERENCES `food_transaction` (`food_transaction_id`),
     CONSTRAINT `food_order_relation_2` FOREIGN KEY (`food_menu_id`) REFERENCES `food_menu` (`food_menu_id`),
     CONSTRAINT `food_order_relation_3` FOREIGN KEY (`food_id`) REFERENCES `food` (`food_id`)
+  );
+
+CREATE TABLE
+  `reservation_order` (
+    `reservation_order_id` int unsigned NOT NULL AUTO_INCREMENT,
+    `food_reservation_id` int unsigned NOT NULL,
+    `food_menu_id` int unsigned NOT NULL,
+    `quantity` int NOT NULL DEFAULT '1',
+    `food_id` int unsigned NOT NULL,
+    PRIMARY KEY (`reservation_order_id`),
+    KEY `reservation_order_relation_1` (`food_reservation_id`),
+    KEY `reservation_order_relation_2` (`food_menu_id`),
+    KEY `reservation_order_relation_3` (`food_id`),
+    CONSTRAINT `reservation_order_relation_1` FOREIGN KEY (`food_reservation_id`) REFERENCES `food_reservation` (`food_reservation_id`),
+    CONSTRAINT `reservation_order_relation_2` FOREIGN KEY (`food_menu_id`) REFERENCES `food_menu` (`food_menu_id`),
+    CONSTRAINT `reservation_order_relation_3` FOREIGN KEY (`food_id`) REFERENCES `food` (`food_id`)
   );

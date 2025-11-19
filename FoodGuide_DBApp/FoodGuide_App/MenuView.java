@@ -42,7 +42,7 @@ public class MenuView extends JFrame {
         labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.Y_AXIS));
 
         // new label with text inside
-        labelList.add(new JLabel("Hello User, welcome to the Food Guide System!"));
+        labelList.add(new JLabel("Hello User, welcome to the Rizzal Food Guide!"));
         labelList.getFirst().setFont(new Font("Verdana", Font.BOLD, 20));
         labelList.add(new JLabel("Do you want to sign in as an admin or a customer?"));
 

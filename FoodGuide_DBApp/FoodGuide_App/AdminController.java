@@ -38,7 +38,10 @@ public class AdminController implements ActionListener {
             case "Create User":
                 view.getCardLayout().show(view.getMainPanel(), "USER_CREATE");
                 break;
-
+            case "Create Promo":
+                view.resetCreatePromoCode(model.getRestaurantNames());
+                view.getCardLayout().show(view.getMainPanel(), "CREATE_PROMO_CODE_PANEL");
+                break;
             case "Log a New Dish": {
                 System.out.println("Log a New Dish clicked!");
 
@@ -199,6 +202,49 @@ public class AdminController implements ActionListener {
                 break;
             }
 
+            // ------------------ Register/Create Promo Panel component ------------------
+            case "CREATE PROMO":
+                ArrayList<String> inputs = view.getCreatePromoFields();
+                if (inputs.size() < 3) {
+                    JOptionPane.showMessageDialog(view,
+                            "Error: You must give a code, percentage, description.",
+                            "Promo Code Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                }
+                float percentageOff;
+                try {
+                    percentageOff = Float.parseFloat(inputs.get(1));
+                }
+                catch (NumberFormatException ex){
+                    JOptionPane.showMessageDialog(view,
+                            "Error: Invalid percentage",
+                            "Promo Code Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                }
+                if (percentageOff < 0.0001 || percentageOff > 1.0) {
+                    JOptionPane.showMessageDialog(view,
+                            "Error: Invalid percentage, must be within (0.0001 to 1.0)",
+                            "Promo Code Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                }
+                if (model.promoCodeAlreadyExists(inputs.get(0))) {
+                    JOptionPane.showMessageDialog(view,
+                            "Error: Promo Code already exists!",
+                            "Promo Code Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                }
+
+                model.createPromoCode(inputs.get(0), percentageOff, inputs.get(2), view.getChosenRestaurantForPromo());
+                JOptionPane.showMessageDialog(view,
+                        "Promo Code created successfully",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                view.getCardLayout().show(view.getMainPanel(), "MANAGE_DATABASE_MENU");
+                break;
             // ------------------ Generate Reports panel component ------------------
             case "GENERATE REPORTS":
                 updateView();

@@ -4,6 +4,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.sql.ResultSetMetaData;
+
+import javax.swing.JTable;
+import javax.swing.JScrollPane;
 
 /**
  * Class: AdminView
@@ -24,6 +28,7 @@ public class AdminView extends JFrame {
     private JPanel userReportPanel;
     private JPanel revenueReportPanel;
     private JPanel feedbackReportPanel;
+    private JPanel createPromoPanel;
 
     // NEW: extra panels for managing Food Events and Origins
     private JPanel foodEventPanel;
@@ -86,6 +91,11 @@ public class AdminView extends JFrame {
     private DefaultTableModel originTableModel;
     private JTextField originNameField;
     private JButton backOriginButton = new JButton("GO BACK ORIGIN");
+    private ArrayList<JTextField> createPromoFields = new ArrayList<>();
+    private ArrayList<JButton> createPromoButtonList = new ArrayList<>();
+    private JComboBox<String> chooseRestaurantForPromo = new JComboBox<>();
+    private JButton createPromo = new JButton("CREATE PROMO");
+    private JButton backPromoCodeButton = new JButton("GO BACK");
 
     /**
      * Constructs the AdminView, initializes all sub-panels,
@@ -107,6 +117,7 @@ public class AdminView extends JFrame {
         userReportPanel = createUserReportPanel();
         revenueReportPanel = createRevenueReportPanel();
         feedbackReportPanel = createFeedbackReportPanel();
+        createPromoPanel = createPromoCodePanel();
 
         foodEventPanel = createFoodEventPanel();
         originPanel = createOriginPanel();
@@ -124,6 +135,7 @@ public class AdminView extends JFrame {
         mainPanel.add(foodEventPanel, "FOOD_EVENT_MENU");
         mainPanel.add(originPanel, "ORIGIN_MENU");
         mainPanel.add(logNewDishPanel, "LOG_NEW_DISH_MENU");   // NEW
+        mainPanel.add(createPromoPanel, "CREATE_PROMO_CODE_PANEL");
 
         add(mainPanel);
 
@@ -172,6 +184,88 @@ public class AdminView extends JFrame {
 
     /**
      * Builds the Manage Database panel.
+     * Creates a panel to display detailed feedback for a selected restaurant.
+     * @return a JPanel for the FEEDBACK_REPORT_PANEL card
+     */
+    private JPanel createFeedbackReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // --- Top Selection Panel ---
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topPanel.add(new JLabel("Select Restaurant:"));
+        feedbackRestaurantComboBox = new JComboBox<>();
+        topPanel.add(feedbackRestaurantComboBox);
+
+        // Per your new convention: no underscores
+        fetchFeedbackButton = new JButton("Fetch Report");
+        fetchFeedbackButton.setActionCommand("Fetch Feedback Report");
+        topPanel.add(fetchFeedbackButton);
+
+        panel.add(topPanel, BorderLayout.NORTH);
+
+        // --- Center Content Panel ---
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); // Vertical layout
+
+        // Overall Rating
+        JPanel ratingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        ratingPanel.setBorder(BorderFactory.createTitledBorder("Overall Rating"));
+        overallRatingLabel = new JLabel("N/A");
+        overallRatingLabel.setFont(new Font("Verdana", Font.BOLD, 18));
+        ratingPanel.add(overallRatingLabel);
+        // Make this panel align left in the BoxLayout
+        ratingPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(ratingPanel);
+
+        // Menu Popularity Table
+        String[] menuColumnNames = {"Menu Item", "Total Times Ordered"};
+        menuPopularityTableModel = new DefaultTableModel(menuColumnNames, 0) {
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        menuPopularityTable = new JTable(menuPopularityTableModel);
+        JScrollPane menuScrollPane = new JScrollPane(menuPopularityTable);
+        menuScrollPane.setBorder(BorderFactory.createTitledBorder("Menu Item Popularity (Ranked)"));
+        menuScrollPane.setPreferredSize(new Dimension(800, 150)); // Give it a preferred size
+        // Make this panel align left in the BoxLayout
+        menuScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(menuScrollPane);
+
+        // Comments Table
+        String[] commentsColumnNames = {"User Comments"};
+        commentsTableModel = new DefaultTableModel(commentsColumnNames, 0) {
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        commentsTable = new JTable(commentsTableModel);
+        JScrollPane commentsScrollPane = new JScrollPane(commentsTable);
+        commentsScrollPane.setBorder(BorderFactory.createTitledBorder("Feedback Comments"));
+        commentsScrollPane.setPreferredSize(new Dimension(800, 150)); // Give it a preferred size
+        // Make this panel align left in the BoxLayout
+        commentsScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(commentsScrollPane);
+
+        panel.add(centerPanel, BorderLayout.CENTER);
+
+        // --- Button Panel (South) ---
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#FCD303"));
+
+        feedbackReportButtonList.clear();
+        // Per your new convention: no underscores
+        backFeedbackReportButton.setActionCommand("GO BACK FEEDBACK REPORT");
+        feedbackReportButtonList.add(backFeedbackReportButton);
+
+        // Also add the fetch button to this list so the listener is attached
+        feedbackReportButtonList.add(fetchFeedbackButton);
+
+        buttonPanel.add(backFeedbackReportButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    /**
+     * Builds the database management selection panel.
      * @return a JPanel for the MANAGE_DATABASE_MENU card
      */
     private JPanel createManageDatabasePanel() {
@@ -198,6 +292,7 @@ public class AdminView extends JFrame {
         manageDatabaseButtonList.add(new JButton("Manage Food Events"));
         manageDatabaseButtonList.add(new JButton("Manage Origins"));
 
+        manageDatabaseButtonList.add(new JButton("Create Promo"));
         manageDatabaseButtonList.add(new JButton("GO BACK"));
 
         for (JButton jButton : manageDatabaseButtonList) {
@@ -217,11 +312,13 @@ public class AdminView extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
 
         JPanel titlePanel = new JPanel(new GridBagLayout());
+
         JLabel label = new JLabel("Choose a report to generate");
         label.setFont(new Font("Verdana", Font.BOLD, 20));
         titlePanel.add(label);
         panel.add(titlePanel, BorderLayout.CENTER);
 
+        // BUTTONS
         JPanel generateReportsButtonPanel = new JPanel(new GridLayout(0, 1));
         generateReportsButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
         generateReportsButtonPanel.setBackground(Color.decode("#FCD303"));
@@ -253,6 +350,7 @@ public class AdminView extends JFrame {
         titlePanel.add(label);
         panel.add(titlePanel, BorderLayout.NORTH);
 
+        // BUTTONS
         JPanel userRegButtonPanel = new JPanel(new GridLayout(0, 1));
         userRegButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
         userRegButtonPanel.setBackground(Color.decode("#FCD303"));
@@ -274,9 +372,9 @@ public class AdminView extends JFrame {
         titlePanel.add(label);
         panel.add(titlePanel, BorderLayout.NORTH);
 
-        // FORM
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 10, 10));
-        formPanel.setBorder(new EmptyBorder(20, 150, 20, 150));
+        // REGISTRATION FORM
+        JPanel formPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // 0 rows, 2 cols, 10px gaps
+        formPanel.setBorder(new EmptyBorder(20, 150, 20, 150)); // Add padding
 
         JLabel nameLabel = new JLabel("Username:");
         JLabel emailLabel = new JLabel("Email Address:");
@@ -296,7 +394,7 @@ public class AdminView extends JFrame {
         panel.add(formPanel, BorderLayout.CENTER);
 
         // BUTTONS
-        JPanel userRegButtonPanel = new JPanel(new FlowLayout());
+        JPanel userRegButtonPanel = new JPanel(new FlowLayout()); // Use FlowLayout like your others
         userRegButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
         userRegButtonPanel.setBackground(Color.decode("#FCD303"));
 
@@ -309,6 +407,9 @@ public class AdminView extends JFrame {
 
         userRegButtonList.add(registerButton);
         userRegButtonList.add(backUserRegButton);
+        // Add buttons to list
+        userRegButtonList.add(createPromo);
+        userRegButtonList.add(backPromoCodeButton);
 
         for (JButton button : userRegButtonList) {
             userRegButtonPanel.add(button);
@@ -317,6 +418,106 @@ public class AdminView extends JFrame {
         panel.add(userRegButtonPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    /**
+     * Creates a panel to display the creation menu for Promos
+     * @return a JPanel for CREATE_PROMO card 
+     */
+    private JPanel createPromoCodePanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        
+        JLabel titleLabel = new JLabel("Create Promo Code");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel createPromoPanel = new JPanel(new GridLayout(0, 2, 10, 10));
+        createPromoPanel.setBorder(BorderFactory.createTitledBorder("Select Food Culture"));
+        
+        ArrayList<JLabel> labels = new ArrayList<>();
+        labels.add(new JLabel("Enter Code: "));
+        labels.add(new JLabel("Enter Percentage (0.10 = 10%): "));
+        labels.add(new JLabel("Enter Description: "));
+        labels.add(new JLabel("(Optional) Choose Restaurant: "));
+
+        createPromoFields.add(new JTextField());
+        createPromoFields.add(new JTextField());
+        createPromoFields.add(new JTextField());
+
+        for (int i = 0; i < 4 ; i++) {
+            createPromoPanel.add(labels.get(i));
+            if (i == 3) break;
+            createPromoPanel.add(createPromoFields.get(i));
+        }
+        createPromoPanel.add(chooseRestaurantForPromo);
+        panel.add(createPromoPanel, BorderLayout.CENTER);
+
+        // --- UPDATED: BUTTONS ---
+        JPanel createPromoButtonPanel = new JPanel(new FlowLayout()); // Use FlowLayout like your others
+        createPromoButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        createPromoButtonPanel.setBackground(Color.decode("#FCD303"));
+
+        // Initialize button list (clears it for refreshPanels)
+        createPromoButtonList.clear();
+
+        // Add buttons to list
+        createPromoButtonList.add(createPromo);
+        createPromoButtonList.add(backUserRegButton);
+
+        // Add buttons from the list to the panel
+        for (JButton button : createPromoButtonList) {
+            createPromoButtonPanel.add(button);
+        }
+
+        panel.add(createPromoButtonPanel, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    /** 
+     * Sets the drop-down menu for restaurant names and clears fields
+     */
+    public void resetCreatePromoCode(ArrayList<String> restaurantNames) {
+        for (JTextField field : createPromoFields)  {
+            field.setText("");
+            field.revalidate();
+            field.repaint();
+        }
+
+        chooseRestaurantForPromo.removeAllItems();
+        chooseRestaurantForPromo.addItem("");
+        for (String name : restaurantNames) {
+            chooseRestaurantForPromo.addItem(name);
+        }
+
+        chooseRestaurantForPromo.revalidate();
+        chooseRestaurantForPromo.repaint();
+    }
+
+    /**
+     * Gets the values inputted in the CreatePromo text fields
+     * @return an ArrayList of Strings containing the inputted Data
+     */
+    public ArrayList<String> getCreatePromoFields() {
+        ArrayList<String> fields = new ArrayList<>();
+        for (JTextField field : createPromoFields) {
+            if (field.getText().isEmpty())
+                continue;
+            fields.add(field.getText());
+        }
+        return fields;
+    }
+
+    /**
+     * Gets chosen restaurant in create promo Field
+     * returns "" if nothing is chosen
+     * @return String or "" if nothing is chosen
+     */
+    public String getChosenRestaurantForPromo() {
+        if (chooseRestaurantForPromo.getSelectedIndex() == -1) //no chosen restaurant 
+            return "";
+
+        return (String) chooseRestaurantForPromo.getSelectedItem();
     }
 
     /**
