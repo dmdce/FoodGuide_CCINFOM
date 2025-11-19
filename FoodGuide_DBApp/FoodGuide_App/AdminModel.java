@@ -27,7 +27,6 @@ public class AdminModel {
         return menuController;
     }
 
-
     /**
      * Passes the registration request to the database class.
      * (Unchanged)
@@ -53,11 +52,38 @@ public class AdminModel {
     }
 
     /**
+     * Asks the database for a list of all origin names.
+     * Used by AdminController when logging a new dish.
+     */
+    public ArrayList<String> getOriginNames() {
+        return db.fetchOriginNames();
+    }
+
+    /**
+     * Asks the database for a list of all food event names.
+     * Used by AdminController when logging a new dish.
+     */
+    public ArrayList<String> getFoodEventNames() {
+        return db.fetchFoodEventNames();
+    }
+
+    /**
      * Asks the database for a list of food items for a specific restaurant.
      * (Unchanged)
      */
     public ArrayList<FoodItem> getFoodMenu(String restaurantName) {
         return db.getFoodMenuForRestaurant(restaurantName);
+    }
+
+    /**
+     * 🔹 NEW: Admin - insert a completely new dish
+     */
+    public boolean addNewDish(String foodAlias,
+                              double price,
+                              String restaurantName,
+                              String originName,
+                              String eventName) {
+        return db.insertNewDish(foodAlias, price, restaurantName, originName, eventName);
     }
 
     /**
@@ -168,6 +194,66 @@ public class AdminModel {
         return db.fetchFeedbackReport(restaurantName);
     }
 
+    // ------------------------------------------------------------
+    // EXTRA METHODS NEEDED FOR FOOD EVENTS & ORIGINS (CRUD)
+    // ------------------------------------------------------------
+
+    /**
+     * Gets all food events from the database.
+     * @return ArrayList of String arrays containing [id, name, description]
+     */
+    public ArrayList<String[]> getAllFoodEvents() {
+        return db.getAllFoodEvents();
+    }
+
+    /**
+     * Adds a new food event to the database.
+     */
+    public boolean addFoodEvent(String eventName, String description) {
+        return db.addFoodEvent(eventName, description);
+    }
+
+    /**
+     * Updates an existing food event in the database.
+     */
+    public boolean updateFoodEvent(int eventId, String eventName, String description) {
+        return db.updateFoodEvent(eventId, eventName, description);
+    }
+
+    /**
+     * Deletes a food event from the database.
+     */
+    public boolean deleteFoodEvent(int eventId) {
+        return db.deleteFoodEvent(eventId);
+    }
+
+    /**
+     * Gets all origins from the database.
+     * @return ArrayList of String arrays containing [id, name]
+     */
+    public ArrayList<String[]> getAllOrigins() {
+        return db.getAllOrigins();
+    }
+
+    /**
+     * Adds a new origin to the database.
+     */
+    public boolean addOrigin(String originName) {
+        return db.addOrigin(originName);
+    }
+
+    /**
+     * Updates an existing origin in the database.
+     */
+    public boolean updateOrigin(int originId, String originName) {
+        return db.updateOrigin(originId, originName);
+    }
+
+    /**
+     * Deletes an origin from the database.
+     */
+    public boolean deleteOrigin(int originId) {
+        return db.deleteOrigin(originId);
     public void createPromoCode(String code, float percentageOff, String description, String restaurantName) {
         db.createPromoCode(code, percentageOff, description, restaurantName);
     }
@@ -180,3 +266,4 @@ public class AdminModel {
         return db.getFoodPromo(code, restaurantName);
     }
 }
+    

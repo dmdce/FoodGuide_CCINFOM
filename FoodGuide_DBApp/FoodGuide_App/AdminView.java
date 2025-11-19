@@ -1,9 +1,7 @@
 import java.util.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.sql.ResultSetMetaData;
@@ -20,7 +18,7 @@ import javax.swing.JScrollPane;
  */
 public class AdminView extends JFrame {
     private CardLayout cardLayout = new CardLayout();
-    
+
     private JPanel mainPanel = new JPanel(cardLayout);
     private JPanel mainMenuPanel;
     private JPanel manageDatabasePanel;
@@ -31,6 +29,20 @@ public class AdminView extends JFrame {
     private JPanel revenueReportPanel;
     private JPanel feedbackReportPanel;
     private JPanel createPromoPanel;
+
+    // NEW: extra panels for managing Food Events and Origins
+    private JPanel foodEventPanel;
+    private JPanel originPanel;
+
+    // NEW: Log a New Dish panel
+    private JPanel logNewDishPanel;
+    private JTextField dishNameField;
+    private JTextField dishPriceField;
+    private JComboBox<String> originComboBox;
+    private JComboBox<String> eventComboBox;
+    private JComboBox<String> restaurantComboBox;
+    private JButton saveNewDishButton;
+    private JButton backFromLogDishButton;
 
     private ArrayList<JButton> mainMenuButtonList = new ArrayList<>();
     private ArrayList<JButton> manageDatabaseButtonList = new ArrayList<>();
@@ -65,6 +77,20 @@ public class AdminView extends JFrame {
     private JButton backFeedbackReportButton = new JButton("GO BACK");
     private ArrayList<JButton> feedbackReportButtonList = new ArrayList<>();
 
+    // Food Event panel components
+    private ArrayList<JButton> foodEventButtonList = new ArrayList<>();
+    private JTable foodEventTable;
+    private DefaultTableModel foodEventTableModel;
+    private JTextField foodEventNameField;
+    private JTextArea foodEventDescriptionArea;
+    private JButton backFoodEventButton = new JButton("GO BACK FOOD EVENT");
+
+    // Origin panel components
+    private ArrayList<JButton> originButtonList = new ArrayList<>();
+    private JTable originTable;
+    private DefaultTableModel originTableModel;
+    private JTextField originNameField;
+    private JButton backOriginButton = new JButton("GO BACK ORIGIN");
     private ArrayList<JTextField> createPromoFields = new ArrayList<>();
     private ArrayList<JButton> createPromoButtonList = new ArrayList<>();
     private JComboBox<String> chooseRestaurantForPromo = new JComboBox<>();
@@ -82,6 +108,7 @@ public class AdminView extends JFrame {
         setLayout(new BorderLayout());
         setSize(850, 450);
 
+        // create all panels
         mainMenuPanel = createMainMenuPanel();
         manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
@@ -92,6 +119,11 @@ public class AdminView extends JFrame {
         feedbackReportPanel = createFeedbackReportPanel();
         createPromoPanel = createPromoCodePanel();
 
+        foodEventPanel = createFoodEventPanel();
+        originPanel = createOriginPanel();
+        initLogNewDishPanel();   // NEW
+
+        // register all cards
         mainPanel.add(mainMenuPanel, "MAIN_MENU");
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
@@ -100,6 +132,9 @@ public class AdminView extends JFrame {
         mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
         mainPanel.add(revenueReportPanel, "REVENUE_REPORT_PANEL");
         mainPanel.add(feedbackReportPanel, "FEEDBACK_REPORT_PANEL");
+        mainPanel.add(foodEventPanel, "FOOD_EVENT_MENU");
+        mainPanel.add(originPanel, "ORIGIN_MENU");
+        mainPanel.add(logNewDishPanel, "LOG_NEW_DISH_MENU");   // NEW
         mainPanel.add(createPromoPanel, "CREATE_PROMO_CODE_PANEL");
 
         add(mainPanel);
@@ -121,7 +156,7 @@ public class AdminView extends JFrame {
 
         ArrayList<JLabel> labelList = new ArrayList<>();
         labelList.add(new JLabel("Choose an option below!"));
-        labelList.getFirst().setFont(new Font("Verdana", Font.BOLD, 20));
+        labelList.get(0).setFont(new Font("Verdana", Font.BOLD, 20));
 
         for (JLabel labels : labelList) {
             mainMenuLabelPanel.add(labels);
@@ -148,6 +183,7 @@ public class AdminView extends JFrame {
     }
 
     /**
+     * Builds the Manage Database panel.
      * Creates a panel to display detailed feedback for a selected restaurant.
      * @return a JPanel for the FEEDBACK_REPORT_PANEL card
      */
@@ -233,20 +269,13 @@ public class AdminView extends JFrame {
      * @return a JPanel for the MANAGE_DATABASE_MENU card
      */
     private JPanel createManageDatabasePanel() {
-        // MAIN PANEL
         JPanel panel = new JPanel(new BorderLayout());
 
-        // LABELS
+        // LABEL
         JPanel manageDatabaseLabelPanel = new JPanel(new GridBagLayout());
-
-        ArrayList<JLabel> labelList = new ArrayList<>(); // Used for multiple labels
-        labelList.add(new JLabel("What kind of transaction do you want to do?"));
-        labelList.getFirst().setFont(new Font("Verdana", Font.BOLD, 20));
-
-        for (JLabel jLabel : labelList) {
-            manageDatabaseLabelPanel.add(jLabel);
-        }
-
+        JLabel label = new JLabel("What kind of transaction do you want to do?");
+        label.setFont(new Font("Verdana", Font.BOLD, 20));
+        manageDatabaseLabelPanel.add(label);
         panel.add(manageDatabaseLabelPanel, BorderLayout.CENTER);
 
         // BUTTONS
@@ -258,6 +287,11 @@ public class AdminView extends JFrame {
         manageDatabaseButtonList.add(new JButton("Log a New Dish"));
         manageDatabaseButtonList.add(new JButton("Create User"));
         manageDatabaseButtonList.add(new JButton("Create Transaction"));
+
+        // NEW: buttons to open your new panels
+        manageDatabaseButtonList.add(new JButton("Manage Food Events"));
+        manageDatabaseButtonList.add(new JButton("Manage Origins"));
+
         manageDatabaseButtonList.add(new JButton("Create Promo"));
         manageDatabaseButtonList.add(new JButton("GO BACK"));
 
@@ -271,68 +305,17 @@ public class AdminView extends JFrame {
     }
 
     /**
-     * Creates a panel to display the ranked restaurant revenue report.
-     * @return a JPanel for the REVENUE_REPORT_PANEL card
-     */
-    private JPanel createRevenueReportPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // Title
-        JPanel titlePanel = new JPanel(new GridBagLayout());
-        JLabel label = new JLabel("Restaurant Revenue & Transaction Report");
-        label.setFont(new Font("Verdana", Font.BOLD, 20));
-        titlePanel.add(label);
-        panel.add(titlePanel, BorderLayout.NORTH);
-
-        // Results Table
-        String[] columnNames = {"Restaurant Name", "Total Revenue", "Total Transactions"};
-        revenueReportTableModel = new DefaultTableModel(columnNames, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Make table cells not editable
-            }
-        };
-        revenueReportTable = new JTable(revenueReportTableModel);
-        JScrollPane scrollPane = new JScrollPane(revenueReportTable);
-
-        panel.add(scrollPane, BorderLayout.CENTER);
-
-        // Button Panel
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
-        buttonPanel.setBackground(Color.decode("#FCD303"));
-
-        revenueReportButtonList.clear();
-
-        backRevenueReportButton.setActionCommand("GO BACK REVENUE REPORT"); // No underscore
-        revenueReportButtonList.add(backRevenueReportButton);
-
-        for(JButton btn : revenueReportButtonList) {
-            buttonPanel.add(btn);
-        }
-
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        return panel;
-    }
-
-    /**
      * Shows a menu for generating reports.
      * @return a JPanel for the GENERATE_REPORTS_MENU card
      */
     private JPanel createGenerateReportsPanel() {
-        // MAIN PANEL
         JPanel panel = new JPanel(new BorderLayout());
 
-        // LABELS
         JPanel titlePanel = new JPanel(new GridBagLayout());
 
         JLabel label = new JLabel("Choose a report to generate");
         label.setFont(new Font("Verdana", Font.BOLD, 20));
-
         titlePanel.add(label);
-
         panel.add(titlePanel, BorderLayout.CENTER);
 
         // BUTTONS
@@ -359,17 +342,12 @@ public class AdminView extends JFrame {
     }
 
     private JPanel createUserRegPanel() {
-        // MAIN PANEL
         JPanel panel = new JPanel(new BorderLayout());
 
-        // LABELS
         JPanel titlePanel = new JPanel(new GridBagLayout());
-
         JLabel label = new JLabel("User Registration Report");
         label.setFont(new Font("Verdana", Font.BOLD, 20));
-
         titlePanel.add(label);
-
         panel.add(titlePanel, BorderLayout.NORTH);
 
         // BUTTONS
@@ -385,7 +363,6 @@ public class AdminView extends JFrame {
     }
 
     private JPanel createUserCreationPanel() {
-        // MAIN PANEL
         JPanel panel = new JPanel(new BorderLayout());
 
         // LABELS
@@ -399,20 +376,16 @@ public class AdminView extends JFrame {
         JPanel formPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // 0 rows, 2 cols, 10px gaps
         formPanel.setBorder(new EmptyBorder(20, 150, 20, 150)); // Add padding
 
-        // Create labels
         JLabel nameLabel = new JLabel("Username:");
         JLabel emailLabel = new JLabel("Email Address:");
 
-        // Initialize text field list (clears it for refreshPanels)
         userRegTextFieldList.clear();
 
-        // Create text fields and add to list
         JTextField nameField = new JTextField(20);
         JTextField emailField = new JTextField(20);
         userRegTextFieldList.add(nameField);
         userRegTextFieldList.add(emailField);
 
-        // Add components to the form panel
         formPanel.add(nameLabel);
         formPanel.add(nameField);
         formPanel.add(emailLabel);
@@ -425,14 +398,19 @@ public class AdminView extends JFrame {
         userRegButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
         userRegButtonPanel.setBackground(Color.decode("#FCD303"));
 
-        // Initialize button list (clears it for refreshPanels)
         userRegButtonList.clear();
 
+        // NOTE: original code used "REGISTER_USER"; controller uses "REGISTER USER".
+        // We keep original to avoid touching group code.
+        registerButton.setActionCommand("REGISTER_USER");
+        backUserRegButton.setActionCommand("GO BACK USER REG");
+
+        userRegButtonList.add(registerButton);
+        userRegButtonList.add(backUserRegButton);
         // Add buttons to list
         userRegButtonList.add(createPromo);
         userRegButtonList.add(backPromoCodeButton);
 
-        // Add buttons from the list to the panel
         for (JButton button : userRegButtonList) {
             userRegButtonPanel.add(button);
         }
@@ -547,11 +525,9 @@ public class AdminView extends JFrame {
      * @return a JPanel for the USER_REPORT_PANEL card
      */
     private JPanel createUserReportPanel() {
-        // MAIN PANEL
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // LABELS
         JPanel titlePanel = new JPanel(new GridBagLayout());
         JLabel label = new JLabel("Registered User List");
         label.setFont(new Font("Verdana", Font.BOLD, 20));
@@ -562,7 +538,7 @@ public class AdminView extends JFrame {
         userReportTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Make table cells not editable
+                return false;
             }
         };
         userReportTable = new JTable(userReportTableModel);
@@ -570,14 +546,131 @@ public class AdminView extends JFrame {
 
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // BUTTONS
-        JPanel userReportButtonPanel = new JPanel(new FlowLayout()); // Changed to FlowLayout
+        JPanel userReportButtonPanel = new JPanel(new FlowLayout());
         userReportButtonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
         userReportButtonPanel.setBackground(Color.decode("#FCD303"));
 
         userReportButtonPanel.add(backUserReportButton);
 
         panel.add(userReportButtonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    /**
+     * Creates a panel to display the ranked restaurant revenue report.
+     * @return a JPanel for the REVENUE_REPORT_PANEL card
+     */
+    private JPanel createRevenueReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel label = new JLabel("Restaurant Revenue & Transaction Report");
+        label.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(label);
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        String[] columnNames = {"Restaurant Name", "Total Revenue", "Total Transactions"};
+        revenueReportTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        revenueReportTable = new JTable(revenueReportTableModel);
+        JScrollPane scrollPane = new JScrollPane(revenueReportTable);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBorder(new EmptyBorder(10, 150, 10, 150));
+        buttonPanel.setBackground(Color.decode("#FCD303"));
+
+        revenueReportButtonList.clear();
+
+        backRevenueReportButton.setActionCommand("GO BACK REVENUE REPORT");
+        revenueReportButtonList.add(backRevenueReportButton);
+
+        for (JButton btn : revenueReportButtonList) {
+            buttonPanel.add(btn);
+        }
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    /**
+     * Creates a panel to display detailed feedback for a selected restaurant.
+     * @return a JPanel for the FEEDBACK_REPORT_PANEL card
+     */
+    private JPanel createFeedbackReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // --- Top Selection Panel ---
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topPanel.add(new JLabel("Select Restaurant:"));
+        feedbackRestaurantComboBox = new JComboBox<>();
+        topPanel.add(feedbackRestaurantComboBox);
+
+        fetchFeedbackButton = new JButton("Fetch Report");
+        fetchFeedbackButton.setActionCommand("Fetch Feedback Report");
+        topPanel.add(fetchFeedbackButton);
+
+        panel.add(topPanel, BorderLayout.NORTH);
+
+        // --- Center Content Panel ---
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+
+        // Overall Rating
+        JPanel ratingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        ratingPanel.setBorder(BorderFactory.createTitledBorder("Overall Rating"));
+        overallRatingLabel = new JLabel("N/A");
+        overallRatingLabel.setFont(new Font("Verdana", Font.BOLD, 18));
+        ratingPanel.add(overallRatingLabel);
+        ratingPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(ratingPanel);
+
+        // Menu Popularity Table
+        String[] menuColumnNames = {"Menu Item", "Total Times Ordered"};
+        menuPopularityTableModel = new DefaultTableModel(menuColumnNames, 0) {
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        menuPopularityTable = new JTable(menuPopularityTableModel);
+        JScrollPane menuScrollPane = new JScrollPane(menuPopularityTable);
+        menuScrollPane.setBorder(BorderFactory.createTitledBorder("Menu Item Popularity (Ranked)"));
+        menuScrollPane.setPreferredSize(new Dimension(800, 150));
+        menuScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(menuScrollPane);
+
+        // Comments Table
+        String[] commentsColumnNames = {"User Comments"};
+        commentsTableModel = new DefaultTableModel(commentsColumnNames, 0) {
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        commentsTable = new JTable(commentsTableModel);
+        JScrollPane commentsScrollPane = new JScrollPane(commentsTable);
+        commentsScrollPane.setBorder(BorderFactory.createTitledBorder("Feedback Comments"));
+        commentsScrollPane.setPreferredSize(new Dimension(800, 150));
+        commentsScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(commentsScrollPane);
+
+        panel.add(centerPanel, BorderLayout.CENTER);
+
+        // --- Button Panel (South) ---
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#FCD303"));
+
+        feedbackReportButtonList.clear();
+        backFeedbackReportButton.setActionCommand("GO BACK FEEDBACK REPORT");
+        feedbackReportButtonList.add(backFeedbackReportButton);
+        feedbackReportButtonList.add(fetchFeedbackButton);
+
+        buttonPanel.add(backFeedbackReportButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -603,10 +696,8 @@ public class AdminView extends JFrame {
             return;
         }
 
-        // Clear old results
         userReportTableModel.setRowCount(0);
 
-        // Add new results
         if (users != null) {
             for (UserData user : users) {
                 userReportTableModel.addRow(new Object[]{
@@ -620,16 +711,318 @@ public class AdminView extends JFrame {
 
     /*
      * --------------------------------------------------------------------------------------------
+     * FOOD EVENT PANEL
+     * --------------------------------------------------------------------------------------------
+     */
+
+    private JPanel createFoodEventPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel titleLabel = new JLabel("Manage Food Events");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(titleLabel);
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+
+        // Table
+        String[] columnNames = {"ID", "Event Name", "Description"};
+        foodEventTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        foodEventTable = new JTable(foodEventTableModel);
+        foodEventTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        foodEventTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = foodEventTable.getSelectedRow();
+                if (selectedRow >= 0) {
+                    foodEventNameField.setText((String) foodEventTableModel.getValueAt(selectedRow, 1));
+                    foodEventDescriptionArea.setText((String) foodEventTableModel.getValueAt(selectedRow, 2));
+                }
+            }
+        });
+        JScrollPane tableScrollPane = new JScrollPane(foodEventTable);
+        tableScrollPane.setBorder(BorderFactory.createTitledBorder("Existing Food Events"));
+        centerPanel.add(tableScrollPane, BorderLayout.CENTER);
+
+        // Form
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createTitledBorder("Add/Edit Food Event"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Event Name
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Event Name:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1.0;
+        foodEventNameField = new JTextField(20);
+        formPanel.add(foodEventNameField, gbc);
+
+        // Description
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.NORTHEAST;
+        formPanel.add(new JLabel("Description:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+        foodEventDescriptionArea = new JTextArea(5, 20);
+        foodEventDescriptionArea.setLineWrap(true);
+        foodEventDescriptionArea.setWrapStyleWord(true);
+        JScrollPane descScrollPane = new JScrollPane(foodEventDescriptionArea);
+        formPanel.add(descScrollPane, gbc);
+
+        centerPanel.add(formPanel, BorderLayout.EAST);
+
+        panel.add(centerPanel, BorderLayout.CENTER);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#FCD303"));
+
+        foodEventButtonList.clear();
+
+        JButton addButton = new JButton("Add Event");
+        addButton.setActionCommand("ADD_FOOD_EVENT");
+        foodEventButtonList.add(addButton);
+
+        JButton editButton = new JButton("Edit Event");
+        editButton.setActionCommand("EDIT_FOOD_EVENT");
+        foodEventButtonList.add(editButton);
+
+        JButton deleteButton = new JButton("Delete Event");
+        deleteButton.setActionCommand("DELETE_FOOD_EVENT");
+        foodEventButtonList.add(deleteButton);
+
+        JButton refreshButton = new JButton("Refresh Table");
+        refreshButton.setActionCommand("REFRESH_FOOD_EVENT_TABLE");
+        foodEventButtonList.add(refreshButton);
+
+        backFoodEventButton.setActionCommand("GO BACK FOOD EVENT");
+        foodEventButtonList.add(backFoodEventButton);
+
+        for (JButton btn : foodEventButtonList) {
+            buttonPanel.add(btn);
+        }
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    public JTable getFoodEventTable() { return foodEventTable; }
+    public DefaultTableModel getFoodEventTableModel() { return foodEventTableModel; }
+    public JTextField getFoodEventNameField() { return foodEventNameField; }
+    public JTextArea getFoodEventDescriptionArea() { return foodEventDescriptionArea; }
+
+    /*
+     * --------------------------------------------------------------------------------------------
+     * ORIGIN PANEL
+     * --------------------------------------------------------------------------------------------
+     */
+
+    private JPanel createOriginPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JPanel titlePanel = new JPanel(new GridBagLayout());
+        JLabel titleLabel = new JLabel("Manage Origins");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titlePanel.add(titleLabel);
+        panel.add(titlePanel, BorderLayout.NORTH);
+
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+
+        String[] columnNames = {"ID", "Origin Name"};
+        originTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        originTable = new JTable(originTableModel);
+        originTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        originTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = originTable.getSelectedRow();
+                if (selectedRow >= 0) {
+                    originNameField.setText((String) originTableModel.getValueAt(selectedRow, 1));
+                }
+            }
+        });
+        JScrollPane tableScrollPane = new JScrollPane(originTable);
+        tableScrollPane.setBorder(BorderFactory.createTitledBorder("Existing Origins"));
+        centerPanel.add(tableScrollPane, BorderLayout.CENTER);
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createTitledBorder("Add/Edit Origin"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Origin Name:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1.0;
+        originNameField = new JTextField(20);
+        formPanel.add(originNameField, gbc);
+
+        centerPanel.add(formPanel, BorderLayout.EAST);
+
+        panel.add(centerPanel, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#FCD303"));
+
+        originButtonList.clear();
+
+        JButton addButton = new JButton("Add Origin");
+        addButton.setActionCommand("ADD_ORIGIN");
+        originButtonList.add(addButton);
+
+        JButton editButton = new JButton("Edit Origin");
+        editButton.setActionCommand("EDIT_ORIGIN");
+        originButtonList.add(editButton);
+
+        JButton deleteButton = new JButton("Delete Origin");
+        deleteButton.setActionCommand("DELETE_ORIGIN");
+        originButtonList.add(deleteButton);
+
+        JButton refreshButton = new JButton("Refresh Table");
+        refreshButton.setActionCommand("REFRESH_ORIGIN_TABLE");
+        originButtonList.add(refreshButton);
+
+        backOriginButton.setActionCommand("GO BACK ORIGIN");
+        originButtonList.add(backOriginButton);
+
+        for (JButton btn : originButtonList) {
+            buttonPanel.add(btn);
+        }
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    public JTable getOriginTable() { return originTable; }
+    public DefaultTableModel getOriginTableModel() { return originTableModel; }
+    public JTextField getOriginNameField() { return originNameField; }
+
+    /*
+     * --------------------------------------------------------------------------------------------
+     * LOG NEW DISH PANEL
+     * --------------------------------------------------------------------------------------------
+     */
+
+    private void initLogNewDishPanel() {
+        logNewDishPanel = new JPanel(new BorderLayout());
+        logNewDishPanel.setBackground(Color.WHITE);
+
+        JPanel formPanel = new JPanel(new GridLayout(0, 2, 10, 10));
+        formPanel.setBorder(new EmptyBorder(20, 40, 20, 40));
+
+        // Dish name
+        formPanel.add(new JLabel("Dish name:"));
+        dishNameField = new JTextField();
+        formPanel.add(dishNameField);
+
+        // Price
+        formPanel.add(new JLabel("Price:"));
+        dishPriceField = new JTextField();
+        formPanel.add(dishPriceField);
+
+        // Origin
+        formPanel.add(new JLabel("Origin:"));
+        originComboBox = new JComboBox<>();
+        formPanel.add(originComboBox);
+
+        // Food Event
+        formPanel.add(new JLabel("Food Event:"));
+        eventComboBox = new JComboBox<>();
+        formPanel.add(eventComboBox);
+
+        // Restaurant
+        formPanel.add(new JLabel("Restaurant:"));
+        restaurantComboBox = new JComboBox<>();
+        formPanel.add(restaurantComboBox);
+
+        logNewDishPanel.add(formPanel, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        saveNewDishButton = new JButton("Save Dish");
+        saveNewDishButton.setActionCommand("SAVE_NEW_DISH");
+
+        backFromLogDishButton = new JButton("GO BACK");
+        backFromLogDishButton.setActionCommand("GO BACK LOG NEW DISH");
+
+        buttonPanel.add(saveNewDishButton);
+        buttonPanel.add(backFromLogDishButton);
+
+        logNewDishPanel.add(buttonPanel, BorderLayout.SOUTH);
+    }
+
+    // helpers + getters for Log New Dish
+    public void populateLogNewDishCombos(
+            ArrayList<String> origins,
+            ArrayList<String> events,
+            ArrayList<String> restaurants) {
+
+        if (originComboBox != null) {
+            originComboBox.removeAllItems();
+            if (origins != null) {
+                for (String o : origins) originComboBox.addItem(o);
+            }
+        }
+
+        if (eventComboBox != null) {
+            eventComboBox.removeAllItems();
+            if (events != null) {
+                for (String e : events) eventComboBox.addItem(e);
+            }
+        }
+
+        if (restaurantComboBox != null) {
+            restaurantComboBox.removeAllItems();
+            if (restaurants != null) {
+                for (String r : restaurants) restaurantComboBox.addItem(r);
+            }
+        }
+    }
+
+    public JTextField getDishNameField() { return dishNameField; }
+    public JTextField getDishPriceField() { return dishPriceField; }
+    public JComboBox<String> getOriginComboBox() { return originComboBox; }
+    public JComboBox<String> getEventComboBox() { return eventComboBox; }
+    public JComboBox<String> getRestaurantComboBox() { return restaurantComboBox; }
+
+    /*
+     * --------------------------------------------------------------------------------------------
      * LAYOUT AND BUTTON BACKBONE
      * --------------------------------------------------------------------------------------------
      */
 
-    /**
-     * Refreshes the display panels of the application. This method removes existing panels,
-     * recreates them to reflect any updated data, and then adds them back to the main panel.
-     */
     public void refreshPanels() {
-        // Remove
+        // remove old panels (not main menu)
         mainPanel.remove(manageDatabasePanel);
         mainPanel.remove(generateReportsPanel);
         mainPanel.remove(userRegPanel);
@@ -637,8 +1030,11 @@ public class AdminView extends JFrame {
         mainPanel.remove(userReportPanel);
         mainPanel.remove(revenueReportPanel);
         mainPanel.remove(feedbackReportPanel);
+        mainPanel.remove(foodEventPanel);
+        mainPanel.remove(originPanel);
+        mainPanel.remove(logNewDishPanel);
 
-        // Generate and add
+        // recreate
         manageDatabasePanel = createManageDatabasePanel();
         generateReportsPanel = createGenerateReportsPanel();
         userRegPanel = createUserRegPanel();
@@ -646,7 +1042,11 @@ public class AdminView extends JFrame {
         userReportPanel = createUserReportPanel();
         revenueReportPanel = createRevenueReportPanel();
         feedbackReportPanel = createFeedbackReportPanel();
+        foodEventPanel = createFoodEventPanel();
+        originPanel = createOriginPanel();
+        initLogNewDishPanel();
 
+        // re-add
         mainPanel.add(manageDatabasePanel, "MANAGE_DATABASE_MENU");
         mainPanel.add(generateReportsPanel, "GENERATE_REPORTS_MENU");
         mainPanel.add(userRegPanel, "USER_REG");
@@ -654,30 +1054,39 @@ public class AdminView extends JFrame {
         mainPanel.add(userReportPanel, "USER_REPORT_PANEL");
         mainPanel.add(revenueReportPanel, "REVENUE_REPORT_PANEL");
         mainPanel.add(feedbackReportPanel, "FEEDBACK_REPORT_PANEL");
+        mainPanel.add(foodEventPanel, "FOOD_EVENT_MENU");
+        mainPanel.add(originPanel, "ORIGIN_MENU");
+        mainPanel.add(logNewDishPanel, "LOG_NEW_DISH_MENU");
 
-        // Revalidate and repaint
         mainPanel.revalidate();
         mainPanel.repaint();
     }
 
-    /**
-     * Sets the ActionListener for various GUI components, ensuring that button clicks
-     * and other actions are handled by the provided listener.
-     *
-     * @param listener The ActionListener to be used for the GUI components.
-     */
     public void setActionListener(ActionListener listener) {
-        // Remove to not stack
+        // remove (to avoid stacking same listener)
         backButton.removeActionListener(listener);
         backGenerateReportsButton.removeActionListener(listener);
         backUserRegButton.removeActionListener(listener);
         backUserReportButton.removeActionListener(listener);
+        backRevenueReportButton.removeActionListener(listener);
+        backFeedbackReportButton.removeActionListener(listener);
+        backFoodEventButton.removeActionListener(listener);
+        backOriginButton.removeActionListener(listener);
+        if (saveNewDishButton != null) saveNewDishButton.removeActionListener(listener);
+        if (backFromLogDishButton != null) backFromLogDishButton.removeActionListener(listener);
 
-        // Add
+        // add
         backButton.addActionListener(listener);
         backGenerateReportsButton.addActionListener(listener);
         backUserRegButton.addActionListener(listener);
         backUserReportButton.addActionListener(listener);
+        backRevenueReportButton.addActionListener(listener);
+        backFeedbackReportButton.addActionListener(listener);
+        backFoodEventButton.addActionListener(listener);
+        backOriginButton.addActionListener(listener);
+        if (saveNewDishButton != null) saveNewDishButton.addActionListener(listener);
+        if (backFromLogDishButton != null) backFromLogDishButton.addActionListener(listener);
+
         for (JButton jButton : mainMenuButtonList) {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
@@ -694,35 +1103,34 @@ public class AdminView extends JFrame {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
-
         for (JButton jButton : revenueReportButtonList) {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
-
         for (JButton jButton : feedbackReportButtonList) {
             jButton.removeActionListener(listener);
             jButton.addActionListener(listener);
         }
+        for (JButton jButton : foodEventButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
+        for (JButton jButton : originButtonList) {
+            jButton.removeActionListener(listener);
+            jButton.addActionListener(listener);
+        }
 
-        // Add ActionCommands (actions with same names but different functions)
         backUserReportButton.setActionCommand("GO BACK USER REPORT");
         backUserRegButton.setActionCommand("GO BACK USER REG");
+        backFoodEventButton.setActionCommand("GO BACK FOOD EVENT");
+        backOriginButton.setActionCommand("GO BACK ORIGIN");
     }
 
-    /**
-     * Clears and repopulates the revenue report table with fresh data.
-     * @param data An ArrayList of RestaurantRevenueData objects.
-     */
     public void updateRevenueReportTable(ArrayList<RestaurantRevenueData> data) {
         if (revenueReportTableModel == null) {
             return;
         }
-
-        // Clear old results
         revenueReportTableModel.setRowCount(0);
-
-        // Add new results
         if (data != null) {
             for (RestaurantRevenueData row : data) {
                 revenueReportTableModel.addRow(new Object[]{
@@ -734,37 +1142,14 @@ public class AdminView extends JFrame {
         }
     }
 
-    /**
-     * Returns the main JPanel which acts as a container for different views
-     *
-     * @return The main JPanel of the view.
-     */
-    public JPanel getMainPanel() {
-        return mainPanel;
-    }
+    public JPanel getMainPanel() { return mainPanel; }
+    public CardLayout getCardLayout() { return cardLayout; }
 
-    /**
-     * Returns the CardLayout manager used by the main panel to switch between different views.
-     *
-     * @return The CardLayout instance.
-     */
-    public CardLayout getCardLayout() {
-        return cardLayout;
-    }
-
-    /**
-     * Gets the selected restaurant name from the feedback panel's JComboBox.
-     * @return The selected restaurant name.
-     */
     public String getFeedbackSelectedRestaurant() {
         Object item = feedbackRestaurantComboBox.getSelectedItem();
         return (item != null) ? item.toString() : "[Select One]";
     }
 
-    /**
-     * Populates the restaurant selection JComboBox on the feedback panel.
-     * @param restaurantNames An ArrayList of restaurant names.
-     */
     public void populateFeedbackRestaurantComboBox(ArrayList<String> restaurantNames) {
         if (feedbackRestaurantComboBox == null) return;
         feedbackRestaurantComboBox.removeAllItems();
@@ -774,11 +1159,6 @@ public class AdminView extends JFrame {
         }
     }
 
-    /**
-     * Updates all components on the feedback panel with new data.
-     * If data is null, it clears the panel.
-     * @param data The complete RestaurantFeedbackReport DTO.
-     */
     public void updateFeedbackReportPanel(RestaurantFeedbackReport data) {
         if (data == null) {
             updateOverallRatingLabel(0.0);
@@ -802,7 +1182,7 @@ public class AdminView extends JFrame {
 
     private void updateMenuPopularityTable(ArrayList<MenuItemPopularityData> items) {
         if (menuPopularityTableModel == null) return;
-        menuPopularityTableModel.setRowCount(0); // Clear old data
+        menuPopularityTableModel.setRowCount(0);
         if (items != null) {
             for (MenuItemPopularityData item : items) {
                 menuPopularityTableModel.addRow(new Object[]{
@@ -815,11 +1195,32 @@ public class AdminView extends JFrame {
 
     private void updateCommentsTable(ArrayList<String> comments) {
         if (commentsTableModel == null) return;
-        commentsTableModel.setRowCount(0); // Clear old data
+        commentsTableModel.setRowCount(0);
         if (comments != null) {
             for (String comment : comments) {
-                commentsTableModel.addRow(new Object[]{ comment });
+                commentsTableModel.addRow(new Object[]{comment});
             }
+        }
+    }
+
+    /*
+     * Simple FoodItem class so AdminView.FoodItem compiles
+     */
+    public static class FoodItem {
+        private String name;
+        private double price;
+
+        public FoodItem(String name, double price) {
+            this.name = name;
+            this.price = price;
+        }
+
+        public String getName() { return name; }
+        public double getPrice() { return price; }
+
+        @Override
+        public String toString() {
+            return name + " - P" + String.format("%.2f", price);
         }
     }
 }
