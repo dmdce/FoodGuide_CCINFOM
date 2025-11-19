@@ -54,12 +54,6 @@ public class FoodDataBase {
                     "FROM " + FOOD_MENU_TABLE + " " +
                     "WHERE " + FOOD_ALIAS_COL + " = ? AND " + RESTAURANT_ID_COL + " = ?";
 
-    // --- FOOD TABLE (for inserting new dishes) ---
-    private static final String FOOD_TABLE = "food";
-    private static final String FOOD_NAME_COL = "food_name";
-    private static final String ORIGIN_ID_COL = "origin_id";
-    private static final String FOOD_EVENT_ID_COL = "food_event_id";
-
     // --- TRANSACTION, ORDER, and RATING TABLES ---
     private static final String TRANSACTION_TABLE = "food_transaction";
     private static final String TRANSACTION_ID_COL = "food_transaction_id";
@@ -85,27 +79,40 @@ public class FoodDataBase {
                     "VALUES (?, ?, ?, ?, ?, ?)";
 
     // --- RESERVATION TABLE ---
-    private static final String RESERVATION_TABLE = "food_reservation";
+    private static final String FR = "fr";
+    private static final String FOOD_RESERVATION_TABLE = "food_reservation";
+    private static final String FOOD_RESERVATION_ID_COL = "food_reservation_id";
+    private static final String FOOD_RESERVATION_DATE_COL = "reservation_date";
+    private static final String FOOD_RESERVATION_INITIAL_PRICE_COL = "initial_price";
     private static final String RESERVATION_INSERT_QUERY =
-            "INSERT INTO " + RESERVATION_TABLE +
+            "INSERT INTO " + FOOD_RESERVATION_TABLE +
                     " (restaurant_name, initial_price, food_user_id, reservation_date) " +
                     "VALUES (?, ?, ?, NOW())";
+
+    // --- FOR USING RESERVATION ---
+    private static final String RO = "ro";
+    private static final String RESERVATION_ORDER_TABLE = "reservation_order";
+    private static final String RESERVATION_ORDER_ID_COL = "reservation_order_id";
+    private static final String RESERVATION_ORDER_INSERT_QUERY =
+            "INSERT INTO " + RESERVATION_ORDER_TABLE +
+                    " (food_reservation_id, food_menu_id, quantity, food_id) " +
+                    "VALUES (?, ?, ?, ?)";
 
     // --- FOR FETCHING ALL USERS ---
     private static final String ALL_USERS_QUERY =
             "SELECT " + USER_ID_COL + ", " + USER_NAME_COL + ", " + USER_EMAIL_COL +
                     " FROM " + USER_TABLE + " ORDER BY " + USER_ID_COL + " ASC";
 
-    // --- NEW: FOR RESTAURANT RECOMMENDATION
+    // --- FOR RESTAURANT RECOMMENDATION ---
     private static final String FOOD_ADDRESS_ID_COL = "food_address_id";
     private static final String ORIGINS = "origin";
     private static final String ORIGIN_NAME = "name";
-    private static final String ALL_ORIGINS_QUERY =
-            "SELECT * FROM " + ORIGINS;
+    private static final String ALL_ORIGINS_QUERY = 
+        "SELECT * FROM " + ORIGINS;
     private static final String FOOD_EVENT = "food_event";
     private static final String FOOD_EVENT_NAME = "food_event_name";
-    private static final String FOOD_EVENT_NAME_QUERY =
-            "SELECT " + FOOD_EVENT_NAME + " FROM " + FOOD_EVENT;
+    private static final String FOOD_EVENT_NAME_QUERY = 
+        "SELECT " + FOOD_EVENT_NAME + " FROM " + FOOD_EVENT;
 
     private static final String REVENUE_REPORT_QUERY =
             "SELECT " +
@@ -143,7 +150,7 @@ public class FoodDataBase {
                     "WHERE " +
                     "    r." + RESTAURANT_NAME_COL + " = ? " +
                     "GROUP BY " +
-                    "    fm." + FOOD_MENU_ID_COL + ", fm." + FOOD_ALIAS_COL + " " +
+                    "    fm." + FOOD_MENU_ID_COL + ", fm." + FOOD_ALIAS_COL + " " + // Group by ID for accuracy
                     "ORDER BY " +
                     "    total_ordered DESC";
 
@@ -173,7 +180,7 @@ public class FoodDataBase {
     public boolean registerUser(String username, String email) {
         // First check if email already exists
         if (emailExists(email)) {
-            System.err.println("Registration failed: Email already exists.");
+            System.err.println("Error: Registration failed. Email already exists.");
             return false;
         }
 
@@ -434,7 +441,7 @@ public class FoodDataBase {
                     }
                 }
             }
-            try (PreparedStatement orderStmt = conn.prepareStatement(ORDER_INSERT_QUERY);
+            try (PreparedStatement orderStmt = conn.prepareStatement(RESERVATION_ORDER_INSERT_QUERY);
                  PreparedStatement menuIdStmt = conn.prepareStatement(FOOD_MENU_IDS_QUERY)) {
                 for (Map.Entry<FoodItem, Integer> entry : itemQuantities.entrySet()) {
                     FoodItem item = entry.getKey();
@@ -503,19 +510,21 @@ public class FoodDataBase {
                         RESTAURANT_NAME_COL + ", " + TRANSACTION_INITIAL_PRICE_COL + ", " +
                         TRANSACTION_PROMO_COL + ", " + TRANSACTION_FINAL_PRICE_COL + " " +
                         "FROM " + TRANSACTION_TABLE + " " +
-                        "WHERE " + USER_ID_COL + " = ? "
+                        "WHERE " + USER_ID_COL + " = ? " // Base filter is always the user
         );
 
+        // This list will hold the values for the prepared statement
         ArrayList<Object> parameters = new ArrayList<>();
         parameters.add(userId);
 
+        // Append filters if they are valid
         if (startDate != null && !startDate.trim().isEmpty()) {
             sql.append(" AND " + TRANSACTION_DATE_COL + " >= ?");
-            parameters.add(startDate);
+            parameters.add(startDate); // Assumes "yyyy-mm-dd" format
         }
         if (endDate != null && !endDate.trim().isEmpty()) {
             sql.append(" AND " + TRANSACTION_DATE_COL + " <= ?");
-            parameters.add(endDate + " 23:59:59");
+            parameters.add(endDate + " 23:59:59"); // Go to end of the day
         }
         if (restaurantName != null && !restaurantName.trim().isEmpty() && !restaurantName.equals("[All]")) {
             sql.append(" AND " + RESTAURANT_NAME_COL + " = ?");
@@ -523,10 +532,12 @@ public class FoodDataBase {
         }
         if (maxPrice != null && !maxPrice.trim().isEmpty()) {
             try {
+                // Validate that it's a number
                 double price = Double.parseDouble(maxPrice);
                 sql.append(" AND " + TRANSACTION_FINAL_PRICE_COL + " <= ?");
                 parameters.add(price);
             } catch (NumberFormatException e) {
+                // Invalid number, so we ignore this filter
                 System.err.println("Invalid max price format, ignoring filter: " + maxPrice);
             }
         }
@@ -537,20 +548,25 @@ public class FoodDataBase {
                 sql.append(" AND " + TRANSACTION_PROMO_COL + " = ?");
                 parameters.add(promoVal);
             } catch (NumberFormatException e) {
+                // Invalid number, so we ignore this filter
                 System.err.println("Invalid promo format, ignoring filter: " + promo);
             }
         }
 
+        // Add ordering
         sql.append(" ORDER BY " + TRANSACTION_DATE_COL + " DESC");
+        // --- End of Dynamic Query Building ---
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
+            // Set all the parameters we collected
             int paramIndex = 1;
             for (Object param : parameters) {
                 stmt.setObject(paramIndex++, param);
             }
 
+            // Execute the query
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     transactions.add(new TransactionData(
@@ -570,6 +586,244 @@ public class FoodDataBase {
 
         return transactions;
     }
+
+    /**
+     * Searches the database for reservations matching the given filters.
+     * @return An ArrayList of ReservationData objects.
+     */
+    public ArrayList<ReservationData> getReservationHistory(Integer userId) {
+        ArrayList<ReservationData> reservations = new ArrayList<>();
+
+        // --- Dynamic Query Building ---
+        StringBuilder sql = new StringBuilder(
+                "SELECT " + RO + "." + RESERVATION_ORDER_ID_COL + ", " + FR + "." + FOOD_RESERVATION_DATE_COL + ", " +
+                        FR + "." + RESTAURANT_NAME_COL + ", " + FR + "." + FOOD_RESERVATION_INITIAL_PRICE_COL + " " +
+                        "FROM " + RESERVATION_ORDER_TABLE + " " + RO + " " +
+                                "JOIN " + FOOD_RESERVATION_TABLE + " " + FR + " " +
+                                "ON " + RO + "." + FOOD_RESERVATION_ID_COL + " = " + FR + "." + FOOD_RESERVATION_ID_COL + " " +
+                        "WHERE " + FR + "." + USER_ID_COL + " = ? " // Base filter is always the user
+        );
+
+        // This list will hold the values for the prepared statement
+        ArrayList<Object> parameters = new ArrayList<>();
+        parameters.add(userId);
+
+        // Add ordering
+        sql.append(" ORDER BY " + FR + "." + FOOD_RESERVATION_DATE_COL + " DESC");
+        // --- End of Dynamic Query Building ---
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            // Set all the parameters we collected
+            int paramIndex = 1;
+            for (Object param : parameters) {
+                stmt.setObject(paramIndex++, param);
+            }
+
+            // Execute the query
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    reservations.add(new ReservationData(
+                            rs.getInt(RO + "." + RESERVATION_ORDER_ID_COL),
+                            rs.getTimestamp(FR + "." + FOOD_RESERVATION_DATE_COL),
+                            rs.getString(FR + "." + RESTAURANT_NAME_COL),
+                            rs.getDouble(FR + "." + FOOD_RESERVATION_INITIAL_PRICE_COL)
+                    ));
+                }
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return reservations;
+    }
+
+    public boolean convertReservationToTransaction(
+            int reservationId,
+            Integer promoId,
+            double finalPrice,
+            int quality,
+            int authenticity,
+            double overallRating,
+            String comments
+    ) {
+        Connection conn = null;
+
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. FETCH RESERVATION HEADER
+            String headerSql =
+                    "SELECT restaurant_name, initial_price, food_user_id " +
+                            "FROM food_reservation WHERE food_reservation_id = ?";
+
+            String restaurantName = null;
+            double initialPrice = 0;
+            int userId = 0;
+
+            try (PreparedStatement stmt = conn.prepareStatement(headerSql)) {
+                stmt.setInt(1, reservationId);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) throw new SQLException("Reservation not found.");
+
+                    restaurantName = rs.getString("restaurant_name");
+                    initialPrice = rs.getDouble("initial_price");
+                    userId = rs.getInt("food_user_id");
+                }
+            }
+
+            // 2. LOOK UP RESTAURANT ID
+            int restaurantId = -1;
+            try (PreparedStatement stmt = conn.prepareStatement(RESTAURANT_ID_QUERY)) {
+                stmt.setString(1, restaurantName);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) restaurantId = rs.getInt("restaurant_id");
+                    else throw new SQLException("Restaurant not found.");
+                }
+            }
+
+            // 3. INSERT INTO FOOD_TRANSACTION
+            int transactionId = -1;
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    TRANSACTION_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
+
+                stmt.setString(1, restaurantName);
+
+                if (promoId == null || promoId == -1)
+                    stmt.setNull(2, java.sql.Types.INTEGER);
+                else
+                    stmt.setInt(2, promoId);
+
+                stmt.setDouble(3, finalPrice);
+                stmt.setDouble(4, initialPrice);
+                stmt.setInt(5, userId);
+
+                stmt.executeUpdate();
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) transactionId = rs.getInt(1);
+                }
+            }
+
+            // 4. FETCH RESERVATION ITEMS
+            String itemsSql =
+                    "SELECT food_menu_id, quantity, food_id " +
+                            "FROM reservation_order WHERE food_reservation_id = ?";
+
+            ArrayList<int[]> items = new ArrayList<>();
+
+            try (PreparedStatement stmt = conn.prepareStatement(itemsSql)) {
+                stmt.setInt(1, reservationId);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    items.add(new int[] {
+                            rs.getInt("food_menu_id"),
+                            rs.getInt("quantity"),
+                            rs.getInt("food_id")
+                    });
+                }
+            }
+
+            // 5. INSERT ITEMS INTO FOOD_ORDER
+            try (PreparedStatement stmt = conn.prepareStatement(ORDER_INSERT_QUERY)) {
+                for (int[] item : items) {
+                    stmt.setInt(1, transactionId);
+                    stmt.setInt(2, item[0]);
+                    stmt.setInt(3, item[1]);
+                    stmt.setInt(4, item[2]);
+                    stmt.addBatch();
+                }
+                stmt.executeBatch();
+            }
+
+            // 6. INSERT RATING
+            try (PreparedStatement stmt = conn.prepareStatement(RATING_INSERT_QUERY)) {
+                stmt.setInt(1, transactionId);
+                stmt.setInt(2, restaurantId);
+                stmt.setString(3, comments);
+                stmt.setInt(4, quality);
+                stmt.setInt(5, authenticity);
+                stmt.setDouble(6, overallRating);
+                stmt.executeUpdate();
+            }
+
+            // 7. DELETE OLD RESERVATION ROWS
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "DELETE FROM reservation_order WHERE food_reservation_id = ?")) {
+                stmt.setInt(1, reservationId);
+                stmt.executeUpdate();
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "DELETE FROM food_reservation WHERE food_reservation_id = ?")) {
+                stmt.setInt(1, reservationId);
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (conn != null)
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
+        } finally {
+            if (conn != null)
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+        }
+    }
+
+    public ReservationPriceData getReservationHeader(int reservationId) {
+        String query = "SELECT reservation_id, initial_price FROM food_reservation WHERE reservation_id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, reservationId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new ReservationPriceData(
+                        rs.getInt("reservation_id"),
+                        rs.getDouble("initial_price")
+                );
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public double getPromoDiscount(int promoId) {
+        String query = "SELECT percentage_off FROM food_promo WHERE food_promo_id = ?";
+
+        Connection conn;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setInt(1, promoId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getDouble("percentage_off");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return 0;
+    }
+
+
+
 
     /**
      * Fetches a list of all registered users from the database.
@@ -597,8 +851,8 @@ public class FoodDataBase {
     }
 
     /**
-     * Fetches a list of all food origins (names only) from the database.
-     * Used by the recommendation feature.
+     * Fetches a list of all food origins from the database.
+     * @return An ArrayList of Strings containing food origins
      */
     public ArrayList<String> fetchOriginNames() {
         ArrayList<String> origins = new ArrayList<>();
@@ -616,10 +870,10 @@ public class FoodDataBase {
         }
         return origins;
     }
-
+    
     /**
-     * Fetches a list of all food event names (names only) from the database.
-     * Used by the recommendation feature.
+     * Fetches a list of all food origins from the database.
+     * @return An ArrayList of Strings containing food origins
      */
     public ArrayList<String> fetchFoodEventNames() {
         ArrayList<String> events = new ArrayList<>();
@@ -638,442 +892,30 @@ public class FoodDataBase {
         return events;
     }
 
-    // --------------------------------------------------------------------
-    // NEW: insertNewDish for Admin "Log a New Dish"
-    // --------------------------------------------------------------------
-
-    /**
-     * Inserts a brand new dish into the database:
-     *  1. Finds or creates origin and food_event
-     *  2. Inserts into food table
-     *  3. Inserts into food_menu for the selected restaurant with alias + price
-     *
-     * @param foodAlias      Dish name / alias
-     * @param price          Price for this restaurant
-     * @param restaurantName Restaurant where this dish belongs
-     * @param originName     Origin name (can be null/empty)
-     * @param eventName      Food event name (can be null/empty)
-     * @return true if everything was inserted successfully, false otherwise
-     */
-    public boolean insertNewDish(String foodAlias,
-                                 double price,
-                                 String restaurantName,
-                                 String originName,
-                                 String eventName) {
-        Connection conn = null;
-
-        try {
-            conn = getConnection();
-            conn.setAutoCommit(false);
-
-            // 1. Get restaurant_id from restaurantName
-            int restaurantId;
-            try (PreparedStatement restStmt = conn.prepareStatement(RESTAURANT_ID_QUERY)) {
-                restStmt.setString(1, restaurantName);
-                try (ResultSet rs = restStmt.executeQuery()) {
-                    if (!rs.next()) {
-                        throw new SQLException("Restaurant not found: " + restaurantName);
-                    }
-                    restaurantId = rs.getInt(RESTAURANT_ID_COL);
-                }
-            }
-
-            // 2. Get or create origin_id
-            Integer originId = null;
-            if (originName != null && !originName.trim().isEmpty()) {
-                String findOriginSql = "SELECT origin_id FROM origin WHERE name = ?";
-                try (PreparedStatement findOrigin = conn.prepareStatement(findOriginSql)) {
-                    findOrigin.setString(1, originName);
-                    try (ResultSet rs = findOrigin.executeQuery()) {
-                        if (rs.next()) {
-                            originId = rs.getInt("origin_id");
-                        }
-                    }
-                }
-
-                if (originId == null) {
-                    String insertOriginSql = "INSERT INTO origin (name) VALUES (?)";
-                    try (PreparedStatement insOrigin = conn.prepareStatement(insertOriginSql, Statement.RETURN_GENERATED_KEYS)) {
-                        insOrigin.setString(1, originName);
-                        insOrigin.executeUpdate();
-                        try (ResultSet keys = insOrigin.getGeneratedKeys()) {
-                            if (keys.next()) {
-                                originId = keys.getInt(1);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 3. Get or create food_event_id
-            Integer eventId = null;
-            if (eventName != null && !eventName.trim().isEmpty()) {
-                String findEventSql = "SELECT food_event_id FROM food_event WHERE food_event_name = ?";
-                try (PreparedStatement findEvent = conn.prepareStatement(findEventSql)) {
-                    findEvent.setString(1, eventName);
-                    try (ResultSet rs = findEvent.executeQuery()) {
-                        if (rs.next()) {
-                            eventId = rs.getInt("food_event_id");
-                        }
-                    }
-                }
-
-                if (eventId == null) {
-                    String insertEventSql = "INSERT INTO food_event (food_event_name, description) VALUES (?, NULL)";
-                    try (PreparedStatement insEvent = conn.prepareStatement(insertEventSql, Statement.RETURN_GENERATED_KEYS)) {
-                        insEvent.setString(1, eventName);
-                        insEvent.executeUpdate();
-                        try (ResultSet keys = insEvent.getGeneratedKeys()) {
-                            if (keys.next()) {
-                                eventId = keys.getInt(1);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 4. Insert into food table
-            int foodId;
-            String insertFoodSql =
-                    "INSERT INTO " + FOOD_TABLE +
-                            " (" + FOOD_NAME_COL + ", " + ORIGIN_ID_COL + ", " + FOOD_EVENT_ID_COL + ") " +
-                            "VALUES (?, ?, ?)";
-
-            try (PreparedStatement foodStmt = conn.prepareStatement(insertFoodSql, Statement.RETURN_GENERATED_KEYS)) {
-                foodStmt.setString(1, foodAlias);
-
-                if (originId == null) {
-                    foodStmt.setNull(2, java.sql.Types.INTEGER);
-                } else {
-                    foodStmt.setInt(2, originId);
-                }
-
-                if (eventId == null) {
-                    foodStmt.setNull(3, java.sql.Types.INTEGER);
-                } else {
-                    foodStmt.setInt(3, eventId);
-                }
-
-                int rows = foodStmt.executeUpdate();
-                if (rows == 0) {
-                    throw new SQLException("Inserting food failed, no rows affected.");
-                }
-
-                try (ResultSet keys = foodStmt.getGeneratedKeys()) {
-                    if (!keys.next()) {
-                        throw new SQLException("Inserting food failed, no ID obtained.");
-                    }
-                    foodId = keys.getInt(1);
-                }
-            }
-
-            // 5. Insert into food_menu for this restaurant
-            String insertMenuSql =
-                    "INSERT INTO " + FOOD_MENU_TABLE +
-                            " (" + FOOD_ID_COL + ", " + RESTAURANT_ID_COL + ", " + FOOD_ALIAS_COL + ", " + PRICE_COL + ") " +
-                            "VALUES (?, ?, ?, ?)";
-
-            try (PreparedStatement menuStmt = conn.prepareStatement(insertMenuSql)) {
-                menuStmt.setInt(1, foodId);
-                menuStmt.setInt(2, restaurantId);
-                menuStmt.setString(3, foodAlias);
-                menuStmt.setDouble(4, price);
-                menuStmt.executeUpdate();
-            }
-
-            conn.commit();
-            System.out.println("New dish inserted: " + foodAlias + " @ " + restaurantName);
-            return true;
-
-        } catch (Exception e) {
-            System.err.println("Error in insertNewDish: " + e.getMessage());
-            e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            return false;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    // --------------------------------------------------------------------
-    // 💡 YOUR NEW METHODS: full CRUD for food_event and origin
-    // --------------------------------------------------------------------
-
-    /**
-     * Gets all food events from the MySQL database.
-     * @return ArrayList of String arrays containing [id, name, description]
-     */
-    public ArrayList<String[]> getAllFoodEvents() {
-        ArrayList<String[]> events = new ArrayList<>();
-        String sql = "SELECT food_event_id, food_event_name, description FROM food_event ORDER BY food_event_id";
-
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                String[] event = new String[3];
-                event[0] = String.valueOf(rs.getInt("food_event_id"));
-                event[1] = rs.getString("food_event_name");
-                String desc = rs.getString("description");
-                event[2] = (desc != null) ? desc : "";
-                events.add(event);
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("SQL Error getting food events: " + e.getMessage());
-            e.printStackTrace();
-        } catch (Exception e) {
-            System.err.println("Unexpected error getting food events: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return events;
-    }
-
-    /**
-     * Adds a new food event to the MySQL database.
-     * @param eventName The name of the food event.
-     * @param description The description of the food event.
-     * @return true if insertion was successful, false otherwise.
-     */
-    public boolean addFoodEvent(String eventName, String description) {
-        String sql = "INSERT INTO food_event (food_event_name, description) VALUES (?, ?)";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, eventName);
-            if (description == null || description.trim().isEmpty()) {
-                stmt.setNull(2, java.sql.Types.VARCHAR);
-            } else {
-                stmt.setString(2, description);
-            }
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("SQL Error adding food event: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } catch (Exception e) {
-            System.err.println("Unexpected error adding food event: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
-     * Updates an existing food event in the MySQL database.
-     * @param eventId The ID of the food event to update.
-     * @param eventName The new name of the food event.
-     * @param description The new description of the food event.
-     * @return true if update was successful, false otherwise.
-     */
-    public boolean updateFoodEvent(int eventId, String eventName, String description) {
-        String sql = "UPDATE food_event SET food_event_name = ?, description = ? WHERE food_event_id = ?";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, eventName);
-            if (description == null || description.trim().isEmpty()) {
-                stmt.setNull(2, java.sql.Types.VARCHAR);
-            } else {
-                stmt.setString(2, description);
-            }
-            stmt.setInt(3, eventId);
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("SQL Error updating food event: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } catch (Exception e) {
-            System.err.println("Unexpected error updating food event: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
-     * Deletes a food event from the MySQL database.
-     * @param eventId The ID of the food event to delete.
-     * @return true if deletion was successful, false otherwise.
-     */
-    public boolean deleteFoodEvent(int eventId) {
-        String deleteSql = "DELETE FROM food_event WHERE food_event_id = ?";
-
-        try (Connection conn = getConnection();
-             PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
-
-            deleteStmt.setInt(1, eventId);
-            int rowsAffected = deleteStmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("SQL Error deleting food event: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } catch (Exception e) {
-            System.err.println("Unexpected error deleting food event: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
-     * Gets all origins from the MySQL database.
-     * @return ArrayList of String arrays containing [id, name]
-     */
-    public ArrayList<String[]> getAllOrigins() {
-        ArrayList<String[]> origins = new ArrayList<>();
-        String sql = "SELECT origin_id, name FROM origin ORDER BY origin_id";
-
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                String[] origin = new String[2];
-                origin[0] = String.valueOf(rs.getInt("origin_id"));
-                origin[1] = rs.getString("name");
-                origins.add(origin);
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("SQL Error getting origins: " + e.getMessage());
-            e.printStackTrace();
-        } catch (Exception e) {
-            System.err.println("Unexpected error getting origins: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return origins;
-    }
-
-    /**
-     * Adds a new origin to the MySQL database.
-     * @param originName The name of the origin (place/country).
-     * @return true if insertion was successful, false otherwise.
-     */
-    public boolean addOrigin(String originName) {
-        String sql = "INSERT INTO origin (name) VALUES (?)";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, originName);
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("SQL Error adding origin: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } catch (Exception e) {
-            System.err.println("Unexpected error adding origin: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
-     * Updates an existing origin in the MySQL database.
-     * @param originId The ID of the origin to update.
-     * @param originName The new name of the origin.
-     * @return true if update was successful, false otherwise.
-     */
-    public boolean updateOrigin(int originId, String originName) {
-        String sql = "UPDATE origin SET name = ? WHERE origin_id = ?";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, originName);
-            stmt.setInt(2, originId);
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("SQL Error updating origin: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } catch (Exception e) {
-            System.err.println("Unexpected error updating origin: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
-     * Deletes an origin from the MySQL database.
-     * @param originId The ID of the origin to delete.
-     * @return true if deletion was successful, false otherwise.
-     */
-    public boolean deleteOrigin(int originId) {
-        String deleteSql = "DELETE FROM origin WHERE origin_id = ?";
-
-        try (Connection conn = getConnection();
-             PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
-
-            deleteStmt.setInt(1, originId);
-            int rowsAffected = deleteStmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("SQL Error deleting origin: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } catch (Exception e) {
-            System.err.println("Unexpected error deleting origin: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // --------------------------------------------------------------------
-    // END of your added CRUD methods
-    // --------------------------------------------------------------------
-
     public ArrayList<RestaurantData> fetchRestaurantFromOriginAndEvent(
             ArrayList<String> origins,
             ArrayList<String> events
-    ) {
+            ) {
         ArrayList<RestaurantData> restaurants = new ArrayList<>();
 
+        //Build where in string for origins:
         String originsList = origins.stream()
-                .map(o -> "'" + o + "'")
-                .collect(Collectors.joining(", ", "(", ")"));
+            .map(o -> "'" + o + "'")
+            .collect(Collectors.joining(", ", "(", ")"));
 
         String eventsList = events.stream()
-                .map(e -> "'" + e + "'")
-                .collect(Collectors.joining(", ", "(", ")"));
+            .map(e -> "'" + e + "'")
+            .collect(Collectors.joining(", ", "(", ")"));
 
-        final String QUERY =
-                "SELECT DISTINCT r.* FROM restaurant r " +
-                        "JOIN food_menu fm ON fm.restaurant_id = r.restaurant_id " +
-                        "JOIN food f ON f.food_id = fm.food_id " +
-                        "LEFT JOIN origin o ON f.origin_id = o.origin_id " +
-                        "LEFT JOIN food_event fe ON f.food_event_id = fe.food_event_id " +
-                        "WHERE o.name IN " + originsList + " " +
-                        "AND fe.food_event_name IN " + eventsList;
+        //Query
+        final String QUERY = 
+            "SELECT DISTINCT r.* FROM restaurant r " +
+            "JOIN food_menu fm ON fm.restaurant_id = r.restaurant_id " +
+            "JOIN food f ON f.food_id = fm.food_id " +
+            "LEFT JOIN origin o ON f.origin_id = o.origin_id " +
+            "LEFT JOIN food_event fe ON f.food_event_id = fe.food_event_id " +
+            "WHERE o.name IN " + originsList + " " +
+            "AND fe.food_event_name IN " + eventsList;
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(QUERY);
@@ -1081,13 +923,13 @@ public class FoodDataBase {
 
             while (rs.next()) {
                 restaurants.add(new RestaurantData(
-                        rs.getInt(RESTAURANT_ID_COL),
-                        rs.getInt(FOOD_ADDRESS_ID_COL),
-                        rs.getString(RESTAURANT_NAME_COL),
-                        rs.getString(RESTAURANT_DESCRIPTION_COL),
-                        rs.getInt(RESTAURANT_NUM_OF_VISITS_COL),
-                        rs.getFloat(RESTAURANT_TOTAL_RATING_COL)
-                ));
+                            rs.getInt(RESTAURANT_ID_COL),
+                            rs.getInt(FOOD_ADDRESS_ID_COL),
+                            rs.getString(RESTAURANT_NAME_COL),
+                            rs.getString(RESTAURANT_DESCRIPTION_COL),
+                            rs.getInt(RESTAURANT_NUM_OF_VISITS_COL),
+                            rs.getFloat(RESTAURANT_TOTAL_RATING_COL)
+                            ));
             }
 
         } catch (SQLException | ClassNotFoundException e) {
@@ -1144,9 +986,11 @@ public class FoodDataBase {
 
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
+            // Return empty data on failure
             return new RestaurantFeedbackReport(0.0, new ArrayList<>(), new ArrayList<>());
         }
 
+        // Return the complete DTO
         return new RestaurantFeedbackReport(overallRating, menuPopularity, comments);
     }
 
