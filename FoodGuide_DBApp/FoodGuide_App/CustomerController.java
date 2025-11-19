@@ -15,6 +15,7 @@ public class CustomerController implements ActionListener {
     private CustomerView view;
 
     // For User Details
+    private Integer userId;
     private ArrayList<String> signInInput;
     private String username;
     private String email;
@@ -60,7 +61,7 @@ public class CustomerController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         // Get the logged-in user ID for cases that need it
-        Integer userId = model.getLoggedInUserId();
+        userId = model.getLoggedInUserId();
 
         switch (e.getActionCommand()) {
             // ------------------ SIGN IN Panel component ------------------
@@ -130,10 +131,15 @@ public class CustomerController implements ActionListener {
                 break;
 
             // ------------------ TRANSACTION CREATION (Refactored to helper) Panel component ------------------
-            case "RESTAURANT_SELECTED", "RES_RESTAURANT_SELECTED", "CREATE TRANSACTION", "RESERVE TRANSACTION", "USE RESERVATION",
+            case "RESTAURANT_SELECTED", "RES_RESTAURANT_SELECTED", "CREATE TRANSACTION", "RESERVE TRANSACTION",
                  "ADD ITEM", "ADD RESERVE ITEM", "CALCULATE TOTAL", "CALCULATE RESERVATION TOTAL", "PROCEED TO RATING",
                  "CALCULATE_RATING", "GO BACK FOOD RATING", "GO BACK TRANSACTION", "GO BACK RESERVATION", "CANCEL USE RESERVATION":
                 handleTransactionEvents(e); // Helper function for clarity
+                break;
+
+            case "USE RESERVATION", "PROCEED ORDER RESERVATION", "CALCULATE OVERALL RESERVATION",
+                 "SUBMIT RATING RESERVATION", "GO BACK RATING RESERVATION":
+                handleUseReservationEvents(e); // Helper function for clarity
                 break;
 
             // ------------------ Reservation panel component ------------------
@@ -368,11 +374,6 @@ public class CustomerController implements ActionListener {
                 view.getCardLayout().show(view.getMainPanel(), "RESERVATION_CREATE");
                 break;
 
-            case "USE RESERVATION":
-                System.err.println("DEBUG: USE RESERVATION");
-                view.getCardLayout().show(view.getMainPanel(), "USE_RESERVATION_MENU");
-                break;
-
             case "ADD ITEM":
                 selectedItem = (FoodItem) view.getFoodItemComboBox().getSelectedItem();
                 if (selectedItem == null) return;
@@ -463,6 +464,103 @@ public class CustomerController implements ActionListener {
         }
     }
 
+    private void handleUseReservationEvents(ActionEvent e) {
+        switch (e.getActionCommand()) {
+            case "USE RESERVATION":
+                if (userId == null) {
+                    JOptionPane.showMessageDialog(view, "Error: You are not logged in.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                searchReservationHistory(userId);
+
+                view.getCardLayout().show(view.getMainPanel(), "USE_RESERVATION_MENU");
+                break;
+
+            case "PROCEED ORDER RESERVATION":
+                String id = view.getSelectedReservationID();
+
+                if (id == null) {
+                    JOptionPane.showMessageDialog(view, "Please choose a reservation first.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Switch View panel
+                view.showRatingPanel();
+
+                break;
+
+            case "CALCULATE OVERALL RESERVATION":
+                view.updateOverallRating();
+                break;
+
+            case "SUBMIT RATING RESERVATION": {
+
+                // 1. Extract needed values
+                int reservationId = Integer.parseInt(view.getSelectedReservationID());
+
+                Integer promoId = null;
+                String promoText = view.getPromoCode();
+
+                // convert promo code to integer or null
+                if (promoText != null && !promoText.trim().isEmpty()) {
+                    try {
+                        promoId = Integer.parseInt(promoText.trim());
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(view,
+                                "Promo code must be a number.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                }
+
+                // 2. Compute final price (you must define how final price is computed)
+                double finalPrice = model.getAm().computeFinalPrice(
+                        reservationId,
+                        promoId
+                );
+
+                // 3. Fetch rating values from View
+                int quality = view.getFoodQuality();
+                int authenticity = view.getAuthenticity();
+                double overallRating = view.getOverallRating();
+                String comments = view.getComments();
+
+                // 4. Call model
+                boolean success = model.getAm().finalizeReservation(
+                        reservationId,
+                        promoId,
+                        finalPrice,
+                        quality,
+                        authenticity,
+                        overallRating,
+                        comments
+                );
+
+                // 5. Result dialog
+                if (success) {
+                    JOptionPane.showMessageDialog(view,
+                            "Reservation converted into a final transaction!",
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                    // Optional: Return to reservation list
+                    view.showReservationPanel();
+                } else {
+                    JOptionPane.showMessageDialog(view,
+                            "Error finalizing reservation.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            break;
+
+
+            case "GO BACK RATING RESERVATION":
+                view.showReservationPanel();
+                break;
+        }
+    }
+
     /**
      * Gets filter values from the view, calls the model, and updates the table.
      * @param userId The ID of the logged-in user.
@@ -482,6 +580,16 @@ public class CustomerController implements ActionListener {
 
         // 3. Update the view's table with the results
         view.updateHistoryTable(transactions);
+    }
+
+    /**
+     * Gets filter values from the view, calls the model, and updates the table.
+     * @param userId The ID of the logged-in user.
+     */
+    private void searchReservationHistory(Integer userId) {
+        ArrayList<ReservationData> reservations = model.getAm().fetchReservationHistory(userId);
+
+        view.updateReservationHistoryTable(reservations);
     }
 
     /**

@@ -55,6 +55,16 @@ public class CustomerView extends JFrame {
 
     // Use Reservation Panel components
     private ArrayList<JButton> useReservationButtonList = new ArrayList<>();
+    private DefaultTableModel reservationHistoryTableModel;
+    private JTable reservationHistoryTable;
+    private String selectedReservationID = null;
+
+    private JPanel ratingPanelReservation;
+    private JComboBox<Integer> qualityBoxReservation;
+    private JComboBox<Integer> authBoxReservation;
+    private JTextField promoCodeFieldReservation;
+    private JTextArea commentsAreaReservation;
+    private JLabel overallLabelReservation;
 
     // Rating Panel components
     private ArrayList<JButton> ratingButtonList = new ArrayList<>();
@@ -103,6 +113,7 @@ public class CustomerView extends JFrame {
         transactionPanel = createTransactionPanel();
         reservationPanel = createReservationPanel();
         useReservationPanel = createUseReservationPanel();
+        ratingPanelReservation = createRatingReservationPanel();
         foodRatingPanel = createFoodRatingPanel();
         transactionHistoryPanel = createTransactionHistoryPanel();
         restaurantRecommendationPanel = createRestaurantRecommendationPanel();
@@ -113,6 +124,7 @@ public class CustomerView extends JFrame {
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
         mainPanel.add(reservationPanel, "RESERVATION_CREATE");
         mainPanel.add(useReservationPanel, "USE_RESERVATION_MENU");
+        mainPanel.add(ratingPanelReservation, "RATING");
         mainPanel.add(foodRatingPanel, "RATING_MENU");
         mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
         mainPanel.add(restaurantRecommendationPanel, "RESTAURANT_RECOMMENDATION");
@@ -120,7 +132,7 @@ public class CustomerView extends JFrame {
         add(mainPanel);
 
         setVisible(true);
-        setResizable(true); // Allow resizing TODO: SET TO false BEFORE SUBMISSION
+        setResizable(false); // Allow resizing
     }
 
     /**
@@ -459,7 +471,6 @@ public class CustomerView extends JFrame {
         return panel;
     }
 
-    // TODO BY DARRYL
     private JPanel createUseReservationPanel() {
         // Main panel
         JPanel panel = new JPanel(new BorderLayout(10, 10));
@@ -473,11 +484,67 @@ public class CustomerView extends JFrame {
 
         panel.add(titlePanel, BorderLayout.NORTH);
 
+        // Display reservations to a table
+        JPanel reservedPanel = new JPanel(new GridBagLayout());
+        reservedPanel.setBorder(BorderFactory.createTitledBorder("Reserved Orders"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 5, 2, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        String[] columnNames = {"ID", "Date", "Restaurant", "Initial Price"};
+        reservationHistoryTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        reservationHistoryTable = new JTable(reservationHistoryTableModel);
+
+        reservationHistoryTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        reservationHistoryTable.getSelectionModel().addListSelectionListener(event -> {
+            if (!event.getValueIsAdjusting()) {
+                int selectedRow = reservationHistoryTable.getSelectedRow();
+                if (selectedRow != -1) {
+                    // Extract row values
+                    String id = reservationHistoryTable.getValueAt(selectedRow, 0).toString();
+                    String date = reservationHistoryTable.getValueAt(selectedRow, 1).toString();
+                    String restaurant = reservationHistoryTable.getValueAt(selectedRow, 2).toString();
+                    String price = reservationHistoryTable.getValueAt(selectedRow, 3).toString();
+
+                    System.err.println("Selected row: " + id + ", " + restaurant);
+                }
+            }
+        });
+
+        reservationHistoryTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int row = reservationHistoryTable.getSelectedRow();
+                if (row != -1) {
+                    selectedReservationID = reservationHistoryTable.getValueAt(row, 0).toString();
+                }
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane(reservationHistoryTable);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 4; // Span all columns
+        gbc.fill = GridBagConstraints.BOTH; // Table fills both ways
+        gbc.weightx = 1.0; // Table cell gets full width
+        gbc.weighty = 1.0; // Make table take remaining vertical space
+        reservedPanel.add(scrollPane, gbc);
+
+        panel.add(reservedPanel, BorderLayout.CENTER);
 
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBackground(Color.decode("#2E5E19"));
         useReservationButtonList.clear();
+
+        JButton proceedButton = new JButton("PROCEED ORDER");
+        proceedButton.setActionCommand("PROCEED ORDER RESERVATION");
+        useReservationButtonList.add(proceedButton);
 
         JButton backButton = new JButton("CANCEL USAGE");
         backButton.setActionCommand("CANCEL USE RESERVATION");
@@ -492,9 +559,101 @@ public class CustomerView extends JFrame {
         return panel;
     }
 
+    public String getSelectedReservationID() {
+        return selectedReservationID;
+    }
+
+    private JPanel createRatingReservationPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5,5,5,5);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Promo Code
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(new JLabel("Promo Code:"), gbc);
+        gbc.gridx = 1;
+        promoCodeFieldReservation = new JTextField(10);
+        panel.add(promoCodeFieldReservation, gbc);
+
+        // Food Quality
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("Food Quality (1–5):"), gbc);
+        gbc.gridx = 1;
+        qualityBoxReservation = new JComboBox<>(new Integer[]{1,2,3,4,5});
+        panel.add(qualityBoxReservation, gbc);
+
+        // Authenticity
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(new JLabel("Authenticity (1–5):"), gbc);
+        gbc.gridx = 1;
+        authBoxReservation = new JComboBox<>(new Integer[]{1,2,3,4,5});
+        panel.add(authBoxReservation, gbc);
+
+        // Overall Rating
+        gbc.gridx = 0; gbc.gridy = 3;
+        panel.add(new JLabel("Overall Rating:"), gbc);
+        gbc.gridx = 1;
+        overallLabelReservation = new JLabel("N/A");
+        panel.add(overallLabelReservation, gbc);
+
+        // Comments
+        gbc.gridx = 0; gbc.gridy = 4;
+        panel.add(new JLabel("Comments:"), gbc);
+        gbc.gridx = 1;
+        commentsAreaReservation = new JTextArea(8, 20);
+        panel.add(new JScrollPane(commentsAreaReservation), gbc);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel();
+
+        JButton calcButton = new JButton("Calculate Overall");
+        calcButton.setActionCommand("CALCULATE OVERALL RESERVATION");
+
+        JButton submitButton = new JButton("Submit Final Rating");
+        submitButton.setActionCommand("SUBMIT RATING RESERVATION");
+
+        JButton backButton = new JButton("GO BACK");
+        backButton.setActionCommand("GO BACK RATING RESERVATION");
+
+        buttonPanel.add(calcButton);
+        buttonPanel.add(submitButton);
+        buttonPanel.add(backButton);
+
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
+        panel.add(buttonPanel, gbc);
+
+        ratingPanelReservation = panel;
+        return panel;
+    }
+
+    public void showReservationPanel() {
+        cardLayout.show(mainPanel, "USE_RESERVATION_MENU");
+    }
+
+    public void showRatingPanel() {
+        cardLayout.show(mainPanel, "RATING");
+    }
+
+    public void updateOverallRating() {
+        int q = (int) qualityBoxReservation.getSelectedItem();
+        int a = (int) authBoxReservation.getSelectedItem();
+
+        double mean = (q + a) / 2.0;
+        overallLabelReservation.setText(String.format("%.2f", mean));
+    }
+
+    public int getFoodQuality() { return (int) qualityBoxReservation.getSelectedItem(); }
+    public int getAuthenticity() { return (int) authBoxReservation.getSelectedItem(); }
+    public String getComments() { return commentsAreaReservation.getText(); }
+    public String getPromoCode() { return promoCodeFieldReservation.getText(); }
+    public double getOverallRating() {
+        try { return Double.parseDouble(overallLabelReservation.getText()); }
+        catch (Exception e) { return -1; }
+    }
+
     /**
      * Creates the panel for rating a food transaction.
-     * (Unchanged)
      */
     private JPanel createFoodRatingPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
@@ -1172,6 +1331,25 @@ public class CustomerView extends JFrame {
         }
     }
 
+    public void updateReservationHistoryTable(ArrayList<ReservationData> reservations) {
+        if (reservationHistoryTableModel == null) return;
+
+        // Clear old results
+        reservationHistoryTableModel.setRowCount(0);
+
+        // Add new results
+        if (reservations != null) {
+            for (ReservationData reservation : reservations) {
+                reservationHistoryTableModel.addRow(new Object[]{
+                        reservation.getReservationId(),
+                        reservation.getReservationDate(),
+                        reservation.getRestaurantName(),
+                        String.format("%.2f", reservation.getInitialPrice())
+                });
+            }
+        }
+    }
+
     /*
     * --------------------------------------------------------------------------------------------
     * LAYOUT AND BUTTON BACKBONE
@@ -1187,18 +1365,21 @@ public class CustomerView extends JFrame {
         mainPanel.remove(reservationPanel);
         mainPanel.remove(foodRatingPanel);
         mainPanel.remove(transactionHistoryPanel);
+        mainPanel.remove(useReservationPanel);
 
         userActionsPanel = createUserActionsPanel();
         transactionPanel = createTransactionPanel();
         reservationPanel = createReservationPanel();
         foodRatingPanel = createFoodRatingPanel();
         transactionHistoryPanel = createTransactionHistoryPanel();
+        useReservationPanel = createUseReservationPanel();
 
         mainPanel.add(userActionsPanel, "USER_ACTIONS_MENU");
         mainPanel.add(transactionPanel, "TRANSACTION_CREATE");
         mainPanel.add(reservationPanel, "RESERVATION_CREATE");
         mainPanel.add(foodRatingPanel, "RATING_MENU");
         mainPanel.add(transactionHistoryPanel, "HISTORY_VIEW");
+        mainPanel.add(useReservationPanel, "USE_RESERVATION_MENU");
 
         mainPanel.revalidate();
         mainPanel.repaint();
