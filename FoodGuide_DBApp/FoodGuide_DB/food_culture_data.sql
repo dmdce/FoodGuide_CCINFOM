@@ -6,20 +6,43 @@ NOTE:
 USE food_culture;
 
 /*
------------------------------------
-	food_event and origin tables
------------------------------------
+-----------------------------------------
+	food_user TABLE
+-----------------------------------------
+*/
+ALTER TABLE `food_user`
+AUTO_INCREMENT = 1;
+
+INSERT INTO `food_user` (`food_user_name`, `food_user_email`)
+VALUES
+('avram', 'avram_tiu@dlsu.edu.ph'),
+('darryl', 'darryl_esguerra@dlsu.edu.ph'),
+('selina', 'selina_chu@dlsu.edu.ph'),
+('nykko', 'nykko_vanguardia@dlsu.edu.ph'),
+('test1', 'test1@yahoo.com'),
+('test2', 'test2@gmail.com'),
+('test3', 'test3@dlsu.edu.ph'),
+('customer1', 'customer1@dlsu.edu.ph'),
+('customer2', 'customer2@deped.gov.ph'),
+('customer3', 'customer3@gmail.com');
+
+/*
+-----------------------------------------
+	food_event TABLE and origin TABLE
+-----------------------------------------
 */
 ALTER TABLE `origin`
 AUTO_INCREMENT = 1;
 
-INSERT INTO `origin` (name)
+INSERT INTO `origin` (`name`)
 VALUES
 ('Tagalog'),
 ('Kapampangan'),
 ('Cebuano'),
 ('Ilonggo'),
-('Filipino-Chinese');
+('Filipino-Chinese'),
+('Spanish'),
+('Non-Filipino');
 
 ALTER TABLE `food_event`
 AUTO_INCREMENT = 1;
@@ -30,7 +53,13 @@ VALUES
 ('Katyusha', 'Missiles Galore'),
 ('Redo of Healer', 'Trully the healer of all time'),
 ('Boku no Pico', 'Cuz why not'),
-('Ishuzoku Reviewer', 'Monster tag is very good');
+('Ishuzoku Reviewer', 'Monster tag is very good'),
+('Christmas', 'Jose Mari Chan is getting unfreezed'),
+('Lunar New Year', 'Love me some mooncakes'),
+('Valentines', 'Chuushite in Filipino'),
+('Summer', 'Jose Mari Chan is getting unfreezed'),
+('All Souls Day', 'Give Coca-cola and fried chicken to your beloved'),
+('Everyday', 'Nothing unusual');
 
 
 /*
@@ -109,7 +138,7 @@ INSERT INTO `food_culture`.`restaurant`(`food_address_id`,`restaurant_name`,`des
 
 /*
 -----------------------------------
-	food TABLE dummy values
+	food TABLE
 -----------------------------------
 */
 ALTER TABLE `food`
@@ -136,7 +165,27 @@ VALUES
 ('Minimum Search Tree',
 	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Ishuzoku Reviewer'),
     (SELECT `origin_id` FROM `origin` WHERE `name` = 'Filipino-Chinese')
-    );
+    ),
+('Schubligsilog',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Redo of Healer'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Filipino-Chinese')
+    ),
+('Pares',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Everyday'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+	),
+('Holiday Ham Breakfast',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Christmas'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Non-Filipino')
+	),
+('Lechong Paksiw',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Everyday'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+	),
+('Birthday Noodles',
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Lunar New Year'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Filipino-Chinese')
+	);
 
 /*
 -----------------------------------
@@ -177,29 +226,68 @@ VALUES
 	'Where is da lamb sauce',
     50,
     (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Friends and Neighbors Restaurant')
+),
+(
+	(SELECT `food_id` FROM `food` WHERE `food_name` = 'Schubligsilog'),
+	'Schublig with egg and rice',
+    100,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Friends and Neighbors Restaurant')
 );
 
 /*
 -----------------------------------
-	food_promo TABLE dummy values
+	food_promo TABLE
 -----------------------------------
 */
 ALTER TABLE `food_promo`
 AUTO_INCREMENT = 1;
 
 INSERT INTO food_promo (promo_code, percentage_off, promo_description)
-VALUES ('SAVE10', 0.10, '10% off your entire order');
+VALUES
+('SAVE10', 0.10, '10% off your entire order'),
+('SAVE20', 0.20, '20% off your entire order'),
+('SAVE30', 0.30, '30% off your entire order'),
+('SAVE40', 0.40, '40% off your entire order'),
+('SAVE5', 0.05, '5% off your entire order'),
+('SAVE15', 0.15, '15% off your entire order');
 
 -- this one is restaurant specific
 INSERT INTO food_promo (restaurant_id, promo_code, percentage_off, promo_description)
-VALUES (1, 'COFFEE15', 0.15, '15% off for Winikko Cafe And Catering');
-/*
+VALUES
+(1, 'COFFEE15', 0.15, '15% off for Winikko Cafe And Catering'),
+(3, 'SILOG20', 0.20, '10% off for Tapsilog dishes at Chachu Tapsilogan Sa Caloocan'),
+(8, 'PANC33T', 0.33, '33% off for Nanay''s Pancit Malabon'),
+(9, 'DELUXE10', 0.10, '10% off on exclusive dishes at Master Garden Filipino Specialty Restaurant');
 
+/*
 -----------------------------------
 	SELECT QUERIES FOR TESTING
 -----------------------------------
 */
-SELECT * FROM food_address;
-
+-- Reset tables (WARNING: CAN DELETE DATA, VERY DANGEROUS)
+DELETE FROM origin WHERE origin_id >= 6;
+DELETE FROM food_event WHERE food_event_id >= 6;
+DELETE FROM food WHERE food_id >= 6;
+DELETE FROM food_menu WHERE food_menu_id >= 6;
 DELETE FROM restaurant WHERE restaurant_id > 0;
+DELETE FROM food_user WHERE food_user_id > 4;
+
+-- Select tables
+SELECT * FROM origin;
+SELECT * FROM food_event;
+SELECT * FROM food;
+SELECT * FROM food_menu;
 SELECT * FROM restaurant;
+SELECT * FROM food_address;
+SELECT * FROM food_transaction;
+
+
+-- Other queries
+SELECT DISTINCT r.*
+FROM restaurant r
+JOIN food_menu fm ON fm.restaurant_id = r.restaurant_id
+JOIN food f ON f.food_id = fm.food_id
+LEFT JOIN origin o ON f.origin_id = o.origin_id
+LEFT JOIN food_event fe ON f.food_event_id = fe.food_event_id
+WHERE o.name IN ('Tagalog', 'Filipino-Chinese', 'Ilonggo')
+GROUP BY fm.food_menu_id;
