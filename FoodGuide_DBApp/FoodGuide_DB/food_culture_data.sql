@@ -49,11 +49,11 @@ AUTO_INCREMENT = 1;
 
 INSERT INTO  `food_event` (`food_event_name`, `description`)
 VALUES
-('Daily Fare', 'Common Food eaten on a day-to-day basis'),
-('Katyusha', 'Missiles Galore'),
-('Redo of Healer', 'Trully the healer of all time'),
-('Boku no Pico', 'Cuz why not'),
-('Ishuzoku Reviewer', 'Monster tag is very good'),
+('Fiesta sa Nayon', 'A major town or village festival celebrating a patron saint or local harvest.'),
+('Noche Buena', 'The traditional Christmas Eve feast and dinner.'),
+('Pasko', 'The general season and celebrations for Christmas in the Philippines.'),
+('Eid al-Fitr', 'The Islamic "Festival of Breaking the Fast" celebrated by Filipino Muslims.'),
+('Semana Santa', 'Holy Week observances, typically involving meatless meals.'),
 ('Christmas', 'Jose Mari Chan is getting unfreezed'),
 ('Lunar New Year', 'Love me some mooncakes'),
 ('Valentines', 'Chuushite in Filipino'),
@@ -147,27 +147,27 @@ auto_increment = 1;
 INSERT INTO `food` (`food_name`, `food_event_id`, `origin_id`)
 VALUES
 ('Itlog with Egg',
-	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Daily Fare'),
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Fiesta sa Nayon'),
     (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
     ),
 ('Shrek',
-	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Redo of Healer'),
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Rizal Day'),
     (SELECT `origin_id` FROM `origin` WHERE `name` = 'Cebuano')
     ),
 ('Prinitong daga',
-	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Katyusha'),
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Noche Buena'),
     (SELECT `origin_id` FROM `origin` WHERE `name` = 'Kapampangan')
     ),
 ('Gordon Ramsay',
-	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Boku no Pico'),
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Eid al-Fitr'),
     (SELECT `origin_id` FROM `origin` WHERE `name` = 'Ilonggo')
     ),
 ('Minimum Search Tree',
-	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Ishuzoku Reviewer'),
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Semana Santa'),
     (SELECT `origin_id` FROM `origin` WHERE `name` = 'Filipino-Chinese')
     ),
 ('Schubligsilog',
-	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Redo of Healer'),
+	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Rizal Day'),
     (SELECT `origin_id` FROM `origin` WHERE `name` = 'Filipino-Chinese')
     ),
 ('Pares',
@@ -185,7 +185,48 @@ VALUES
 ('Birthday Noodles',
 	(SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Lunar New Year'),
     (SELECT `origin_id` FROM `origin` WHERE `name` = 'Filipino-Chinese')
-	);
+	),
+('Adobo',
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Semana Santa'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+    ),
+('Pancit Malabon',
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Everyday'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+    ),
+('Sisig',
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Everyday'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Kapampangan')
+    ),
+('Lechon',
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Fiesta sa Nayon'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Cebuano')
+    ),
+('Bibingka',
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Pasko'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+    ),
+('Tapa',
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Semana Santa'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+    ),
+('Tapsilog',
+    (SELECT `food_id` FROM `food` WHERE `food_name` = 'Tapa'), -- Re-using Tapa's food_id for its Silog dish
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Semana Santa'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+    ),
+('Buko Pandan',
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Summer'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+    ),
+('Lumpia Shanghai',
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Everyday'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Filipino-Chinese')
+    ),
+('Dinuguan',
+    (SELECT `food_event_id` FROM `food_event` WHERE `food_event_name` = 'Everyday'),
+    (SELECT `origin_id` FROM `origin` WHERE `name` = 'Tagalog')
+    );
 
 /*
 -----------------------------------
@@ -232,6 +273,42 @@ VALUES
 	'Schublig with egg and rice',
     100,
     (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Friends and Neighbors Restaurant')
+),
+(
+    (SELECT `food_id` FROM `food` WHERE `food_name` = 'Adobo' ORDER BY food_id DESC LIMIT 1),
+    'Classic Chicken Adobo',
+    250.00,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Winikko Cafe And Catering')
+),
+(
+    (SELECT `food_id` FROM `food` WHERE `food_name` = 'Pancit Malabon' ORDER BY food_id DESC LIMIT 1),
+    'Nanay''s Special Pancit',
+    350.50,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Nanay''s Pancit Malabon')
+),
+(
+    (SELECT `food_id` FROM `food` WHERE `food_name` = 'Sisig' ORDER BY food_id DESC LIMIT 1),
+    'Sizzling Pork Sisig',
+    280.00,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Kanto Freestyle Breakfast')
+),
+(
+    (SELECT `food_id` FROM `food` WHERE `food_name` = 'Tapsilog' ORDER BY food_id DESC LIMIT 1),
+    'Chachu''s Best Tapsilog',
+    185.00,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Chachu Tapsilogan Sa Caloocan')
+),
+(
+    (SELECT `food_id` FROM `food` WHERE `food_name` = 'Bibingka' ORDER BY food_id DESC LIMIT 1),
+    'Traditional Bibingka Special',
+    95.00,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'Traditional Bibingka & Puto Bumbong Stall')
+),
+(
+    (SELECT `food_id` FROM `food` WHERE `food_name` = 'Lumpia Shanghai' ORDER BY food_id DESC LIMIT 1),
+    'Fresh Lumpia',
+    120.00,
+    (SELECT `restaurant_id` FROM `restaurant` WHERE `restaurant_name` = 'New Po Heng Lumpia House')
 );
 
 /*
@@ -258,6 +335,131 @@ VALUES
 (3, 'SILOG20', 0.20, '10% off for Tapsilog dishes at Chachu Tapsilogan Sa Caloocan'),
 (8, 'PANC33T', 0.33, '33% off for Nanay''s Pancit Malabon'),
 (9, 'DELUXE10', 0.10, '10% off on exclusive dishes at Master Garden Filipino Specialty Restaurant');
+
+/*
+-----------------------------------
+    food_transaction TABLE (Prerequisite for food_rating)
+-----------------------------------
+*/
+ALTER TABLE `food_transaction`
+auto_increment = 1;
+
+INSERT INTO `food_transaction` (`restaurant_name`, `promo`, `initial_price`, `final_price`, `food_user_id`, `transaction_date`)
+VALUES
+('Chachu Tapsilogan Sa Caloocan', 0.20, 370.00, 296.00, 1, '2025-11-15 10:30:00'),
+('Nanay''s Pancit Malabon', 0.33, 701.00, 469.67, 2, '2025-11-16 12:45:00'),
+('Kanto Freestyle Breakfast', 0.00, 560.00, 560.00, 3, '2025-11-17 08:00:00'),
+('Winikko Cafe And Catering', 0.10, 500.00, 450.00, 4, '2025-11-18 14:15:00'),
+('Traditional Bibingka & Puto Bumbong Stall', 0.00, 190.00, 190.00, 5, '2025-11-19 19:30:00'),
+('Master Garden Filipino Specialty Restaurant', (SELECT percentage_off FROM food_promo WHERE promo_code = 'DELUXE10'), 1200.00, 1080.00, 6, '2025-11-20 12:00:00'),
+('Tumba-Tumba Crispy Pata', (SELECT percentage_off FROM food_promo WHERE promo_code = 'SAVE20'), 1500.00, 1200.00, 7, '2025-11-21 20:15:00'),
+('Cafe Poblacion - A Mabini', (SELECT percentage_off FROM food_promo WHERE promo_code = 'SAVE5'), 350.00, 332.50, 8, '2025-11-22 07:45:00'),
+('Elias', (SELECT percentage_off FROM food_promo WHERE promo_code = 'SAVE10'), 900.00, 810.00, 9, '2025-11-23 18:30:00'),
+('Baliwag Lechon Manok at Liempo', 0.00, 750.00, 750.00, 10, '2025-11-24 13:00:00');
+
+/*
+-----------------------------------
+    food_rating TABLE
+-----------------------------------
+*/
+ALTER TABLE `food_rating`
+auto_increment = 1;
+
+INSERT INTO `food_rating` (`food_transaction_id`, `restaurant_id`, `suggestion`, `quality`, `authenticity`, `overall_rating`)
+VALUES
+(1, (SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Chachu Tapsilogan Sa Caloocan'), 'More garlic rice options needed.', 4, 5, 4.5),
+(2, (SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Nanay''s Pancit Malabon'), 'The calamansi was too small.', 5, 5, 5.0),
+(3, (SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Kanto Freestyle Breakfast'), 'Loved the presentation, very homey.', 4, 3, 3.5),
+(4, (SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Winikko Cafe And Catering'), 'Great twist on a classic!', 5, 4, 4.5),
+(5, (SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Traditional Bibingka & Puto Bumbong Stall'), 'Perfectly cooked, tasted like my lola made it.', 5, 5, 5.0),
+(6,(SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Master Garden Filipino Specialty Restaurant'),'Excellent service but the ambiance was lacking.',5, 4, 4.5),
+(7,(SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Tumba-Tumba Crispy Pata'),'The crispy pata lived up to its name! So crunchy.',5, 5, 5.0),
+(8,(SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Cafe Poblacion - A Mabini'),'Good breakfast spot, wish the coffee was hotter.',3, 4, 3.5),
+(9,(SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Elias'),'A truly elevated Filipino experience. Will be back!',5, 5, 5.0),
+(10,(SELECT restaurant_id FROM restaurant WHERE restaurant_name = 'Baliwag Lechon Manok at Liempo'),'Reliable and tasty as always. Good value.',4, 4, 4.0);
+
+/*
+-----------------------------------
+    food_order TABLE
+-----------------------------------
+*/
+ALTER TABLE `food_order`
+auto_increment = 1;
+
+INSERT INTO `food_order` (`food_transaction_id`, `food_menu_id`, `quantity`, `food_id`)
+VALUES
+(1, (SELECT food_menu_id FROM food_menu WHERE food_alias = 'Chachu''s Best Tapsilog'), 2, (SELECT food_id FROM food WHERE food_name = 'Tapsilog' ORDER BY food_id DESC LIMIT 1)),
+(2, (SELECT food_menu_id FROM food_menu WHERE food_alias = 'Nanay''s Special Pancit'), 1, (SELECT food_id FROM food WHERE food_name = 'Pancit Malabon' ORDER BY food_id DESC LIMIT 1)),
+(3, (SELECT food_menu_id FROM food_menu WHERE food_alias = 'Sizzling Pork Sisig'), 2, (SELECT food_id FROM food WHERE food_name = 'Sisig' ORDER BY food_id DESC LIMIT 1)),
+(4, (SELECT food_menu_id FROM food_menu WHERE food_alias = 'Classic Chicken Adobo'), 2, (SELECT food_id FROM food WHERE food_name = 'Adobo' ORDER BY food_id DESC LIMIT 1)),
+(4, (SELECT food_menu_id FROM food_menu WHERE food_alias = 'Boiled egg in boiled egg sauce'), 1, (SELECT food_id FROM food WHERE food_name = 'Itlog with Egg' ORDER BY food_id ASC LIMIT 1)),
+(5, (SELECT food_menu_id FROM food_menu WHERE food_alias = 'Traditional Bibingka Special'), 2, (SELECT food_id FROM food WHERE food_name = 'Bibingka' ORDER BY food_id DESC LIMIT 1)),
+-- Transaction ID 6: Master Garden Filipino Specialty Restaurant
+(6,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Classic Chicken Adobo'),3,(SELECT food_id FROM food WHERE food_name = 'Adobo' ORDER BY food_id DESC LIMIT 1)),
+(6,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Binary Search Tree'),2,(SELECT food_id FROM food WHERE food_name = 'Minimum Search Tree' ORDER BY food_id DESC LIMIT 1)),
+-- Transaction ID 7: Tumba-Tumba Crispy Pata
+(7,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Boiled egg in boiled egg sauce'),5,(SELECT food_id FROM food WHERE food_name = 'Itlog with Egg' ORDER BY food_id ASC LIMIT 1)),
+-- Transaction ID 8: Cafe Poblacion - A Mabini
+(8,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Chachu''s Best Tapsilog'),1,(SELECT food_id FROM food WHERE food_name = 'Tapsilog' ORDER BY food_id DESC LIMIT 1)),
+(8,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Boiled egg in boiled egg sauce'),1,(SELECT food_id FROM food WHERE food_name = 'Itlog with Egg' ORDER BY food_id ASC LIMIT 1)),
+-- Transaction ID 9: Elias
+(9,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Classic Chicken Adobo'),4,(SELECT food_id FROM food WHERE food_name = 'Adobo' ORDER BY food_id DESC LIMIT 1)),
+(9,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Binary Search Tree'),1,(SELECT food_id FROM food WHERE food_name = 'Minimum Search Tree' ORDER BY food_id DESC LIMIT 1)),
+-- Transaction ID 10: Baliwag Lechon Manok at Liempo
+(10,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Classic Chicken Adobo'),2,(SELECT food_id FROM food WHERE food_name = 'Adobo' ORDER BY food_id DESC LIMIT 1)),
+(10,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Chachu''s Best Tapsilog'),1,(SELECT food_id FROM food WHERE food_name = 'Tapsilog' ORDER BY food_id DESC LIMIT 1)),
+(10,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Boiled egg in boiled egg sauce'),1,(SELECT food_id FROM food WHERE food_name = 'Itlog with Egg' ORDER BY food_id ASC LIMIT 1));
+
+
+/*
+-----------------------------------
+    food_reservation TABLE
+-----------------------------------
+*/
+ALTER TABLE `food_reservation`
+auto_increment = 1;
+
+INSERT INTO `food_reservation` (`restaurant_name`, `initial_price`, `food_user_id`, `reservation_date`)
+VALUES
+('New Po Heng Lumpia House', 240.00, 6, '2025-11-25 18:00:00'),
+('Un Cuenca', 800.00, 7, '2025-12-10 19:30:00'),
+('Original Pares Mami House', 500.00, 8, '2025-11-20 11:00:00'),
+('Lore by Chef Tatung', 1500.00, 1, '2025-12-01 19:00:00'),
+('Relish Cafe', 900.00, 2, '2025-12-05 18:30:00'),
+('Plana''s Pantry', 650.00, 3, '2025-12-12 12:00:00'),
+('Luyong''s', 400.00, 4, '2025-12-15 11:30:00'),
+('Rodic''s Diner', 300.00, 5, '2025-12-18 09:00:00'),
+('Three Sisters Restaurant', 1200.00, 6, '2025-12-24 20:00:00'),
+('Winikko Cafe And Catering', 700.00, 7, '2025-12-28 14:00:00');
+
+/*
+-----------------------------------
+    reservation_order TABLE
+-----------------------------------
+*/
+ALTER TABLE `reservation_order`
+auto_increment = 1;
+
+INSERT INTO `reservation_order` (`food_reservation_id`, `food_menu_id`, `quantity`, `food_id`)
+VALUES
+(1, (SELECT food_menu_id FROM food_menu WHERE food_alias = 'Fresh Lumpia'), 2, (SELECT food_id FROM food WHERE food_name = 'Lumpia Shanghai' ORDER BY food_id DESC LIMIT 1)),
+(2, (SELECT food_menu_id FROM food_menu WHERE food_alias = 'Classic Chicken Adobo'), 3, (SELECT food_id FROM food WHERE food_name = 'Adobo' ORDER BY food_id DESC LIMIT 1)),
+(3, (SELECT food_menu_id FROM food_menu WHERE food_alias = 'Boiled egg in boiled egg sauce'), 5, (SELECT food_id FROM food WHERE food_name = 'Itlog with Egg' ORDER BY food_id ASC LIMIT 1)),
+-- Reservation ID 4: Lore by Chef Tatung
+(4,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Classic Chicken Adobo'),4,(SELECT food_id FROM food WHERE food_name = 'Adobo' ORDER BY food_id DESC LIMIT 1)),
+-- Reservation ID 5: Relish Cafe
+(5,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Classic Chicken Adobo'),2,(SELECT food_id FROM food WHERE food_name = 'Adobo' ORDER BY food_id DESC LIMIT 1)),
+-- Reservation ID 6: Plana''s Pantry
+(6,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Boiled egg in boiled egg sauce'),3,(SELECT food_id FROM food WHERE food_name = 'Itlog with Egg' ORDER BY food_id ASC LIMIT 1)),
+-- Reservation ID 7: Luyong''s
+(7,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Binary Search Tree'),1,(SELECT food_id FROM food WHERE food_name = 'Minimum Search Tree' ORDER BY food_id DESC LIMIT 1)),
+-- Reservation ID 8: Rodic''s Diner
+(8,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Chachu''s Best Tapsilog'),2,(SELECT food_id FROM food WHERE food_name = 'Tapsilog' ORDER BY food_id DESC LIMIT 1)),
+-- Reservation ID 9: Three Sisters Restaurant
+(9,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Classic Chicken Adobo'),5,(SELECT food_id FROM food WHERE food_name = 'Adobo' ORDER BY food_id DESC LIMIT 1)),
+-- Reservation ID 10: Winikko Cafe And Catering
+(10,(SELECT food_menu_id FROM food_menu WHERE food_alias = 'Boiled egg in boiled egg sauce'),4,(SELECT food_id FROM food WHERE food_name = 'Itlog with Egg' ORDER BY food_id ASC LIMIT 1));
+
 
 /*
 -----------------------------------
